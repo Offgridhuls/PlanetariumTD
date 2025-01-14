@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 7344505298169975313}
   - component: {fileID: 809939136776408274}
   - component: {fileID: 807763393247112747}
-  - component: {fileID: 2704898092291648004}
+  - component: {fileID: 2526509629052936677}
   m_Layer: 0
   m_Name: 'Bullet                '
   m_TagString: Untagged
@@ -192,7 +192,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &2704898092291648004
+--- !u!114 &2526509629052936677
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -204,5 +204,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aa9f5eecbc13f7a489a336c397b85278, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ProjectileSpeed: 50
-  RB: {fileID: 807763393247112747}
+  ProjectileSpeed: 20

@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class BulletProjectile : ProjectileBase
 {
-    public override void ShootProjectile(Vector3 target)
+    public override void ShootProjectile(Vector3 target, EnemyBase Enemy)
     {
         if (RB != null)
         {

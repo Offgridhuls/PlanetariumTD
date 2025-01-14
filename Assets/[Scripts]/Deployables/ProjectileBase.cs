@@ -16,11 +16,15 @@ public abstract class ProjectileBase : MonoBehaviour
         RB = GetComponent<Rigidbody>();
         ProjectileFX = GetComponent<ParticleSystem>();
     }
-    protected void Start()
+    public virtual void Start()
     {
         
     }
-    public abstract void ShootProjectile(Vector3 target);
+    public virtual void Update()
+    { 
+        
+    }
+    public abstract void ShootProjectile(Vector3 target, EnemyBase Enemy);
 
     public float GetProjectileSpeed()
     {

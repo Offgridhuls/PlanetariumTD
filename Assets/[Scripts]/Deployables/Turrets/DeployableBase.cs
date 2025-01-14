@@ -63,7 +63,7 @@ public class DeployableBase : MonoBehaviour
     protected virtual void FireTurret()
     {
         var Projectile = Instantiate(M_Projectile, Muzzle.position, Quaternion.identity);
-        Projectile.ShootProjectile(targetPosition);
+        Projectile.ShootProjectile(targetPosition, ClosestTarget);
     }
 
     void CheckClosestTarget()

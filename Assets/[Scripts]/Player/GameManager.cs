@@ -25,13 +25,39 @@ public class GameManager : MonoBehaviour
     }
     private void Update()
     {
-        if (Input.GetMouseButtonDown(0) && !UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+        if (Input.GetMouseButtonDown(0) && !UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject()) // Mouse and Keyboard
         {
             Debug.Log("MouseButtonDown");
+            Vector3 mouse = Input.mousePosition;
             if (CursorController.IsCursorActive() && bhasSelectedTurret)
             {
-                TryPlaceTurret();
+                TryPlaceTurret(mouse);
             }
+        }
+        else if(Input.touchCount > 0) // Touches
+        {
+            Touch touch = Input.GetTouch(0);
+            if(bhasSelectedTurret)
+            {
+                switch (touch.phase)
+                {
+                    case TouchPhase.Began:
+                        TryPlaceTurret(touch.position);
+                        break;
+
+                    case TouchPhase.Moved:
+                        break;
+
+                    case TouchPhase.Stationary:
+                        break;
+
+                    case TouchPhase.Ended:
+                        break;
+
+                    case TouchPhase.Canceled:
+                        break;
+                }
+            }  
         }
     }
     public void EnableSelectedTurret(DeployableBase selectedTurret)
@@ -52,9 +78,9 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void TryPlaceTurret()
+    void TryPlaceTurret(Vector3 ScreenPosition)
     {
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        Ray ray = Camera.main.ScreenPointToRay(ScreenPosition);
         RaycastHit hit;
         
         if (Physics.Raycast(ray, out hit))
