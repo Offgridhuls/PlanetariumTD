@@ -101,7 +101,7 @@ public class PlayerSphericalMovementComponent : MonoBehaviour
         }
         velocity += gravity * Time.deltaTime;
         //Debug.Log("Current Gravity: " + gravity.ToString());
-        rb.velocity = velocity; // update rb velocity with local velocity value
+        rb.linearVelocity = velocity; // update rb velocity with local velocity value
         ClearState();
     }
 
@@ -109,7 +109,7 @@ public class PlayerSphericalMovementComponent : MonoBehaviour
     {
         framesSinceLastGrounded += 1;
         framesSinceLastJump += 1;
-        velocity = rb.velocity; //reset local velocity variable
+        velocity = rb.linearVelocity; //reset local velocity variable
         if (IsGrounded || SnapToGround())
         {
             framesSinceLastGrounded = 0;

@@ -26,7 +26,7 @@ public class MissileProjectile : ProjectileBase
             Quaternion targetRotation = Quaternion.LookRotation(direction);
             transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, 1000f * Time.deltaTime);
 
-            RB.velocity = direction * ProjectileSpeed;
+            RB.linearVelocity = direction * ProjectileSpeed;
             if (Vector3.Distance(transform.position, EnemyObject.transform.position) < 0.5f)
             {
                 OnProjectileHit();
