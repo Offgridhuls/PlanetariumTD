@@ -24,7 +24,7 @@ public abstract class ProjectileBase : MonoBehaviour
     { 
         
     }
-    public abstract void ShootProjectile(Vector3 target, EnemyBase Enemy);
+    public abstract void ShootProjectile(Vector3 target, GameObject Enemy);
 
     public float GetProjectileSpeed()
     {

@@ -63,7 +63,7 @@ public class DeployableBase : MonoBehaviour
     protected virtual void FireTurret()
     {
         var Projectile = Instantiate(M_Projectile, Muzzle.position, Quaternion.identity);
-        Projectile.ShootProjectile(targetPosition, ClosestTarget);
+        Projectile.ShootProjectile(targetPosition, ClosestTarget.gameObject);
     }
 
     void CheckClosestTarget()
@@ -89,14 +89,12 @@ public class DeployableBase : MonoBehaviour
 
         ClosestTarget = closestEnemy;
     }
-
     private void RotateTowardsTarget(Vector3 target)
     {
         Vector3 direction = target - transform.position;
         Quaternion targetRotation = Quaternion.LookRotation(direction);
         TurretPivot.transform.rotation = Quaternion.Slerp(TurretPivot.transform.rotation, targetRotation, Time.deltaTime * 5f);
     }
-
     Vector3 PredictFuturePosition(EnemyBase target, float bulletSpeed)
     {
         enemyVelocity = (target.gameObject.transform.position - previousPosition) / Time.deltaTime;

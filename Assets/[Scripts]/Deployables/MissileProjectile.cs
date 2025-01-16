@@ -7,14 +7,13 @@ public class MissileProjectile : ProjectileBase
 {
     private Vector3 targetPosition;
     private bool isLaunched = false;
-    private EnemyBase Enemy;
+    private GameObject EnemyObject;
     // Start is called before the first frame update
-    public override void ShootProjectile(Vector3 target, EnemyBase enemy)
+    public override void ShootProjectile(Vector3 target, GameObject enemyObject)
     {
-        targetPosition = Enemy.gameObject.transform.position;
-        Enemy = enemy;
+        targetPosition = enemyObject.transform.position;
         isLaunched = true;
-
+        EnemyObject = enemyObject;
         // Ensure the missile is facing the target
         Vector3 direction = (target - transform.position).normalized;
         transform.LookAt(target);
@@ -24,12 +23,12 @@ public class MissileProjectile : ProjectileBase
         if (isLaunched)
         {
             // Move towards the target
-            Vector3 direction = (Enemy.gameObject.transform.position - transform.position).normalized;
+            Vector3 direction = (EnemyObject.transform.position - transform.position).normalized;
             RB.velocity = direction * ProjectileSpeed;
-            Vector3 lookAtTarget = (Enemy.gameObject.transform.position - transform.position).normalized;
+            Vector3 lookAtTarget = (EnemyObject.transform.position - transform.position).normalized;
             transform.LookAt(lookAtTarget);
             // Optional: Destroy the missile when it reaches the target
-            if (Vector3.Distance(transform.position, Enemy.gameObject.transform.position) < 0.5f)
+            if (Vector3.Distance(transform.position, EnemyObject.transform.position) < 0.5f)
             {
                 Explode();
             }
