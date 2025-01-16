@@ -14,7 +14,6 @@ public class MissileProjectile : ProjectileBase
         targetPosition = enemyObject.transform.position;
         isLaunched = true;
         EnemyObject = enemyObject;
-        // Ensure the missile is facing the target
         Vector3 direction = (target - transform.position).normalized;
         transform.LookAt(target);
     }
@@ -22,20 +21,21 @@ public class MissileProjectile : ProjectileBase
     {
         if (isLaunched)
         {
-            // Move towards the target
             Vector3 direction = (EnemyObject.transform.position - transform.position).normalized;
+
+            Quaternion targetRotation = Quaternion.LookRotation(direction);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, 1000f * Time.deltaTime);
+
             RB.velocity = direction * ProjectileSpeed;
-            Vector3 lookAtTarget = (EnemyObject.transform.position - transform.position).normalized;
-            transform.LookAt(lookAtTarget);
-            // Optional: Destroy the missile when it reaches the target
             if (Vector3.Distance(transform.position, EnemyObject.transform.position) < 0.5f)
             {
-                Explode();
+                OnProjectileHit();
             }
         }
     }
-    private void Explode()
+    public override void OnProjectileHit()
     {
-
+        var iFX = Instantiate(ImpactFX, transform.position, Quaternion.identity);
+        Destroy(this.gameObject);
     }
 }

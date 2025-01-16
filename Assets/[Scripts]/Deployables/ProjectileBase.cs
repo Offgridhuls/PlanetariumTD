@@ -7,6 +7,9 @@ public abstract class ProjectileBase : MonoBehaviour
 {
     private ParticleSystem ProjectileFX;
 
+    [SerializeField]
+    public GameObject ImpactFX;
+
     protected Rigidbody RB;
 
     [SerializeField]
@@ -30,5 +33,7 @@ public abstract class ProjectileBase : MonoBehaviour
     {
         return ProjectileSpeed;
     }
+
+    public abstract void OnProjectileHit();
 
 }

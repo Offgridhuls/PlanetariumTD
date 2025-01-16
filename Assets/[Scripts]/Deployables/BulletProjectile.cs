@@ -12,4 +12,8 @@ public class BulletProjectile : ProjectileBase
             RB.AddForce(targetDirection * ProjectileSpeed, ForceMode.Impulse);
         }
     }
+    public override void OnProjectileHit()
+    {
+
+    }
 }
