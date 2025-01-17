@@ -36,4 +36,4 @@ MonoBehaviour:
       type: {class: MoveToNearestGenerator, ns: , asm: Assembly-CSharp}
       data:
         enabled: 1
-        Altitude: 5
+        Altitude: 13
