@@ -64,6 +64,7 @@ public class GameManager : MonoBehaviour
     {
         if (!bhasSelectedTurret)
         {
+            DisableSelectedTurret();
             SelectedTurret = selectedTurret;
             bhasSelectedTurret = true;
         }
@@ -71,7 +72,7 @@ public class GameManager : MonoBehaviour
 
     public void DisableSelectedTurret()
     {
-        if (bhasSelectedTurret && SelectedTurret == null)
+        if (bhasSelectedTurret && SelectedTurret != null)
         {
             SelectedTurret = null;
             bhasSelectedTurret = false;

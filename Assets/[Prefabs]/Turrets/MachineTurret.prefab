@@ -310,7 +310,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Muzzle: {fileID: 6172694075418666337}
   TurretPivot: {fileID: 6349184743611042079}
-  M_Projectile: {fileID: -7824494733749033677, guid: 26941c05e5971c44ebf22b64e4bb5074, type: 3}
+  M_Projectile: {fileID: 2526509629052936677, guid: 756ffe6ec469fbf4693bd5795d17ae5a, type: 3}
   M_TurretStats:
     HealthPoints: 0
     Damage: 0
