@@ -101,6 +101,6 @@ public class GameManager : MonoBehaviour
     {
         Instantiate(SelectedTurret, new Vector3(position.x, position.y, position.z), rotation);
         DisableSelectedTurret();
-        CursorController.HideCursor();
+        //CursorController.HideCursor();
     }
 }
