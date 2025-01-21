@@ -91,6 +91,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -207,6 +210,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -308,13 +314,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 200a70536857abe4f9f50d7ed2a73b73, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Muzzle: {fileID: 6172694075418666337}
-  TurretPivot: {fileID: 6349184743611042079}
   M_Projectile: {fileID: -7824494733749033677, guid: 26941c05e5971c44ebf22b64e4bb5074, type: 3}
-  M_TurretStats:
-    HealthPoints: 0
-    Damage: 0
-    AgroRadius: 20
-    FireInterval: 2
-    ScrapCost: 0
-    CoinCost: 0
+  M_TurretStats: {fileID: 11400000, guid: 851dd75c5d628e745a05e982ef134b64, type: 2}
+  maxHealth: 100
+  currentHealth: 0
+  integrity: 1
+  deathEffect: {fileID: 0}
+  damageEffect: {fileID: 0}
+  healthBarPrefab: {fileID: 0}
+  onHealthChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  onDeath:
+    m_PersistentCalls:
+      m_Calls: []

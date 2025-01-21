@@ -28,8 +28,8 @@ Transform:
   m_GameObject: {fileID: 7377224693683169032}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.002048}
+  m_LocalScale: {x: 0.91604114, y: 0.91604114, z: 0.91604114}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7135591619302538236}
@@ -208,9 +208,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7e2c59309227da246a3146cba2596591, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ImpactFX: {fileID: 0}
-  ProjectileSpeed: 5
-  arcHeight: 5
+  projectileSpeed: 3
+  lifetime: 20
+  hitEffect: {fileID: 1159615438314744, guid: 14cf9b5bc3f9faf4ca5ce80298f43111, type: 3}
+  targetLayers:
+    serializedVersion: 2
+    m_Bits: 64
+  arcHeight: 1
+  explosionRadius: 20
+  enemyLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  minDistance: 5
+  maxDistance: 15
 --- !u!1001 &7136232260485898420
 PrefabInstance:
   m_ObjectHideFlags: 0

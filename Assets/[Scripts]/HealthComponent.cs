@@ -4,28 +4,62 @@ using UnityEngine;
 
 public class HealthComponent : MonoBehaviour, IDamageable
 {
-    float CurrentHealth;
-    float MaxHealth;
+    [SerializeField] private float maxHealth = 100f;
+    [SerializeField] private float currentHealth;
+    [SerializeField] private float integrity = 1f;
+    [SerializeField] private bool isDead = false;
 
-    float StartingIntegrity;
-    float Integrity;
+    private void Start()
+    {
+        currentHealth = maxHealth;
+    }
 
-    bool isDead = false;
     public float GetCurrentHealth()
     {
-        return CurrentHealth;
+        return currentHealth;
     }
+
     public float GetMaxHealth()
     {
-        return MaxHealth;
+        return maxHealth;
     }
+
+    public void SetMaxHealth(float newMaxHealth)
+    {
+        maxHealth = Mathf.Max(1f, newMaxHealth);
+        currentHealth = maxHealth;
+    }
+
     public void ProcessDamage(DamageData data)
     {
-        CurrentHealth -= ((data.Damage * data.DamageMultiplier) / Integrity);
-        if (CurrentHealth <= 0)
+        TakeDamage(data.Damage * data.DamageMultiplier / integrity);
+    }
+
+    public void TakeDamage(float damage)
+    {
+        if (isDead) return;
+
+        currentHealth = Mathf.Max(0, currentHealth - damage);
+        
+        if (currentHealth <= 0)
         {
-            CurrentHealth = 0;
+            currentHealth = 0;
             isDead = true;
         }
     }
+
+    public void SetIntegrity(float newIntegrity)
+    {
+        integrity = Mathf.Max(0.1f, newIntegrity);
+    }
+
+    public void Heal(float amount)
+    {
+        if (isDead) return;
+        currentHealth = Mathf.Min(maxHealth, currentHealth + amount);
+    }
+
+    public bool IsAlive => !isDead;
+    public float CurrentHealth => currentHealth;
+    public float MaxHealth => maxHealth;
 }

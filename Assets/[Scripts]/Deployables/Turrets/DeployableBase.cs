@@ -1,42 +1,124 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
+using System;
 
-public class DeployableBase : MonoBehaviour
+public class DeployableBase : MonoBehaviour, IDamageable
 {
     [Header("Turret Components")]
-    [SerializeField]
-    private Transform Muzzle;
-    [SerializeField]
-    private Transform TurretPivot;
+    [SerializeField] protected ProjectileBase M_Projectile;
+    [SerializeField] protected TurretStats M_TurretStats;
 
-    [Header("Projectile")]
-    [SerializeField]
-    private ProjectileBase M_Projectile;
+    [Header("Health Settings")]
+    [SerializeField] protected float maxHealth = 100f;
+    [SerializeField] protected float currentHealth;
+    [SerializeField] protected float integrity = 1f;
 
-    private UpgradeComponent M_UpgradeComponent;
-
-    [SerializeField]
-    private TurretStats M_TurretStats;
+    [Header("Effects")]
+    [SerializeField] protected GameObject deathEffect;
+    [SerializeField] protected GameObject damageEffect;
+    [SerializeField] protected GameObject healthBarPrefab;
+    protected GameObject healthBarInstance;
 
     private bool IsDestroyed = false;
-    private EnemyBase ClosestTarget;
-
-    private float FireTimer = 0;
-
-    private Vector3 targetPosition;
+    protected EnemyBase ClosestTarget;
+    protected Vector3 targetPosition;
     private Vector3 previousPosition;
     private Vector3 enemyVelocity;
+    private float velocityUpdateTimer = 0f;
+    private const float VELOCITY_UPDATE_INTERVAL = 0.1f;
+    protected float FireTimer = 0;
 
-    void Update()
+    public UnityEvent<float> onHealthChanged = new UnityEvent<float>();
+    public UnityEvent onDeath = new UnityEvent();
+
+    #region IDamageable Implementation
+    public float CurrentHealth => currentHealth;
+    public float MaxHealth => maxHealth;
+    public bool IsAlive => currentHealth > 0;
+
+    public virtual void TakeDamage(float damage)
+    {
+        if (!IsAlive) return;
+
+        damage *= (1f - integrity);
+        currentHealth = Mathf.Max(0f, currentHealth - damage);
+
+        if (damageEffect != null)
+        {
+            Instantiate(damageEffect, transform.position, Quaternion.identity);
+        }
+
+        onHealthChanged?.Invoke(GetHealthPercentage());
+
+        if (!IsAlive)
+        {
+            Die();
+        }
+    }
+    #endregion
+
+    protected virtual void Start()
+    {
+        currentHealth = maxHealth;
+        if (healthBarPrefab != null)
+        {
+            healthBarInstance = Instantiate(healthBarPrefab, transform);
+        }
+    }
+
+    public void SetMaxHealth(float health)
+    {
+        maxHealth = health;
+        currentHealth = health;
+        onHealthChanged?.Invoke(GetHealthPercentage());
+    }
+
+    public void SetIntegrity(float value)
+    {
+        integrity = value;
+    }
+
+    protected virtual void Die()
+    {
+        if (!IsAlive) return;
+        IsDestroyed = true;
+
+        if (deathEffect != null)
+        {
+            Instantiate(deathEffect, transform.position, Quaternion.identity);
+        }
+
+        onDeath?.Invoke();
+        Destroy(gameObject);
+    }
+
+    public float GetHealthPercentage()
+    {
+        return currentHealth / maxHealth;
+    }
+
+    protected virtual void Update()
     {
         if (ClosestTarget != null)
         {
             targetPosition = PredictFuturePosition(ClosestTarget, M_Projectile.GetProjectileSpeed());
             previousPosition = ClosestTarget.gameObject.transform.position;
+
+            velocityUpdateTimer += Time.deltaTime;
+            if (velocityUpdateTimer >= VELOCITY_UPDATE_INTERVAL)
+            {
+                enemyVelocity = (ClosestTarget.transform.position - previousPosition) / VELOCITY_UPDATE_INTERVAL;
+                velocityUpdateTimer = 0f;
+            }
+        }
+        else
+        {
+            ClosestTarget = null;
         }
 
-        if (!IsDestroyed)
+        if (!IsDestroyed && IsAlive)
         {
             FireTimer += Time.deltaTime;
             if (FireTimer >= M_TurretStats.GetFireInterval())
@@ -47,7 +129,8 @@ public class DeployableBase : MonoBehaviour
                 }
                 FireTimer = 0;
             }
-            CheckClosestTarget();
+
+            FindClosestTarget();
             if (ClosestTarget != null)
             {
                 RotateTowardsTarget(targetPosition);
@@ -55,18 +138,7 @@ public class DeployableBase : MonoBehaviour
         }
     }
 
-    public int GetTurretDamage()
-    {
-        return M_TurretStats.GetDamage();
-    }
-
-    protected virtual void FireTurret()
-    {
-        var Projectile = Instantiate(M_Projectile, Muzzle.position, Quaternion.identity);
-        Projectile.ShootProjectile(targetPosition, ClosestTarget.gameObject);
-    }
-
-    void CheckClosestTarget()
+    private void FindClosestTarget()
     {
         Collider[] hitTargets = Physics.OverlapSphere(transform.position, M_TurretStats.GetAgroRadius());
         EnemyBase closestEnemy = null;
@@ -75,39 +147,46 @@ public class DeployableBase : MonoBehaviour
 
         foreach (Collider hitCollider in hitTargets)
         {
-            if (hitCollider.GetComponent<EnemyBase>() != null)
+            EnemyBase enemy = hitCollider.GetComponent<EnemyBase>();
+            if (enemy != null && enemy.IsAlive)
             {
-                var Enemy = hitCollider.GetComponent<EnemyBase>();
-                float distance = Vector3.Distance(transform.position, Enemy.transform.position);
+                float distance = Vector3.Distance(transform.position, enemy.transform.position);
                 if (distance < closestDistance)
                 {
                     closestDistance = distance;
-                    closestEnemy = Enemy;
+                    closestEnemy = enemy;
                 }
             }
         }
 
         ClosestTarget = closestEnemy;
     }
-    private void RotateTowardsTarget(Vector3 target)
-    {
-        Vector3 direction = target - transform.position;
-        Quaternion targetRotation = Quaternion.LookRotation(direction);
-        TurretPivot.transform.rotation = Quaternion.Slerp(TurretPivot.transform.rotation, targetRotation, Time.deltaTime * 5f);
-    }
-    Vector3 PredictFuturePosition(EnemyBase target, float bulletSpeed)
-    {
-        enemyVelocity = (target.gameObject.transform.position - previousPosition) / Time.deltaTime;
 
-        if (enemyVelocity.magnitude > 0)
+    protected virtual void RotateTowardsTarget(Vector3 target)
+    {
+        Vector3 targetDirection = target - transform.position;
+        Quaternion targetRotation = Quaternion.LookRotation(targetDirection);
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, M_TurretStats.GetRotationSpeed() * Time.deltaTime);
+    }
+
+    protected virtual void FireTurret()
+    {
+        if (M_Projectile != null)
         {
-            float distanceToTarget = Vector3.Distance(transform.position, target.transform.position);
-            float travelTime = distanceToTarget / bulletSpeed;
-            return target.transform.position + enemyVelocity * travelTime;
+            ProjectileBase projectile = Instantiate(M_Projectile, transform.position, transform.rotation);
+            projectile.Initialize(M_TurretStats.GetDamage(), targetPosition);
         }
-        else
-        {
-            return target.transform.position;
-        }
+    }
+
+    protected virtual Vector3 PredictFuturePosition(EnemyBase target, float projectileSpeed)
+    {
+        Vector3 targetPos = target.transform.position;
+        Vector3 targetVelocity = enemyVelocity;
+        Vector3 relativePosition = targetPos - transform.position;
+        
+        float timeToTarget = relativePosition.magnitude / projectileSpeed;
+        Vector3 predictedPosition = targetPos + targetVelocity * timeToTarget;
+        
+        return predictedPosition;
     }
 }
