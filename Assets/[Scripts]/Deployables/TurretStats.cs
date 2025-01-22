@@ -1,44 +1,37 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-[System.Serializable]
-struct TurretStats
+[CreateAssetMenu(fileName = "TurretStats", menuName = "PlanetariumTD/Turret Stats")]
+public class TurretStats : ScriptableObject
 {
-    [Header("Turret Stats")]
-    private string Name;
-    [SerializeField]
-    private float HealthPoints;
-    [SerializeField]
-    private int Damage;
-    [SerializeField]
-    private float AgroRadius;
-    [SerializeField]
-    private float FireInterval;
+    [Header("Basic Stats")]
+    [SerializeField] private string turretName = "Default Turret";
+    [SerializeField] private float healthPoints = 100f;
 
-    [Header("Resources")]
-    [SerializeField]
-    private int ScrapCost;
-    [SerializeField]
-    private int CoinCost;
-    public float GetHealth()
-    {
-        return HealthPoints;
-    }
-    public int GetDamage()
-    {
-        return Damage;
-    }
-    public float GetAgroRadius()
-    {
-        return AgroRadius;
-    }
-    public float GetFireInterval()
-    {
-        return FireInterval;
-    }
-    public string GetName()
-    {
-        return Name; 
-    }
+    [Header("Combat Stats")]
+    [SerializeField] private int damage = 10;
+    [SerializeField] private float fireInterval = 1f;
+    [SerializeField] private float agroRadius = 5f;
+    [SerializeField] private float rotationSpeed = 180f;
+    [SerializeField] private float projectileSpeed = 20f;
+    [SerializeField] private float projectileLifetime = 3f;
+
+    [Header("Costs")]
+    [SerializeField] private int scrapCost = 10;
+    [SerializeField] private int coinCost = 10;
+
+    // Basic Stats
+    public string GetName() => turretName;
+    public float GetHealth() => healthPoints;
+
+    // Combat Stats
+    public int GetDamage() => damage;
+    public float GetFireInterval() => fireInterval;
+    public float GetAgroRadius() => agroRadius;
+    public float GetRotationSpeed() => rotationSpeed;
+    public float GetProjectileSpeed() => projectileSpeed;
+    public float GetProjectileLifetime() => projectileLifetime;
+
+    // Costs
+    public int GetScrapCost() => scrapCost;
+    public int GetCoinCost() => coinCost;
 }

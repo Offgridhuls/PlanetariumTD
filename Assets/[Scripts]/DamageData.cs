@@ -7,4 +7,5 @@ public struct DamageData
 {
     public float Damage;
     public float DamageMultiplier;
+    public GameObject Source;
 }

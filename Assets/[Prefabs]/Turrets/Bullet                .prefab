@@ -12,9 +12,9 @@ GameObject:
   - component: {fileID: 809939136776408274}
   - component: {fileID: 807763393247112747}
   - component: {fileID: 2526509629052936677}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: 'Bullet                '
-  m_TagString: Untagged
+  m_TagString: Projectile
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -52,6 +52,9 @@ TrailRenderer:
   m_ReflectionProbeUsage: 0
   m_RayTracingMode: 0
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -204,4 +207,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aa9f5eecbc13f7a489a336c397b85278, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ProjectileSpeed: 20
+  projectileSpeed: 80
+  maxLifetime: 4
+  targetLayers:
+    serializedVersion: 2
+    m_Bits: 64
+  effectLifetime: 4
+  penetrationDepth: 0.1
+  bulletTrail: {fileID: 0}
+  hitEffect: {fileID: 4021103657954561961, guid: 5c755f9bc5253ea418e919994537dcc7, type: 3}

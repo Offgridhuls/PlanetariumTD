@@ -21,7 +21,7 @@ public class GameManager : MonoBehaviour
     }
     private void Start()
     {
-        CursorController = FindObjectOfType<CursorController>();
+        CursorController = Object.FindFirstObjectByType<CursorController>();
     }
     private void Update()
     {

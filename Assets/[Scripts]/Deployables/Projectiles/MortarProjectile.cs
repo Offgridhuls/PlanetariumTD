@@ -1,67 +1,147 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using static UnityEngine.GraphicsBuffer;
+
 public class MortarProjectile : ProjectileBase
 {
-    PlanetBase Planet;
-    public float arcHeight = 5f;
-    private Vector3 startPoint;
-    private Vector3 endPoint;
+    [Header("Mortar Settings")]
+    [SerializeField] private float arcHeight = 5f;
+    [SerializeField] private float explosionRadius = 8f;
+    [SerializeField] private float explosionForce = 15f;
+    [SerializeField] private LayerMask explosionLayers;
+    [SerializeField] private GameObject explosionEffect;
+    [SerializeField] private TrailRenderer mortarTrail;
 
+    private Vector3 startPosition;
     private float journeyLength;
     private float journeyTime;
-    public override void ShootProjectile(Vector3 target, GameObject enemyObject)
+    private bool hasExploded = false;
+
+    public override void ShootProjectile(Vector3 target, GameObject enemy)
     {
-        Planet = FindFirstObjectByType<PlanetBase>();
-        Vector3 randomPoint = GetRandomPointOnSphere(Planet.GetPlanetRadius());
-        startPoint = transform.position;
-        endPoint = randomPoint;
-        journeyLength = Vector3.Distance(startPoint, endPoint);
-        journeyTime = 0f;
+        targetPosition = target;
+        targetEnemy = enemy;
+        startPosition = transform.position;
+        journeyLength = Vector3.Distance(startPosition, targetPosition);
+        journeyTime = journeyLength / projectileSpeed;
+        isInitialized = true;
     }
-    public override void Update()
+
+    protected override void Update()
     {
-        if (journeyTime <= 1f)
+        if (!isInitialized || hasExploded) return;
+
+        // Calculate journey progress
+        aliveTime += Time.deltaTime;
+        float progress = aliveTime / journeyTime;
+
+        if (progress >= 1f)
         {
-            journeyTime += Time.deltaTime * GetProjectileSpeed() / journeyLength;
+            // Reached target, explode
+            transform.position = targetPosition;
+            HandleHit(gameObject);
+            return;
+        }
 
-            // Interpolate position along the sphere's surface
-            Vector3 interpolatedPoint = Vector3.Slerp(startPoint, endPoint, journeyTime);
+        // Calculate arc motion
+        Vector3 currentPos = Vector3.Lerp(startPosition, targetPosition, progress);
+        float heightOffset = arcHeight * Mathf.Sin(progress * Mathf.PI);
+        currentPos.y += heightOffset;
+        
+        // Update position
+        transform.position = currentPos;
+        
+        // Update rotation to face movement direction
+        if (progress < 1f)
+        {
+            Vector3 nextPos = Vector3.Lerp(startPosition, targetPosition, Mathf.Min(1f, progress + 0.1f));
+            nextPos.y += arcHeight * Mathf.Sin(Mathf.Min(1f, progress + 0.1f) * Mathf.PI);
+            transform.rotation = Quaternion.LookRotation((nextPos - currentPos).normalized);
+        }
 
-            // Add arc height
-            float height = Mathf.Sin(journeyTime * Mathf.PI) * arcHeight;
-            Vector3 direction = (interpolatedPoint - Planet.transform.position).normalized;
-            transform.position = interpolatedPoint + direction * height;
+        // Check for early hits
+        CheckForHits();
+    }
 
-
-            if (journeyTime < 1f)
+    protected void CheckForHits()
+    {
+        Collider[] colliders = Physics.OverlapSphere(transform.position, 0.5f, targetLayers);
+        foreach (Collider col in colliders)
+        {
+            if (col.gameObject != gameObject)
             {
-                Vector3 nextInterpolatedPoint = Vector3.Slerp(startPoint, endPoint, journeyTime + 0.01f); // Small step ahead
-                float nextHeight = Mathf.Sin((journeyTime + 0.01f) * Mathf.PI) * arcHeight;
-                Vector3 nextDirection = (nextInterpolatedPoint - Planet.transform.position).normalized;
-                Vector3 nextPosition = nextInterpolatedPoint + nextDirection * nextHeight;
-
-                Vector3 forwardDirection = (nextPosition - transform.position).normalized;
-                transform.rotation = Quaternion.LookRotation(forwardDirection, direction); // Face forward
+                HandleHit(col.gameObject);
+                break;
             }
         }
     }
-    Vector3 GetRandomPointOnSphere(float radius)
+
+    protected override void HandleHit(GameObject hitObject)
     {
-        // Generate random spherical coordinates
-        float theta = Random.Range(0f, Mathf.PI * 2); // Angle around the equator
-        float phi = Mathf.Acos(Random.Range(-1f, 1f)); // Angle from the pole
+        if (hasExploded) return;
+        hasExploded = true;
 
-        // Convert spherical coordinates to Cartesian coordinates
-        float x = radius * Mathf.Sin(phi) * Mathf.Cos(theta);
-        float y = radius * Mathf.Sin(phi) * Mathf.Sin(theta);
-        float z = radius * Mathf.Cos(phi);
+        // Create explosion effect
+        if (explosionEffect != null)
+        {
+            GameObject effect = Instantiate(explosionEffect, transform.position, Quaternion.identity);
+            Destroy(effect, effectLifetime);
+        }
 
-        return new Vector3(x, y, z);
+        // Disable trail
+        if (mortarTrail != null)
+        {
+            mortarTrail.enabled = false;
+        }
+
+        // Apply explosion force and damage to nearby objects
+        Collider[] colliders = Physics.OverlapSphere(transform.position, explosionRadius, explosionLayers);
+        foreach (Collider col in colliders)
+        {
+            // Apply explosion force to rigidbodies
+            Rigidbody rb = col.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.AddExplosionForce(explosionForce, transform.position, explosionRadius, 1f, ForceMode.Impulse);
+            }
+
+            // Deal damage with falloff based on distance
+            float distance = Vector3.Distance(transform.position, col.transform.position);
+            float damageMultiplier = 1f - (distance / explosionRadius);
+            if (damageMultiplier > 0)
+            {
+                var damageable = col.GetComponent<IDamageable>();
+                if (damageable != null)
+                {
+                    int finalDamage = Mathf.RoundToInt(damage * damageMultiplier);
+                    if (finalDamage > 0)
+                    {
+                        DamageData damageData = new DamageData
+                        {
+                            Damage = finalDamage,
+                            Source = gameObject
+                        };
+                        damageable.ProcessDamage(damageData);
+                    }
+                }
+            }
+        }
+
+        OnProjectileHit();
+        Destroy(gameObject);
     }
+
     public override void OnProjectileHit()
     {
+        // Cleanup or additional effects when mortar hits
+        if (mortarTrail != null)
+        {
+            mortarTrail.enabled = false;
+        }
+    }
 
+    private void OnDrawGizmosSelected()
+    {
+        // Draw explosion radius in editor
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, explosionRadius);
     }
 }

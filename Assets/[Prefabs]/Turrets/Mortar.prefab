@@ -12,9 +12,9 @@ GameObject:
   - component: {fileID: 809939136776408274}
   - component: {fileID: 807763393247112747}
   - component: {fileID: 8336235883241234670}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Mortar
-  m_TagString: Untagged
+  m_TagString: Projectile
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -28,8 +28,8 @@ Transform:
   m_GameObject: {fileID: 7377224693683169032}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.002048}
+  m_LocalScale: {x: 0.91604114, y: 0.91604114, z: 0.91604114}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7135591619302538236}
@@ -208,9 +208,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7e2c59309227da246a3146cba2596591, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ImpactFX: {fileID: 0}
-  ProjectileSpeed: 5
-  arcHeight: 5
+  projectileSpeed: 10
+  maxLifetime: 10
+  targetLayers:
+    serializedVersion: 2
+    m_Bits: 64
+  effectLifetime: 10
+  arcHeight: 1
+  explosionRadius: 20
+  explosionForce: 15
+  explosionLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  explosionEffect: {fileID: 8650938231098632368, guid: 6ba1454cd4061fa449ba3e22578c5d5d, type: 3}
+  mortarTrail: {fileID: 809939136776408274}
 --- !u!1001 &7136232260485898420
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -222,6 +233,10 @@ PrefabInstance:
     - target: {fileID: 1718128296080782, guid: e27b3f17703e770488f6117d939da888, type: 3}
       propertyPath: m_Name
       value: Rocket20_Blue
+      objectReference: {fileID: 0}
+    - target: {fileID: 1718128296080782, guid: e27b3f17703e770488f6117d939da888, type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 4023851415100232, guid: e27b3f17703e770488f6117d939da888, type: 3}
       propertyPath: m_LocalScale.x
