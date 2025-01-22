@@ -9,6 +9,7 @@ public class DeployableBase : MonoBehaviour, IDamageable
     [Header("Turret Components")]
     [SerializeField] protected ProjectileBase M_Projectile;
     [SerializeField] protected TurretStats M_TurretStats;
+    [SerializeField] protected Transform TurretMuzzle;
     [SerializeField] protected bool requiresLineOfSight = true;
     [SerializeField] protected LayerMask lineOfSightMask;
 
@@ -197,7 +198,7 @@ public class DeployableBase : MonoBehaviour, IDamageable
         Vector3 targetPos = PredictTargetPosition(ClosestTarget, M_TurretStats.GetProjectileSpeed());
         
         // Spawn and initialize projectile
-        ProjectileBase projectile = Instantiate(M_Projectile, transform.position, Quaternion.identity);
+        ProjectileBase projectile = Instantiate(M_Projectile, TurretMuzzle.position, Quaternion.identity);
         projectile.Initialize(M_TurretStats.GetDamage(), targetPos, M_TurretStats.GetProjectileSpeed());
     }
 

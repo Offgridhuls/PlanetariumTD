@@ -263,7 +263,7 @@ Transform:
   m_GameObject: {fileID: 4204360929741668383}
   serializedVersion: 2
   m_LocalRotation: {x: 0.5, y: -0.5, z: -0.49999997, w: 0.50000006}
-  m_LocalPosition: {x: 0.1329, y: -0.0002, z: -0.0229}
+  m_LocalPosition: {x: 0.1139, y: -0.0002, z: -0.0229}
   m_LocalScale: {x: -0.23874603, y: -0.23874603, z: -0.23874603}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -316,6 +316,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   M_Projectile: {fileID: 2526509629052936677, guid: 756ffe6ec469fbf4693bd5795d17ae5a, type: 3}
   M_TurretStats: {fileID: 11400000, guid: 851dd75c5d628e745a05e982ef134b64, type: 2}
+  TurretMuzzle: {fileID: 6172694075418666337}
   requiresLineOfSight: 1
   lineOfSightMask:
     serializedVersion: 2
@@ -326,10 +327,16 @@ MonoBehaviour:
   deathEffect: {fileID: 0}
   damageEffect: {fileID: 0}
   healthBarPrefab: {fileID: 0}
+  fireSound: {fileID: 0}
+  deathSound: {fileID: 0}
+  soundVolume: 0.5
   onDeath:
     m_PersistentCalls:
       m_Calls: []
   onHealthChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  OnDeployableDeath:
     m_PersistentCalls:
       m_Calls: []
   firePoint: {fileID: 6172694075418666337}
