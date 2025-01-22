@@ -23,6 +23,11 @@ public class DeployableBase : MonoBehaviour, IDamageable
     [SerializeField] protected GameObject healthBarPrefab;
     protected GameObject healthBarInstance;
 
+    [Header("Sound Effects")]
+    [SerializeField] protected AudioClip fireSound;
+    [SerializeField] protected AudioClip deathSound;
+    [SerializeField] protected float soundVolume = 0.5f;
+
     private bool isDead = false;
     protected EnemyBase ClosestTarget;
     protected Vector3 targetPosition;
@@ -34,6 +39,22 @@ public class DeployableBase : MonoBehaviour, IDamageable
 
     public UnityEvent onDeath = new UnityEvent();
     public UnityEvent<float> onHealthChanged = new UnityEvent<float>();
+    public UnityEvent<DeployableBase> OnDeployableDeath = new UnityEvent<DeployableBase>();
+
+    protected AudioSource audioSource;
+
+    protected virtual void Awake()
+    {
+        // Set up audio source if we have sound effects
+        if (fireSound != null || deathSound != null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.spatialBlend = 1f; // 3D sound
+            audioSource.maxDistance = 30f;
+            audioSource.rolloffMode = AudioRolloffMode.Linear;
+            audioSource.volume = soundVolume;
+        }
+    }
 
     protected virtual void Start()
     {
@@ -70,16 +91,17 @@ public class DeployableBase : MonoBehaviour, IDamageable
 
     protected virtual void Die()
     {
-        if (isDead) return;
-        isDead = true;
-        
-        if (deathEffect != null)
+        if (!isDead)
         {
-            Instantiate(deathEffect, transform.position, Quaternion.identity);
+            isDead = true;
+            PlayDeathSound();
+            
+            // Notify any listeners about the death
+            OnDeployableDeath?.Invoke(this);
+            
+            // Destroy the deployable
+            Destroy(gameObject);
         }
-        
-        onDeath?.Invoke();
-        Destroy(gameObject);
     }
 
     public bool IsAlive => !isDead;
@@ -156,12 +178,43 @@ public class DeployableBase : MonoBehaviour, IDamageable
     {
         if (ClosestTarget == null || !HasLineOfSight(ClosestTarget.transform)) return;
 
+        // Play fire sound
+        PlayFireSound();
+        
         // Calculate predicted position if target is moving
         Vector3 targetPos = PredictTargetPosition();
         
         // Spawn and initialize projectile
         ProjectileBase projectile = Instantiate(M_Projectile, transform.position, Quaternion.identity);
         projectile.Initialize(M_TurretStats.GetDamage(), targetPos, M_TurretStats.GetProjectileSpeed());
+    }
+
+    protected virtual void PlayFireSound()
+    {
+        if (audioSource != null && fireSound != null)
+        {
+            audioSource.PlayOneShot(fireSound, soundVolume);
+        }
+    }
+
+    protected virtual void PlayDeathSound()
+    {
+        if (audioSource != null && deathSound != null)
+        {
+            // Create a temporary audio source for the death sound
+            GameObject audioObj = new GameObject("DeathSound");
+            audioObj.transform.position = transform.position;
+            AudioSource tempAudio = audioObj.AddComponent<AudioSource>();
+            tempAudio.clip = deathSound;
+            tempAudio.spatialBlend = 1f;
+            tempAudio.maxDistance = 30f;
+            tempAudio.rolloffMode = AudioRolloffMode.Linear;
+            tempAudio.volume = soundVolume;
+            tempAudio.Play();
+
+            // Destroy the audio object after the sound finishes
+            Destroy(audioObj, deathSound.length + 0.1f);
+        }
     }
 
     protected Vector3 PredictTargetPosition()
