@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 809939136776408274}
   - component: {fileID: 807763393247112747}
   - component: {fileID: 8336235883241234670}
+  - component: {fileID: 3291415098594369821}
   m_Layer: 8
   m_Name: Mortar
   m_TagString: Projectile
@@ -209,12 +210,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   projectileSpeed: 10
-  maxLifetime: 10
+  maxLifetime: 15
   targetLayers:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 65
   effectLifetime: 10
-  arcHeight: 1
+  launchSound: {fileID: 0}
+  hitSound: {fileID: 0}
+  soundVolume: 0.5
+  arcHeight: 7
   explosionRadius: 20
   explosionForce: 15
   explosionLayers:
@@ -222,6 +226,27 @@ MonoBehaviour:
     m_Bits: 4294967295
   explosionEffect: {fileID: 8650938231098632368, guid: 6ba1454cd4061fa449ba3e22578c5d5d, type: 3}
   mortarTrail: {fileID: 809939136776408274}
+--- !u!65 &3291415098594369821
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7377224693683169032}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.42689773, y: 0.47731867, z: 1.09389}
+  m_Center: {x: 0.04528476, y: 0.033998728, z: -0.0011178623}
 --- !u!1001 &7136232260485898420
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -143,14 +143,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3369326511488920860}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.034, y: 0.149, z: 0}
+  m_LocalRotation: {x: -0.6669678, y: -0, z: -0, w: 0.7450866}
+  m_LocalPosition: {x: -0.03400002, y: 0.155, z: 0.008}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 21223678216739637}
   m_Father: {fileID: 4043274889783186814}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -83.667, y: 0, z: 0}
 --- !u!1 &3764585064869267261
 GameObject:
   m_ObjectHideFlags: 0
@@ -316,7 +316,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   M_Projectile: {fileID: 8336235883241234670, guid: ce203af8c8438804b8c0201bce8cece1, type: 3}
   M_TurretStats: {fileID: 11400000, guid: 2fb8645421766174ba17577f98a1207b, type: 2}
-  requiresLineOfSight: 0
+  requiresLineOfSight: 1
   lineOfSightMask:
     serializedVersion: 2
     m_Bits: 1
@@ -326,10 +326,16 @@ MonoBehaviour:
   deathEffect: {fileID: 1163451204420696, guid: 95175aeab20f4d041860eca89a4ddded, type: 3}
   damageEffect: {fileID: 1743637094903878, guid: 021a2f7a2c5bc4449b4c64a66a050e8c, type: 3}
   healthBarPrefab: {fileID: 0}
+  fireSound: {fileID: 0}
+  deathSound: {fileID: 0}
+  soundVolume: 0.5
   onDeath:
     m_PersistentCalls:
       m_Calls: []
   onHealthChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  OnDeployableDeath:
     m_PersistentCalls:
       m_Calls: []
   mortarBarrel: {fileID: 6172694075418666337}

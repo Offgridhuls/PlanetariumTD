@@ -37,29 +37,27 @@ public class MortarTurret : DeployableBase
             Quaternion targetRotation = Quaternion.AngleAxis(currentBarrelAngle, transform.right) * Quaternion.LookRotation(transform.forward, upDirection);
             mortarBarrel.rotation = targetRotation;
         }
+        
+        
+        if (ClosestTarget == null || !ClosestTarget.IsAlive)
+        {
+            ClosestTarget = null;
+        }
+
+        FireTimer += Time.deltaTime;
+        if (FireTimer >= M_TurretStats.GetFireInterval())
+        {
+            FireTimer = 0f;
+            FireTurret();
+        }
+           
+        
     }
 
     
     protected virtual void RotateTowardsTarget(Vector3 target)
     {
-        if (planet != null)
-        {
-            // Calculate direction to target along planet surface
-            Vector3 targetDirection = target - transform.position;
-            Vector3 upDirection = (transform.position - planet.transform.position).normalized;
-            Vector3 projectedDirection = Vector3.ProjectOnPlane(targetDirection, upDirection);
-
-            if (projectedDirection != Vector3.zero)
-            {
-                // Create rotation that looks at target while staying oriented to planet
-                Quaternion targetRotation = Quaternion.LookRotation(projectedDirection, upDirection);
-                transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, M_TurretStats.GetRotationSpeed() * Time.deltaTime);
-            }
-        }
-        else
-        {
-            base.RotateTowardsTarget(target);
-        }
+       
     }
     protected override void FireTurret()
     {

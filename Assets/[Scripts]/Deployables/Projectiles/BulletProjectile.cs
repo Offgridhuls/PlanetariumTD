@@ -16,6 +16,9 @@ public class BulletProjectile : ProjectileBase
         targetPosition = target;
         targetEnemy = enemy;
         isInitialized = true;
+        
+        Vector3 targetDirection = (target - transform.position).normalized;
+        GetComponent<Rigidbody>().AddForce(targetDirection * projectileSpeed, ForceMode.Impulse);
     }
 
     protected override void Update()

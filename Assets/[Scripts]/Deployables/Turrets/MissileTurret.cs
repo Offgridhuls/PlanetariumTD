@@ -7,7 +7,19 @@ public class MissileTurret : DeployableBase
     [Header("Missile Settings")]
     [SerializeField] private Transform firePoint;
 
-  
+
+    protected override void Update()
+    {
+        base.Update();
+        
+        FireTimer += Time.deltaTime;
+        if (FireTimer >= M_TurretStats.GetFireInterval())
+        {
+            FireTimer = 0f;
+            FireTurret();
+        }
+    }
+
     protected override void FireTurret()
     {
         if (ClosestTarget == null || !HasLineOfSight(ClosestTarget.transform)) return;

@@ -12,15 +12,15 @@ public class MachineGun : DeployableBase
 
     protected override void FireTurret()
     {
-        if (ClosestTarget == null || !HasLineOfSight(ClosestTarget.transform)) return;
+        if (ClosestTarget == null) return;
 
         // Calculate predicted position if target is moving
-        Vector3 targetPos = PredictTargetPosition();
+        Vector3 targetPos = PredictTargetPosition(ClosestTarget, M_TurretStats.GetProjectileSpeed());
         
         // Calculate direction to target with optional spread
         Vector3 directionToTarget = (targetPos - firePoint.position).normalized;
         
-        if (useSpread)
+        /*if (useSpread)
         {
             // Add random spread
             float randomSpreadX = Random.Range(-spreadAngle, spreadAngle);
@@ -30,16 +30,27 @@ public class MachineGun : DeployableBase
             
             // Update target position with spread
             targetPos = firePoint.position + directionToTarget * Vector3.Distance(firePoint.position, targetPos);
-        }
+        }*/
         
         // Spawn and initialize projectile
-        ProjectileBase projectile = Instantiate(M_Projectile, firePoint.position, Quaternion.LookRotation(directionToTarget));
+        
+        
+        
+        ProjectileBase projectile = Instantiate(M_Projectile, transform.position, transform.rotation);
         projectile.Initialize(M_TurretStats.GetDamage(), targetPos, M_TurretStats.GetProjectileSpeed());
-        projectile.ShootProjectile(targetPos, ClosestTarget.gameObject);
+        projectile.ShootProjectile(targetPosition, ClosestTarget.gameObject);
     }
  
     protected override void Update()
     {
         base.Update();
+        
+        FireTimer += Time.deltaTime;
+        if (FireTimer >= M_TurretStats.GetFireInterval())
+        {
+            FireTimer = 0f;
+            FireTurret();
+           
+        }
     }
 }

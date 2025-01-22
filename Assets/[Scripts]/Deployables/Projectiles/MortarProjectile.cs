@@ -10,55 +10,114 @@ public class MortarProjectile : ProjectileBase
     [SerializeField] private GameObject explosionEffect;
     [SerializeField] private TrailRenderer mortarTrail;
 
+    
+    private Vector3 startPoint;
+    private Vector3 endPoint;
+    
     private Vector3 startPosition;
     private float journeyLength;
     private float journeyTime;
     private bool hasExploded = false;
-
+    PlanetBase planet;
     public override void ShootProjectile(Vector3 target, GameObject enemy)
     {
         targetPosition = target;
         targetEnemy = enemy;
         startPosition = transform.position;
-        journeyLength = Vector3.Distance(startPosition, targetPosition);
-        journeyTime = journeyLength / projectileSpeed;
         isInitialized = true;
+        
+        planet = FindFirstObjectByType<PlanetBase>();
+        Vector3 randomPoint = GetRandomPointOnSphere(planet.GetPlanetRadius());
+        startPoint = transform.position;
+        endPoint = randomPoint;
+        journeyLength = Vector3.Distance(startPosition, targetPosition);
+        journeyTime = 0f;
     }
 
+    Vector3 GetRandomPointOnSphere(float radius)
+    {
+        // Generate random spherical coordinates
+        float theta = Random.Range(0f, Mathf.PI * 2); // Angle around the equator
+        float phi = Mathf.Acos(Random.Range(-1f, 1f)); // Angle from the pole
+
+        // Convert spherical coordinates to Cartesian coordinates
+        float x = radius * Mathf.Sin(phi) * Mathf.Cos(theta);
+        float y = radius * Mathf.Sin(phi) * Mathf.Sin(theta);
+        float z = radius * Mathf.Cos(phi);
+
+        return new Vector3(x, y, z);
+    }
+    
     protected override void Update()
     {
-        if (!isInitialized || hasExploded) return;
+       if (!isInitialized || planet == null) return;
 
-        // Calculate journey progress
-        aliveTime += Time.deltaTime;
-        float progress = aliveTime / journeyTime;
-
-        if (progress >= 1f)
+        if (journeyTime <= 1f)
         {
-            // Reached target, explode
-            transform.position = targetPosition;
-            HandleHit(gameObject);
-            return;
+            journeyTime += Time.deltaTime * projectileSpeed / journeyLength;
+
+            // Clamp to prevent NaN
+            float clampedJourneyTime = Mathf.Clamp01(journeyTime);
+
+            // Interpolate position along the sphere's surface
+            Vector3 interpolatedPoint = Vector3.Slerp(startPoint, endPoint, clampedJourneyTime);
+            CheckForHits();
+            // Add arc height using sine curve
+            float height = Mathf.Sin(clampedJourneyTime * Mathf.PI) * arcHeight;
+            Vector3 direction = (interpolatedPoint - planet.transform.position).normalized;
+            Vector3 newPosition = interpolatedPoint + direction * height;
+
+            // Validate position before assigning
+            if (!float.IsNaN(newPosition.x) && !float.IsNaN(newPosition.y) && !float.IsNaN(newPosition.z))
+            {
+                transform.position = newPosition;
+
+                // Calculate rotation to face movement direction
+                if (clampedJourneyTime < 1f)
+                {
+                    Vector3 nextInterpolatedPoint = Vector3.Slerp(startPoint, endPoint, Mathf.Clamp01(clampedJourneyTime + 0.01f));
+                    float nextHeight = Mathf.Sin(Mathf.Clamp01(clampedJourneyTime + 0.01f) * Mathf.PI) * arcHeight;
+                    Vector3 nextDirection = (nextInterpolatedPoint - planet.transform.position).normalized;
+                    Vector3 nextPosition = nextInterpolatedPoint + nextDirection * nextHeight;
+
+                    if (!float.IsNaN(nextPosition.x) && !float.IsNaN(nextPosition.y) && !float.IsNaN(nextPosition.z))
+                    {
+                        Vector3 forwardDirection = (nextPosition - transform.position).normalized;
+                        transform.rotation = Quaternion.LookRotation(forwardDirection, direction);
+                    }
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Invalid position calculated for mortar projectile");
+                Destroy(gameObject);
+                return;
+            }
+
+            if (clampedJourneyTime >= maxLifetime)
+            {
+                Explode();
+            }
+        }
+    }
+    
+    private void Explode()
+    {
+        // Create explosion effect
+        if (explosionEffect != null)
+        {
+            Instantiate(explosionEffect, transform.position, Quaternion.identity);
         }
 
-        // Calculate arc motion
-        Vector3 currentPos = Vector3.Lerp(startPosition, targetPosition, progress);
-        float heightOffset = arcHeight * Mathf.Sin(progress * Mathf.PI);
-        currentPos.y += heightOffset;
-        
-        // Update position
-        transform.position = currentPos;
-        
-        // Update rotation to face movement direction
-        if (progress < 1f)
+        // Deal area damage
+        Collider[] hitColliders = Physics.OverlapSphere(transform.position, explosionRadius, explosionLayers);
+        foreach (var hitCollider in hitColliders)
         {
-            Vector3 nextPos = Vector3.Lerp(startPosition, targetPosition, Mathf.Min(1f, progress + 0.1f));
-            nextPos.y += arcHeight * Mathf.Sin(Mathf.Min(1f, progress + 0.1f) * Mathf.PI);
-            transform.rotation = Quaternion.LookRotation((nextPos - currentPos).normalized);
+            HandleHit(hitCollider.gameObject);
         }
 
-        // Check for early hits
-        CheckForHits();
+        OnProjectileHit();
+        Destroy(gameObject);
     }
 
     protected void CheckForHits()

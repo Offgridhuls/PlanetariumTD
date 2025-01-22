@@ -314,13 +314,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a620bc68dd8304e49986d9d4beb744fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Muzzle: {fileID: 6172694075418666337}
-  TurretPivot: {fileID: 6349184743611042079}
-  M_Projectile: {fileID: 4458035295663730333, guid: 01adea6db541a9c409f2ebfadc1ec761, type: 3}
-  M_TurretStats:
-    HealthPoints: 0
-    Damage: 0
-    AgroRadius: 20
-    FireInterval: 2
-    ScrapCost: 0
-    CoinCost: 0
+  M_Projectile: {fileID: 0}
+  M_TurretStats: {fileID: 11400000, guid: e28a6a7a60424354fb5d0f311ab2bbac, type: 2}
+  requiresLineOfSight: 1
+  lineOfSightMask:
+    serializedVersion: 2
+    m_Bits: 0
+  maxHealth: 100
+  currentHealth: 0
+  integrity: 1
+  deathEffect: {fileID: 0}
+  damageEffect: {fileID: 0}
+  healthBarPrefab: {fileID: 0}
+  fireSound: {fileID: 0}
+  deathSound: {fileID: 0}
+  soundVolume: 0.5
+  onDeath:
+    m_PersistentCalls:
+      m_Calls: []
+  onHealthChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  OnDeployableDeath:
+    m_PersistentCalls:
+      m_Calls: []
+  mortarBarrel: {fileID: 0}
+  barrelRotationSpeed: 45
+  minFiringAngle: 45
+  maxFiringAngle: 75
+  firePoint: {fileID: 0}

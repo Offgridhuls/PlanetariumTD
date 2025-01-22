@@ -543,8 +543,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   waveConfig: {fileID: 11400000, guid: 06018356f3ce56749a02627ea16dbaae, type: 2}
+  spawnInterval: 1
   autoStartWaves: 1
   spawnParent: {fileID: 575910176}
+  spawnPoints: []
+  spawnHeight: 10
+  onEnemySpawned:
+    m_PersistentCalls:
+      m_Calls: []
+  onEnemyDied:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &544250320
 GameObject:
   m_ObjectHideFlags: 0

@@ -113,44 +113,56 @@ public class DeployableBase : MonoBehaviour, IDamageable
     {
         if (isDead) return;
 
-        // Update closest target
-        float closestDistance = float.MaxValue;
-        Collider[] colliders = Physics.OverlapSphere(transform.position, M_TurretStats.GetAgroRadius());
-
-        foreach (Collider col in colliders)
+        if (ClosestTarget != null)
         {
-            EnemyBase enemy = col.GetComponent<EnemyBase>();
-            if (enemy != null && enemy.IsAlive)
+            targetPosition = PredictTargetPosition(ClosestTarget, M_TurretStats.GetProjectileSpeed());
+            previousPosition = ClosestTarget.gameObject.transform.position;
+        }
+
+        
+           
+        CheckClosestTarget();
+        if (ClosestTarget != null)
+        { 
+            RotateTowardsTarget(targetPosition);
+        }
+        
+       
+        
+    }
+    
+    void CheckClosestTarget()
+    {
+        Collider[] hitTargets = Physics.OverlapSphere(transform.position, M_TurretStats.GetAgroRadius());
+        EnemyBase closestEnemy = null;
+
+        float closestDistance = M_TurretStats.GetAgroRadius();
+
+        foreach (Collider hitCollider in hitTargets)
+        {
+            if (hitCollider.GetComponent<EnemyBase>() != null)
             {
-                float distance = Vector3.Distance(transform.position, enemy.transform.position);
-                if (distance < closestDistance)
+                //TODO: Implement LOS Check
+                var Enemy = hitCollider.GetComponent<EnemyBase>();
+                float distance = Vector3.Distance(transform.position, Enemy.transform.position);
+                if (distance < closestDistance )
                 {
-                    // Check line of sight if required
-                    if (!requiresLineOfSight || HasLineOfSight(enemy.transform))
+                    if (!requiresLineOfSight || HasLineOfSight(Enemy.transform))
                     {
                         closestDistance = distance;
-                        ClosestTarget = enemy;
-                        targetPosition = enemy.transform.position;
+                        closestEnemy = Enemy; 
                     }
+                    
                 }
+                
+                
             }
         }
 
-        if (ClosestTarget == null || !ClosestTarget.IsAlive)
-        {
-            ClosestTarget = null;
-        }
-
-        if (!isDead && ClosestTarget != null)
-        {
-            RotateTowardsTarget(ClosestTarget.transform.position);
-            FireTimer += Time.deltaTime;
-            if (FireTimer >= M_TurretStats.GetFireInterval())
-            {
-                FireTimer = 0f;
-                FireTurret();
-            }
-        }
+        
+      
+       
+        ClosestTarget = closestEnemy;
     }
 
     protected bool HasLineOfSight(Transform target)
@@ -182,7 +194,7 @@ public class DeployableBase : MonoBehaviour, IDamageable
         PlayFireSound();
         
         // Calculate predicted position if target is moving
-        Vector3 targetPos = PredictTargetPosition();
+        Vector3 targetPos = PredictTargetPosition(ClosestTarget, M_TurretStats.GetProjectileSpeed());
         
         // Spawn and initialize projectile
         ProjectileBase projectile = Instantiate(M_Projectile, transform.position, Quaternion.identity);
@@ -217,68 +229,20 @@ public class DeployableBase : MonoBehaviour, IDamageable
         }
     }
 
-    protected Vector3 PredictTargetPosition()
+    public Vector3 PredictTargetPosition(EnemyBase target, float bulletSpeed)
     {
-        if (ClosestTarget == null) return Vector3.zero;
+        enemyVelocity = (target.gameObject.transform.position - previousPosition) / Time.deltaTime;
 
-        // Get target's rigidbody and current position
-        Rigidbody targetRb = ClosestTarget.GetComponent<Rigidbody>();
-        Vector3 targetPos = ClosestTarget.transform.position;
-        
-        if (targetRb == null) return targetPos;
-
-        // Get projectile spawn position (either firePoint or turret position)
-        Vector3 firePosition = transform.position;
-        if (GetComponentInChildren<Transform>().Find("FirePoint") != null)
+        if (enemyVelocity.magnitude > 0)
         {
-            firePosition = GetComponentInChildren<Transform>().Find("FirePoint").position;
+            float distanceToTarget = Vector3.Distance(transform.position, target.transform.position);
+            float travelTime = distanceToTarget / bulletSpeed;
+            return target.transform.position + enemyVelocity * travelTime;
         }
-
-        // Calculate initial distance and time
-        float distanceToTarget = Vector3.Distance(firePosition, targetPos);
-        float projectileSpeed = M_TurretStats.GetProjectileSpeed();
-        
-        if (projectileSpeed <= 0) return targetPos;
-
-        // Calculate time for projectile to reach target's current position
-        float timeToTarget = distanceToTarget / projectileSpeed;
-
-        // Get target velocity and adjust for gravity if applicable
-        Vector3 targetVelocity = targetRb.linearVelocity;
-        bool isTargetAffectedByGravity = targetRb.useGravity;
-        
-        // Predict position using iterative approach for better accuracy
-        const int maxIterations = 3;
-        for (int i = 0; i < maxIterations; i++)
+        else
         {
-            // Calculate predicted position based on velocity and time
-            Vector3 predictedPos = targetPos + (targetVelocity * timeToTarget);
-            
-            // Add gravity influence if applicable
-            if (isTargetAffectedByGravity)
-            {
-                predictedPos += 0.5f * Physics.gravity * timeToTarget * timeToTarget;
-            }
-            
-            // Recalculate distance and time based on predicted position
-            float newDistance = Vector3.Distance(firePosition, predictedPos);
-            float newTimeToTarget = newDistance / projectileSpeed;
-            
-            // Update time if it changed significantly
-            if (Mathf.Abs(newTimeToTarget - timeToTarget) < 0.1f)
-                break;
-                
-            timeToTarget = newTimeToTarget;
+            return target.transform.position;
         }
-
-        // Calculate final predicted position
-        Vector3 finalPredictedPos = targetPos + (targetVelocity * timeToTarget);
-        if (isTargetAffectedByGravity)
-        {
-            finalPredictedPos += 0.5f * Physics.gravity * timeToTarget * timeToTarget;
-        }
-
-        return finalPredictedPos;
     }
 
     protected virtual void RotateTowardsTarget(Vector3 target)

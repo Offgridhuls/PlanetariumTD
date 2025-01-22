@@ -19,7 +19,8 @@ public abstract class ProjectileBase : MonoBehaviour
     protected bool isInitialized;
     protected float aliveTime;
     protected AudioSource audioSource;
-
+    protected Rigidbody rigidBody;
+    
     protected virtual void Awake()
     {
         // Set up audio source if we have sound effects
@@ -31,6 +32,8 @@ public abstract class ProjectileBase : MonoBehaviour
             audioSource.rolloffMode = AudioRolloffMode.Linear;
             audioSource.volume = soundVolume;
         }
+        
+        rigidBody = GetComponent<Rigidbody>();
     }
 
     public virtual void Initialize(int damage, Vector3 target, float speed)

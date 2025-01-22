@@ -13,7 +13,7 @@ public abstract class EnemyBase : FSMC_Executer, IDamageable
     [Header("Enemy Settings")]
     [SerializeField] protected float maxHealth = 100f;
     [SerializeField] protected float currentHealth;
-    [SerializeField] protected float integrity = 1f;
+    [SerializeField] protected float integrity = 0.5f;
     [SerializeField] protected bool isDead = false;
 
     [Header("Effects")]

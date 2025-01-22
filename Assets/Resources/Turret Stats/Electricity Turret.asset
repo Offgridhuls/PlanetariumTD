@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8dc4c6e22905eaf418e3a0bab31059b7, type: 3}
-  m_Name: Mortar Stats
+  m_Name: Electricity Turret
   m_EditorClassIdentifier: 
   turretName: Mortar
   healthPoints: 100
   damage: 10
-  fireInterval: 7
+  fireInterval: 6
   agroRadius: 400
   rotationSpeed: 180
   projectileSpeed: 3
