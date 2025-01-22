@@ -2,30 +2,24 @@ using UnityEngine;
 
 public abstract class ProjectileBase : MonoBehaviour
 {
-    [Header("Projectile Settings")]
+    [Header("Base Projectile Settings")]
     [SerializeField] protected float projectileSpeed = 20f;
-    [SerializeField] protected float lifetime = 3f;
-    [SerializeField] protected GameObject hitEffect;
+    [SerializeField] protected float maxLifetime = 3f;
     [SerializeField] protected LayerMask targetLayers;
+    [SerializeField] protected float effectLifetime = 2f;
 
-    protected int damage;
     protected Vector3 targetPosition;
+    protected GameObject targetEnemy;
+    protected int damage;
     protected bool isInitialized;
     protected float aliveTime;
-    protected GameObject targetEnemy;
-    protected Rigidbody rigidBody;
 
-    protected virtual void Awake()
-    {
-        rigidBody = GetComponent<Rigidbody>();
-    }
-
-    public virtual void Initialize(int damage, Vector3 target)
+    public virtual void Initialize(int damage, Vector3 target, float speed)
     {
         this.damage = damage;
         this.targetPosition = target;
-        this.isInitialized = true;
-        this.aliveTime = 0f;
+        this.projectileSpeed = speed;
+        aliveTime = 0f;
     }
 
     public abstract void ShootProjectile(Vector3 target, GameObject enemy);
@@ -35,83 +29,50 @@ public abstract class ProjectileBase : MonoBehaviour
         if (!isInitialized) return;
 
         aliveTime += Time.deltaTime;
-        if (aliveTime >= lifetime)
+        if (aliveTime >= maxLifetime)
         {
+            OnProjectileHit();
             Destroy(gameObject);
             return;
         }
-
-        MoveProjectile();
-        CheckCollisions();
     }
 
-    protected virtual void MoveProjectile()
+    protected virtual void OnTriggerEnter(Collider other)
     {
-        Vector3 direction = (targetPosition - transform.position).normalized;
-        transform.position += direction * projectileSpeed * Time.deltaTime;
-        transform.rotation = Quaternion.LookRotation(direction);
-    }
+        if (!isInitialized) return;
 
-    protected virtual void CheckCollisions()
-    {
-        RaycastHit[] hits = Physics.SphereCastAll(
-            transform.position,
-            0.5f,
-            transform.forward,
-            projectileSpeed * Time.deltaTime,
-            targetLayers
-        );
-
-        foreach (RaycastHit hit in hits)
+        // Check if we hit something in our target layers
+        if (((1 << other.gameObject.layer) & targetLayers) != 0)
         {
-            HandleHit(hit);
+            HandleHit(other.gameObject);
         }
     }
 
-    protected virtual void HandleHit(RaycastHit hit)
+    protected virtual void HandleHit(GameObject hitObject)
     {
-        DealDamage(hit.collider.gameObject);
-        if (hitEffect != null)
+        var damageable = hitObject.GetComponent<IDamageable>();
+        if (damageable != null)
         {
-            Instantiate(hitEffect, hit.point, Quaternion.LookRotation(hit.normal));
+            DamageData damageData = new DamageData
+            {
+                Damage = damage,
+                Source = gameObject
+            };
+            damageable.ProcessDamage(damageData);
         }
+
         OnProjectileHit();
         Destroy(gameObject);
     }
 
-    protected virtual void DealDamage(GameObject target)
+    public virtual void OnProjectileHit()
     {
-        var damageable = target.GetComponent<IDamageable>();
-        if (damageable != null)
-        {
-            damageable.TakeDamage(damage);
-        }
+        // Override in derived classes for specific hit effects
     }
 
-    public abstract void OnProjectileHit();
-
-    public float GetProjectileSpeed()
+    protected virtual void OnDestroy()
     {
-        return projectileSpeed;
-    }
-
-    public void SetProjectileSpeed(float speed)
-    {
-        projectileSpeed = speed;
-    }
-
-    public float GetLifetime()
-    {
-        return lifetime;
-    }
-
-    public void SetLifetime(float time)
-    {
-        lifetime = time;
-    }
-
-    public void SetDamage(int amount)
-    {
-        damage = amount;
+        // Cleanup any remaining effects
+        OnProjectileHit();
     }
 }

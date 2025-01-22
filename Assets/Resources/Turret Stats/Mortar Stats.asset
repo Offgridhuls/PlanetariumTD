@@ -18,7 +18,7 @@ MonoBehaviour:
   fireInterval: 6
   agroRadius: 400
   rotationSpeed: 180
-  projectileSpeed: 20
-  projectileLifetime: 100
+  projectileSpeed: 8
+  projectileLifetime: 20
   scrapCost: 10
   coinCost: 10

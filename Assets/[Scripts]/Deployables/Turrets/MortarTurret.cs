@@ -74,14 +74,14 @@ public class MortarTurret : DeployableBase
 
             // Spawn and initialize projectile
             ProjectileBase projectile = Instantiate(M_Projectile, spawnPosition, spawnRotation);
-            projectile.Initialize((int)M_TurretStats.GetDamage(), ClosestTarget.transform.position);
+            projectile.Initialize((int)M_TurretStats.GetDamage(), ClosestTarget.transform.position, M_TurretStats.GetProjectileSpeed());
             projectile.ShootProjectile(ClosestTarget.transform.position, ClosestTarget.gameObject);
 
             // Add initial velocity in the direction of the barrel
             Rigidbody rb = projectile.GetComponent<Rigidbody>();
             if (rb != null)
             {
-                rb.linearVelocity = spawnRotation * Vector3.forward * projectile.GetProjectileSpeed();
+                rb.linearVelocity = spawnRotation * Vector3.forward * 20f;
             }
         }
     }

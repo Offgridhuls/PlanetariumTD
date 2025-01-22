@@ -316,16 +316,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   M_Projectile: {fileID: 8336235883241234670, guid: ce203af8c8438804b8c0201bce8cece1, type: 3}
   M_TurretStats: {fileID: 11400000, guid: 2fb8645421766174ba17577f98a1207b, type: 2}
+  requiresLineOfSight: 0
+  lineOfSightMask:
+    serializedVersion: 2
+    m_Bits: 1
   maxHealth: 100
   currentHealth: 0
   integrity: 1
   deathEffect: {fileID: 1163451204420696, guid: 95175aeab20f4d041860eca89a4ddded, type: 3}
   damageEffect: {fileID: 1743637094903878, guid: 021a2f7a2c5bc4449b4c64a66a050e8c, type: 3}
   healthBarPrefab: {fileID: 0}
-  onHealthChanged:
+  onDeath:
     m_PersistentCalls:
       m_Calls: []
-  onDeath:
+  onHealthChanged:
     m_PersistentCalls:
       m_Calls: []
   mortarBarrel: {fileID: 6172694075418666337}

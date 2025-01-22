@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 8520035026620119503}
   m_Layer: 0
   m_Name: ChainLightning
-  m_TagString: Untagged
+  m_TagString: Projectile
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -46,9 +46,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7e2c59309227da246a3146cba2596591, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ImpactFX: {fileID: 0}
-  ProjectileSpeed: 5
+  projectileSpeed: 20
+  maxLifetime: 3
+  targetLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  effectLifetime: 2
   arcHeight: 5
+  explosionRadius: 8
+  explosionForce: 15
+  explosionLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  explosionEffect: {fileID: 0}
+  mortarTrail: {fileID: 0}
 --- !u!23 &3532299476712163651
 MeshRenderer:
   m_ObjectHideFlags: 0

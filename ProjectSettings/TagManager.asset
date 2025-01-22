@@ -8,6 +8,7 @@ TagManager:
   - FxTemporaire
   - Enemy
   - Turret
+  - Projectile
   layers:
   - Default
   - TransparentFX

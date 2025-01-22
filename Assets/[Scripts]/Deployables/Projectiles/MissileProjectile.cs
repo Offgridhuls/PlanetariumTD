@@ -4,76 +4,112 @@ public class MissileProjectile : ProjectileBase
 {
     [Header("Missile Settings")]
     [SerializeField] private float turnSpeed = 180f;
-    [SerializeField] private float explosionRadius = 3f;
+    [SerializeField] private float explosionRadius = 5f;
+    [SerializeField] private float explosionForce = 10f;
     [SerializeField] private LayerMask explosionLayers;
-    [SerializeField] private float proximityThreshold = 0.5f;
+    [SerializeField] private GameObject explosionEffect;
+    [SerializeField] private TrailRenderer missileTrail;
 
-    private bool isLaunched = false;
-
-    protected override void Awake()
-    {
-        base.Awake();
-    }
+    private Vector3 currentVelocity;
+    private bool hasExploded = false;
 
     public override void ShootProjectile(Vector3 target, GameObject enemy)
     {
         targetPosition = target;
         targetEnemy = enemy;
-        isLaunched = true;
+        currentVelocity = transform.forward * projectileSpeed;
         isInitialized = true;
-
-        // Initial orientation
-        Vector3 direction = (target - transform.position).normalized;
-        transform.LookAt(target);
     }
 
-    protected override void MoveProjectile()
+    protected override void Update()
     {
-        if (!isLaunched || targetEnemy == null) return;
+        if (!isInitialized || hasExploded) return;
 
-        // Update target position to follow enemy
-        targetPosition = targetEnemy.transform.position;
-        Vector3 direction = (targetPosition - transform.position).normalized;
+        // Update target position if enemy is still alive
+        if (targetEnemy != null)
+        {
+            targetPosition = targetEnemy.transform.position;
+        }
+
+        // Calculate direction to target
+        Vector3 directionToTarget = (targetPosition - transform.position).normalized;
         
         // Smoothly rotate towards target
-        Quaternion targetRotation = Quaternion.LookRotation(direction);
+        Quaternion targetRotation = Quaternion.LookRotation(directionToTarget);
         transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, turnSpeed * Time.deltaTime);
 
-        // Apply movement using rigidbody
-        if (rigidBody != null)
-        {
-            rigidBody.linearVelocity = transform.forward * projectileSpeed;
-        }
-        else
-        {
-            transform.position += transform.forward * projectileSpeed * Time.deltaTime;
-        }
+        // Update velocity based on rotation
+        currentVelocity = Vector3.Lerp(currentVelocity, transform.forward * projectileSpeed, Time.deltaTime * 5f);
+        
+        // Move missile
+        transform.position += currentVelocity * Time.deltaTime;
 
-        // Check if we're close enough to explode
-        if (Vector3.Distance(transform.position, targetPosition) < proximityThreshold)
+        // Check for hits
+        CheckForHits();
+    }
+
+    protected void CheckForHits()
+    {
+        Collider[] colliders = Physics.OverlapSphere(transform.position, 0.5f, targetLayers);
+        foreach (Collider col in colliders)
         {
-            Explode();
+            if (col.gameObject != gameObject)
+            {
+                HandleHit(col.gameObject);
+                break;
+            }
         }
     }
 
-    protected override void HandleHit(RaycastHit hit)
+    protected override void HandleHit(GameObject hitObject)
     {
-        Explode();
-    }
+        if (hasExploded) return;
+        hasExploded = true;
 
-    private void Explode()
-    {
         // Create explosion effect
-        if (hitEffect != null)
+        if (explosionEffect != null)
         {
-            Instantiate(hitEffect, transform.position, Quaternion.identity);
+            GameObject effect = Instantiate(explosionEffect, transform.position, Quaternion.identity);
+            Destroy(effect, effectLifetime);
         }
 
-        // Deal damage to all objects in radius
-        Collider[] hitColliders = Physics.OverlapSphere(transform.position, explosionRadius, explosionLayers);
-        foreach (var hitCollider in hitColliders)
+        // Disable trail
+        if (missileTrail != null)
         {
-            DealDamage(hitCollider.gameObject);
+            missileTrail.enabled = false;
+        }
+
+        // Apply explosion force and damage to nearby objects
+        Collider[] colliders = Physics.OverlapSphere(transform.position, explosionRadius, explosionLayers);
+        foreach (Collider col in colliders)
+        {
+            // Apply explosion force to rigidbodies
+            Rigidbody rb = col.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.AddExplosionForce(explosionForce, transform.position, explosionRadius, 1f, ForceMode.Impulse);
+            }
+
+            // Deal damage with falloff based on distance
+            float distance = Vector3.Distance(transform.position, col.transform.position);
+            float damageMultiplier = 1f - (distance / explosionRadius);
+            if (damageMultiplier > 0)
+            {
+                var damageable = col.GetComponent<IDamageable>();
+                if (damageable != null)
+                {
+                    int finalDamage = Mathf.RoundToInt(damage * damageMultiplier);
+                    if (finalDamage > 0)
+                    {
+                        DamageData damageData = new DamageData
+                        {
+                            Damage = finalDamage,
+                            Source = gameObject
+                        };
+                        damageable.ProcessDamage(damageData);
+                    }
+                }
+            }
         }
 
         OnProjectileHit();
@@ -82,7 +118,11 @@ public class MissileProjectile : ProjectileBase
 
     public override void OnProjectileHit()
     {
-        // Additional effects or cleanup can be added here
+        // Cleanup or additional effects when missile hits
+        if (missileTrail != null)
+        {
+            missileTrail.enabled = false;
+        }
     }
 
     private void OnDrawGizmosSelected()

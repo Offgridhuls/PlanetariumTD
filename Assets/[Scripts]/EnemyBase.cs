@@ -4,16 +4,17 @@ using UnityEngine;
 using FSMC.Runtime;
 using UnityEngine.Events;
 
-public class EnemyBase : FSMC_Executer, IDamageable
+public abstract class EnemyBase : FSMC_Executer, IDamageable
 {
     [Header("Components")]
     protected PlanetBase currentPlanet;
-    [SerializeField] protected EnemyStats enemyStats;
+    [SerializeField] protected EnemySpawnData enemyStats;
 
-    [Header("Health Settings")]
+    [Header("Enemy Settings")]
     [SerializeField] protected float maxHealth = 100f;
     [SerializeField] protected float currentHealth;
     [SerializeField] protected float integrity = 1f;
+    [SerializeField] protected bool isDead = false;
 
     [Header("Effects")]
     [SerializeField] protected GameObject deathEffect;
@@ -30,15 +31,21 @@ public class EnemyBase : FSMC_Executer, IDamageable
     public UnityEvent<int> onScoreGained;
     public UnityEvent<int> onResourceGained;
 
-    #region IDamageable Implementation
-    public float CurrentHealth => currentHealth;
-    public float MaxHealth => maxHealth;
-    public bool IsAlive => currentHealth > 0;
+    public virtual DamageableType GetDamageableType()
+    {
+        return DamageableType.Enemy;
+    }
+
+    public virtual void ProcessDamage(DamageData data)
+    {
+        if (isDead) return;
+        float damage = data.Damage * (1f / integrity);
+        TakeDamage(damage);
+    }
 
     public virtual void TakeDamage(float damage)
     {
-        if (!IsAlive) return;
-
+        if (isDead) return;
         damage *= (1f - integrity);
         currentHealth = Mathf.Max(0f, currentHealth - damage);
 
@@ -49,12 +56,15 @@ public class EnemyBase : FSMC_Executer, IDamageable
 
         onHealthChanged?.Invoke(GetHealthPercentage());
 
-        if (!IsAlive)
+        if (currentHealth <= 0)
         {
             Die();
         }
     }
-    #endregion
+
+    public bool IsAlive => currentHealth > 0;
+    public float CurrentHealth => currentHealth;
+    public float MaxHealth => maxHealth;
 
     protected override void Start()
     {
@@ -74,16 +84,19 @@ public class EnemyBase : FSMC_Executer, IDamageable
         base.Start();
     }
 
-    public void SetMaxHealth(float health)
+    public void ProcessSpawnData(EnemySpawnData spawnData, float speedMult, bool elite)
     {
-        maxHealth = health;
-        currentHealth = health;
+        enemyStats = spawnData;
+        maxHealth = spawnData.maxHealth * (elite ? 2f : 1f);
+        currentHealth = maxHealth;
+        integrity = spawnData.integrity;
         onHealthChanged?.Invoke(GetHealthPercentage());
     }
 
     public void SetIntegrity(float value)
     {
         integrity = value;
+        Debug.Log("Integrity set to: " + integrity);
     }
 
     public void SetEffects(GameObject death, GameObject damage, GameObject healthBar)
@@ -106,7 +119,8 @@ public class EnemyBase : FSMC_Executer, IDamageable
 
     protected virtual void Die()
     {
-        if (!IsAlive) return;
+        if (isDead) return;
+        isDead = true;
 
         if (deathEffect != null)
         {
@@ -139,7 +153,7 @@ public class EnemyBase : FSMC_Executer, IDamageable
         return currentPlanet;
     }
 
-    public EnemyStats GetStats()
+    public EnemySpawnData GetStats()
     {
         return enemyStats;
     }
@@ -153,7 +167,7 @@ public class EnemyBase : FSMC_Executer, IDamageable
             var planetDamageable = planet.GetComponent<IDamageable>();
             if (planetDamageable != null)
             {
-                planetDamageable.TakeDamage(enemyStats.GetDamage());
+                planetDamageable.TakeDamage(enemyStats.damage);
             }
             else
             {

@@ -12,9 +12,8 @@ GameObject:
   - component: {fileID: 4965666668053814821}
   - component: {fileID: 4687432802531861276}
   - component: {fileID: 8588679846482464613}
-  - component: {fileID: 7087111338018079074}
-  - component: {fileID: 364324734398955337}
   - component: {fileID: 6451041024947094753}
+  - component: {fileID: -8260107237632147141}
   m_Layer: 6
   m_Name: Enemy
   m_TagString: Enemy
@@ -111,55 +110,6 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &7087111338018079074
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3507184854093064820}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dd22b67eac5f17541958a6f07324f41c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _controller: {fileID: 11400000, guid: 3002eaf9c716ca147abac9daf4bd3b25, type: 2}
-  enemyStats: {fileID: 11400000, guid: c18692156e0ae204db1e8caba5d7e9cf, type: 2}
-  maxHealth: 100
-  currentHealth: 0
-  integrity: 1
-  deathEffect: {fileID: 1368782967120030, guid: bdbdcfd7c511df246af535551f842df5, type: 3}
-  damageEffect: {fileID: 1850347689673190, guid: 45d4c8d9ea9159743b0fa0c998a36c56, type: 3}
-  healthBarPrefab: {fileID: 0}
-  scoreValue: 10
-  resourceValue: 5
-  onHealthChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  onDeath:
-    m_PersistentCalls:
-      m_Calls: []
-  onScoreGained:
-    m_PersistentCalls:
-      m_Calls: []
-  onResourceGained:
-    m_PersistentCalls:
-      m_Calls: []
---- !u!114 &364324734398955337
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3507184854093064820}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e06888c0065458b4a9a6bd0d15e0673d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  DamageData:
-    Damage: 0
-    DamageMultiplier: 0
 --- !u!54 &6451041024947094753
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -187,3 +137,38 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &-8260107237632147141
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3507184854093064820}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 951e64076df616649972c81350a6bf9c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _controller: {fileID: 11400000, guid: 3002eaf9c716ca147abac9daf4bd3b25, type: 2}
+  enemyStats: {fileID: 11400000, guid: 65de817243cb69c4c927e4e90d03a647, type: 2}
+  maxHealth: 100
+  currentHealth: 0
+  integrity: 0.1
+  isDead: 0
+  deathEffect: {fileID: 0}
+  damageEffect: {fileID: 0}
+  healthBarPrefab: {fileID: 0}
+  scoreValue: 10
+  resourceValue: 5
+  onHealthChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  onDeath:
+    m_PersistentCalls:
+      m_Calls: []
+  onScoreGained:
+    m_PersistentCalls:
+      m_Calls: []
+  onResourceGained:
+    m_PersistentCalls:
+      m_Calls: []

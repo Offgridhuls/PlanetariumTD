@@ -1,15 +1,20 @@
-using System.Collections.Generic;
 using UnityEngine;
-using System.Linq;
+using UnityEngine.Events;
+using System.Collections.Generic;
 
 public class EnemyManager : MonoBehaviour
 {
     public static EnemyManager Instance { get; private set; }
 
     [Header("Wave Configuration")]
-    [SerializeField] private WaveConfiguration waveConfig;
+    public WaveConfiguration waveConfig; // Made public for GameStateManager
+    [SerializeField] private float spawnInterval = 1f;
     [SerializeField] private bool autoStartWaves = true;
     [SerializeField] private Transform spawnParent;
+
+    [Header("Spawn Settings")]
+    [SerializeField] private Transform[] spawnPoints;
+    [SerializeField] private float spawnHeight = 10f;
 
     private PlanetBase planet;
     private int currentWaveNumber = 0;
@@ -18,12 +23,13 @@ public class EnemyManager : MonoBehaviour
     private Queue<(EnemySpawnData data, float delay)> currentWaveQueue = new Queue<(EnemySpawnData data, float delay)>();
     private List<EnemyBase> activeEnemies = new List<EnemyBase>();
     private Dictionary<string, EnemySpawnData> cachedEnemyData = new Dictionary<string, EnemySpawnData>();
+    private float playerPerformance = 1f;
 
+    public UnityEvent onEnemySpawned = new UnityEvent();
+    public UnityEvent onEnemyDied = new UnityEvent();
     public System.Action<int> onWaveStart;
     public System.Action<int> onWaveComplete;
     public System.Action<float> onWaveProgress;
-
-    private float playerPerformance = 1f;
 
     private void Awake()
     {
@@ -36,18 +42,17 @@ public class EnemyManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-
-        // Cache enemy data from Resources folder
-        EnemySpawnData[] enemyDataArray = Resources.LoadAll<EnemySpawnData>("Enemies");
-        foreach (var data in enemyDataArray)
-        {
-            cachedEnemyData[data.name] = data;
-        }
     }
 
     private void Start()
     {
-        planet = Object.FindFirstObjectByType<PlanetBase>();
+        planet = FindFirstObjectByType<PlanetBase>();
+        if (planet == null)
+        {
+            Debug.LogError("No planet found in scene!");
+            return;
+        }
+
         if (spawnParent == null)
         {
             spawnParent = transform;
@@ -64,18 +69,19 @@ public class EnemyManager : MonoBehaviour
         if (currentWaveQueue.Count > 0 && Time.time >= nextSpawnTime)
         {
             SpawnNextEnemy();
-            
-            // Update wave progress
-            float progress = 1f - (float)currentWaveQueue.Count / GetTotalEnemiesInWave();
-            onWaveProgress?.Invoke(progress);
         }
-        else if (currentWaveQueue.Count == 0 && activeEnemies.Count == 0 && Time.time >= nextWaveTime)
+
+        if (currentWaveQueue.Count == 0 && activeEnemies.Count == 0 && Time.time >= nextWaveTime)
         {
             StartNextWave();
         }
 
-        // Clean up destroyed enemies
-        activeEnemies.RemoveAll(e => e == null);
+        UpdateActiveEnemies();
+    }
+
+    private void UpdateActiveEnemies()
+    {
+        activeEnemies.RemoveAll(enemy => enemy == null);
     }
 
     public void StartNextWave()
@@ -86,6 +92,8 @@ public class EnemyManager : MonoBehaviour
             Debug.LogError("No wave configuration assigned!");
             return;
         }
+
+        onWaveStart?.Invoke(currentWaveNumber);
 
         // Calculate wave parameters
         int totalEnemies = waveConfig.CalculateWaveEnemyCount(currentWaveNumber, playerPerformance);
@@ -101,7 +109,6 @@ public class EnemyManager : MonoBehaviour
         
         // Clear and populate wave queue
         currentWaveQueue.Clear();
-        int spawnIndex = 0;
         foreach (var kvp in composition)
         {
             var enemyConfig = waveConfig.enemyTypes.Find(x => x.enemyData == kvp.Key);
@@ -111,16 +118,13 @@ public class EnemyManager : MonoBehaviour
             {
                 float spawnDelay = Random.Range(enemyConfig.minSpawnDelay, enemyConfig.maxSpawnDelay);
                 currentWaveQueue.Enqueue((kvp.Key, spawnDelay));
-                spawnIndex++;
             }
         }
 
-        // Set timers
         nextWaveTime = Time.time + waveDelay;
         nextSpawnTime = Time.time;
-        
-        Debug.Log($"Starting Wave {currentWaveNumber} with {totalEnemies} enemies");
-        onWaveStart?.Invoke(currentWaveNumber);
+
+        onWaveProgress?.Invoke(CalculateWaveProgress());
     }
 
     private void SpawnNextEnemy()
@@ -140,24 +144,18 @@ public class EnemyManager : MonoBehaviour
             GetTotalEnemiesInWave() - currentWaveQueue.Count,
             GetTotalEnemiesInWave(),
             planet.transform.position,
-            planet.GetPlanetRadius(),
-            enemyData.spawnParams.spawnHeight
+            spawnHeight,
+            planet.GetPlanetRadius()
         );
 
-        GameObject enemyObj = Instantiate(enemyData.enemyPrefab, spawnPosition, Quaternion.identity, spawnParent);
-        
-        // Configure the enemy
-        EnemyBase enemy = enemyObj.GetComponent<EnemyBase>();
+        GameObject enemyObject = Instantiate(enemyData.enemyPrefab, spawnPosition, Quaternion.identity, spawnParent);
+        EnemyBase enemy = enemyObject.GetComponent<EnemyBase>();
+
         if (enemy != null)
         {
             ConfigureEnemy(enemy, enemyData);
             activeEnemies.Add(enemy);
-        }
-
-        // Spawn effect
-        if (enemyData.spawnEffect != null)
-        {
-            Instantiate(enemyData.spawnEffect, spawnPosition, Quaternion.identity);
+            onEnemySpawned.Invoke();
         }
 
         nextSpawnTime = Time.time + spawnDelay;
@@ -172,7 +170,7 @@ public class EnemyManager : MonoBehaviour
 
         // Check for elite status
         bool isElite = false;
-        if (enemyConfig != null && enemyConfig.canBeElite)
+        if (enemyConfig != null)
         {
             float eliteChance = enemyConfig.eliteChance;
             var modifier = waveConfig.GetWaveModifier(currentWaveNumber);
@@ -189,44 +187,34 @@ public class EnemyManager : MonoBehaviour
             speedMultiplier = waveConfig.GetSpeedMultiplier(currentWaveNumber, true);
         }
 
-        // Set up health
-        enemy.SetMaxHealth(spawnData.maxHealth * healthMultiplier);
-        enemy.SetIntegrity(spawnData.baseIntegrity);
+        // Configure enemy with modified stats
+        enemy.ProcessSpawnData(spawnData, speedMultiplier, isElite);
+        enemy.onDeath.AddListener(() => OnEnemyDied(enemy));
 
-        // Configure flying enemy parameters if applicable
-        if (spawnData.isFlying && enemy is FlyingEnemyBase flyingEnemy)
-        {
-            flyingEnemy.SetFlightParameters(spawnData.heightVariation, spawnData.heightChangeSpeed);
-        }
-
-        // Set effects
-        enemy.SetEffects(spawnData.deathEffect, spawnData.damageEffect, spawnData.healthBarPrefab);
-        
-        // Set rewards
-        enemy.SetRewards(spawnData.scoreValue, spawnData.resourceValue);
-
-        // Apply elite visual changes if needed
-        if (isElite && enemyConfig != null)
+        // Set materials for elite enemies
+        if (isElite && enemyConfig != null && enemyConfig.eliteMaterial != null)
         {
             var renderer = enemy.GetComponentInChildren<Renderer>();
             if (renderer != null)
             {
-                var materials = renderer.materials;
-                foreach (var material in materials)
+                Material[] materials = renderer.materials;
+                for (int i = 0; i < materials.Length; i++)
                 {
-                    material.color = enemyConfig.eliteColor;
+                    materials[i] = enemyConfig.eliteMaterial;
                 }
                 renderer.materials = materials;
             }
         }
     }
 
-    public void UpdatePlayerPerformance(float performance)
+    private void OnEnemyDied(EnemyBase enemy)
     {
-        playerPerformance = Mathf.Clamp(performance, 0.5f, 1.5f);
+        activeEnemies.Remove(enemy);
+        onEnemyDied.Invoke();
+        onWaveProgress?.Invoke(CalculateWaveProgress());
     }
 
-    public EnemySpawnData GetEnemyData(string enemyName)
+    private EnemySpawnData GetEnemyData(string enemyName)
     {
         if (cachedEnemyData.TryGetValue(enemyName, out EnemySpawnData data))
         {
@@ -248,9 +236,21 @@ public class EnemyManager : MonoBehaviour
         }
     }
 
-    public int GetCurrentWave() => currentWaveNumber;
+    public void UpdatePlayerPerformance(float performance)
+    {
+        playerPerformance = performance;
+    }
+
+    private float CalculateWaveProgress()
+    {
+        int totalEnemies = GetTotalEnemiesInWave();
+        if (totalEnemies == 0) return 1f;
+        return 1f - ((float)(activeEnemies.Count + currentWaveQueue.Count) / totalEnemies);
+    }
+
     public int GetActiveEnemyCount() => activeEnemies.Count;
     public int GetRemainingEnemies() => currentWaveQueue.Count;
     public int GetTotalEnemiesInWave() => GetActiveEnemyCount() + GetRemainingEnemies();
-    public List<EnemyBase> GetActiveEnemies() => activeEnemies.ToList();
+    public List<EnemyBase> GetActiveEnemies() => activeEnemies;
+    public bool IsWaveInProgress() => currentWaveQueue.Count > 0 || activeEnemies.Count > 0;
 }

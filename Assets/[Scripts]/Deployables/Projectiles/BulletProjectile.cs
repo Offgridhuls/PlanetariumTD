@@ -6,43 +6,70 @@ public class BulletProjectile : ProjectileBase
 {
     [Header("Bullet Settings")]
     [SerializeField] private float penetrationDepth = 0.1f;
-    [SerializeField] private TrailRenderer trail;
+    [SerializeField] private TrailRenderer bulletTrail;
+    [SerializeField] private GameObject hitEffect;
+
+    private Vector3 direction;
 
     public override void ShootProjectile(Vector3 target, GameObject enemy)
     {
         targetPosition = target;
         targetEnemy = enemy;
         isInitialized = true;
-        
-        // Point bullet in the right direction immediately
-        Vector3 direction = (targetPosition - transform.position).normalized;
-        transform.rotation = Quaternion.LookRotation(direction);
     }
 
-    protected override void MoveProjectile()
+    protected override void Update()
     {
+        base.Update();
         if (!isInitialized) return;
-
-        Vector3 direction = (targetPosition - transform.position).normalized;
+        
+        // Move bullet in straight line
+        direction = (targetPosition - transform.position).normalized;
         transform.position += direction * projectileSpeed * Time.deltaTime;
+        
+        // Check for hits
+        CheckForHits();
     }
 
-    protected override void HandleHit(RaycastHit hit)
+    protected void CheckForHits()
+    {
+        RaycastHit[] hits = Physics.RaycastAll(transform.position, direction, projectileSpeed * Time.deltaTime, targetLayers);
+        if (hits.Length > 0)
+        {
+            // Sort hits by distance
+            System.Array.Sort(hits, (a, b) => 
+                (a.point - transform.position).sqrMagnitude.CompareTo((b.point - transform.position).sqrMagnitude));
+            
+            // Handle closest hit
+            HandleHit(hits[0].collider.gameObject);
+        }
+    }
+
+    protected override void HandleHit(GameObject hitObject)
     {
         // Create hit effect
         if (hitEffect != null)
         {
-            Instantiate(hitEffect, hit.point, Quaternion.LookRotation(hit.normal));
+            GameObject effect = Instantiate(hitEffect, transform.position, Quaternion.identity);
+            Destroy(effect, effectLifetime);
+        }
+
+        // Disable trail before destroying
+        if (bulletTrail != null)
+        {
+            bulletTrail.enabled = false;
         }
 
         // Deal damage
-        DealDamage(hit.collider.gameObject);
-
-        // Disable trail if it exists
-        if (trail != null)
+        var damageable = hitObject.GetComponent<IDamageable>();
+        if (damageable != null)
         {
-            trail.transform.SetParent(null);
-            Destroy(trail.gameObject, trail.time);
+            DamageData damageData = new DamageData
+            {
+                Damage = damage,
+                Source = gameObject
+            };
+            damageable.ProcessDamage(damageData);
         }
 
         OnProjectileHit();
@@ -51,6 +78,10 @@ public class BulletProjectile : ProjectileBase
 
     public override void OnProjectileHit()
     {
-        // Additional effects or cleanup can be added here
+        // Cleanup effects
+        if (bulletTrail != null)
+        {
+            bulletTrail.enabled = false;
+        }
     }
 }

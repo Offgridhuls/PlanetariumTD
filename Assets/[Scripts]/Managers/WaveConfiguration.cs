@@ -55,6 +55,7 @@ public class WaveConfiguration : ScriptableObject
         public float eliteDamageMultiplier = 2f;
         public Color eliteColor = Color.red;
 
+        public Material eliteMaterial;
         [Header("Formation Settings")]
         [Range(0f, 360f)]
         public float preferredSpawnArc = 360f;

@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d4ef84d46043db40bab26a324a0b8d5, type: 3}
   m_Name: Starting Wave
   m_EditorClassIdentifier: 
-  baseEnemyCount: 10
+  baseEnemyCount: 15
   enemyCountScaling: 1.5
   waveDelayBase: 5
-  waveDelayReduction: 0.95
+  waveDelayReduction: 0.1
   minWaveDelay: 2
   globalHealthScaling: 1.1
   globalSpeedScaling: 1.05
@@ -30,6 +30,15 @@ MonoBehaviour:
     spawnDelayMultiplier: 1
     spawnPattern: 0
     eliteChanceBonus: 0.029
+  - name: Test
+    waveType: 1
+    minWaveNumber: 7
+    enemyCountMultiplier: 1
+    healthMultiplier: 1
+    speedMultiplier: 1
+    spawnDelayMultiplier: 1
+    spawnPattern: 0
+    eliteChanceBonus: 0.099
   bossWaveSettings:
     firstBossWave: 5
     bossWaveInterval: 5
@@ -40,24 +49,65 @@ MonoBehaviour:
     minionHealthPercent: 0.5
   patternRandomization: 0.2
   enemyTypes:
-  - enemyData: {fileID: 11400000, guid: 94b9f10ee5b19894f82a5feedbbe745d, type: 2}
-    baseSpawnWeight: 1
-    waveProgressionWeight: 1
-    healthScaling: 0
-    speedScaling: 0
-    damageScaling: 0
+  - enemyData: {fileID: 11400000, guid: 65de817243cb69c4c927e4e90d03a647, type: 2}
+    baseSpawnWeight: 0.293
+    waveProgressionWeight: 0.057
+    healthScaling: 1
+    speedScaling: 1
+    damageScaling: 1
     minSpawnDelay: 0
     maxSpawnDelay: 0
-    maxPerWave: 65
+    maxPerWave: 100
     isBoss: 0
-    canBeElite: 0
-    eliteChance: 0
-    eliteHealthMultiplier: 0
-    eliteSpeedMultiplier: 0
-    eliteDamageMultiplier: 0
-    eliteColor: {r: 0, g: 0, b: 0, a: 0}
-    preferredSpawnArc: 0
-    minDistanceFromOthers: 0
+    canBeElite: 1
+    eliteChance: 0.162
+    eliteHealthMultiplier: 2
+    eliteSpeedMultiplier: 3
+    eliteDamageMultiplier: 4
+    eliteColor: {r: 0.509434, g: 0.3484336, b: 0.3484336, a: 0}
+    eliteMaterial: {fileID: 2100000, guid: d0c0c8e5922b6884085ac36efc479758, type: 2}
+    preferredSpawnArc: 31
+    minDistanceFromOthers: 3
+    maintainFormation: 0
+  - enemyData: {fileID: 11400000, guid: 20917f4100764c1428d6b4a2e026e769, type: 2}
+    baseSpawnWeight: 0.323
+    waveProgressionWeight: 0.245
+    healthScaling: 1
+    speedScaling: 1
+    damageScaling: 1
+    minSpawnDelay: 0
+    maxSpawnDelay: 0
+    maxPerWave: 100
+    isBoss: 0
+    canBeElite: 1
+    eliteChance: 0.162
+    eliteHealthMultiplier: 2
+    eliteSpeedMultiplier: 3
+    eliteDamageMultiplier: 4
+    eliteColor: {r: 0.509434, g: 0.3484336, b: 0.3484336, a: 0}
+    eliteMaterial: {fileID: 2100000, guid: d0c0c8e5922b6884085ac36efc479758, type: 2}
+    preferredSpawnArc: 31
+    minDistanceFromOthers: 3
+    maintainFormation: 0
+  - enemyData: {fileID: 11400000, guid: 8d8d244c50ad8be43a0dc90ad6d93915, type: 2}
+    baseSpawnWeight: 0.07
+    waveProgressionWeight: 0.14
+    healthScaling: 1
+    speedScaling: 1
+    damageScaling: 1
+    minSpawnDelay: 0
+    maxSpawnDelay: 0
+    maxPerWave: 2
+    isBoss: 1
+    canBeElite: 1
+    eliteChance: 0.162
+    eliteHealthMultiplier: 2
+    eliteSpeedMultiplier: 3
+    eliteDamageMultiplier: 4
+    eliteColor: {r: 0.509434, g: 0.3484336, b: 0.3484336, a: 0}
+    eliteMaterial: {fileID: 2100000, guid: d0c0c8e5922b6884085ac36efc479758, type: 2}
+    preferredSpawnArc: 31
+    minDistanceFromOthers: 3
     maintainFormation: 0
   enableDynamicDifficulty: 1
   playerPerformanceWeight: 0.5
