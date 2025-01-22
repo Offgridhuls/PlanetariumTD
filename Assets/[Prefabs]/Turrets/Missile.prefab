@@ -212,14 +212,17 @@ MonoBehaviour:
   maxLifetime: 3
   targetLayers:
     serializedVersion: 2
-    m_Bits: 65
+    m_Bits: 64
   effectLifetime: 2
+  launchSound: {fileID: 0}
+  hitSound: {fileID: 0}
+  soundVolume: 0.5
   turnSpeed: 180
   explosionRadius: 3
   explosionForce: 10
   explosionLayers:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 64
   explosionEffect: {fileID: 3909882206432518598, guid: 9f51e8e68cc9b164abbf8473ed186904, type: 3}
   missileTrail: {fileID: 809939136776408274}
 --- !u!1001 &6735403025656459294

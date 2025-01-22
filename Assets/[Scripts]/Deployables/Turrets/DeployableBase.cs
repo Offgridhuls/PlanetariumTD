@@ -8,7 +8,7 @@ public class DeployableBase : MonoBehaviour, IDamageable
 {
     [Header("Turret Components")]
     [SerializeField] protected ProjectileBase M_Projectile;
-    [SerializeField] protected TurretStats M_TurretStats;
+    [SerializeField] public TurretStats M_TurretStats;
     [SerializeField] protected Transform TurretMuzzle;
     [SerializeField] protected bool requiresLineOfSight = true;
     [SerializeField] protected LayerMask lineOfSightMask;

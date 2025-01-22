@@ -15,6 +15,8 @@ namespace Planetarium
         
         public TurretManager TurretManager;
         
+        public ResourceManager ResourceManager;
+        
         // Camera and Input
         public Camera MainCamera;
         public CursorController CursorController;

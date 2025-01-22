@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using FSMC.Runtime;
+using Planetarium;
 using UnityEngine.Events;
 
 public abstract class EnemyBase : FSMC_Executer, IDamageable
@@ -24,7 +25,8 @@ public abstract class EnemyBase : FSMC_Executer, IDamageable
 
     [Header("Rewards")]
     [SerializeField] protected int scoreValue = 10;
-    [SerializeField] protected int resourceValue = 5;
+    [SerializeField] protected ResourceType[] possibleResources;
+    [SerializeField] protected Vector2 resourceDropRange = new Vector2(1, 3);
 
     public UnityEvent<float> onHealthChanged = new UnityEvent<float>();
     public UnityEvent onDeath = new UnityEvent();
@@ -114,7 +116,7 @@ public abstract class EnemyBase : FSMC_Executer, IDamageable
     public void SetRewards(int score, int resources)
     {
         scoreValue = score;
-        resourceValue = resources;
+        //resourceValue = resources;
     }
 
     protected virtual void Die()
@@ -122,18 +124,33 @@ public abstract class EnemyBase : FSMC_Executer, IDamageable
         if (isDead) return;
         isDead = true;
 
+        // Spawn death effect if assigned
         if (deathEffect != null)
         {
             Instantiate(deathEffect, transform.position, Quaternion.identity);
         }
 
-        onDeath?.Invoke();
-        onScoreGained?.Invoke(scoreValue);
-        onResourceGained?.Invoke(resourceValue);
-        
-        //GameManager.Instance?.AddScore(scoreValue);
-        //ResourceManager.Instance?.AddResources(resourceValue);
+        // Drop resources
+        if (possibleResources != null && possibleResources.Length > 0)
+        {
+            int resourceCount = Random.Range((int)resourceDropRange.x, (int)resourceDropRange.y + 1);
+            ResourceManager resourceManager = FindFirstObjectByType<ResourceManager>();
+            
+            if (resourceManager != null)
+            {
+                for (int i = 0; i < resourceCount; i++)
+                {
+                    ResourceType selectedResource = possibleResources[Random.Range(0, possibleResources.Length)];
+                    Vector3 randomOffset = Random.insideUnitSphere * 1f;
+                    resourceManager.SpawnResource(selectedResource, transform.position + randomOffset);
+                }
+            }
+        }
 
+        onDeath.Invoke();
+        onScoreGained?.Invoke(scoreValue);
+
+        // Destroy the enemy object
         Destroy(gameObject);
     }
 
