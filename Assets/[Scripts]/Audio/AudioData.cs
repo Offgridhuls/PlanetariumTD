@@ -1,9 +1,9 @@
 using UnityEngine;
 using System;
 
-namespace PlanetariumTD.Audio
+namespace Planetarium.Audio
 {
-    public enum GameState
+    public enum AudioState
     {
         MainMenu,
         PreRound,

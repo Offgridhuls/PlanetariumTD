@@ -1,56 +1,49 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class CursorController : MonoBehaviour
+namespace Planetarium
 {
+    public class CursorController : MonoBehaviour
+    {
+        [Header("Cursor Settings")]
+        [SerializeField] private Texture2D defaultCursor;
+        [SerializeField] private Texture2D placementCursor;
+        [SerializeField] private Vector2 cursorHotspot = Vector2.zero;
 
-    private bool m_CursorActive;
-    // Start is called before the first frame update
-    void Start()
-    {
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
-        m_CursorActive = true;
-    }
-
-    private void Update()
-    {
-        /*if(Input.GetMouseButtonDown(1))
+        private void Start()
         {
-            ToggleCursorMode();
-        }*/
-    }
-    public void ToggleCursorMode()
-    {
-        if (!m_CursorActive)
-        {
-            Cursor.lockState = CursorLockMode.None;
+            // Set initial cursor
+            SetDefaultCursor();
+            
+            // Ensure cursor is always visible
             Cursor.visible = true;
-            m_CursorActive = true;
+            Cursor.lockState = CursorLockMode.None;
         }
-        else
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-            m_CursorActive = false;
-        }
-    }
 
-    public void ShowCursor()
-    {
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
-        m_CursorActive = true;
-    }
-    public void HideCursor()
-    {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-        m_CursorActive = false;
-    }
-    public bool IsCursorActive()
-    {
-        return m_CursorActive;
+        public void SetDefaultCursor()
+        {
+            if (defaultCursor != null)
+            {
+                Cursor.SetCursor(defaultCursor, cursorHotspot, CursorMode.Auto);
+            }
+        }
+
+        public void SetPlacementCursor()
+        {
+            if (placementCursor != null)
+            {
+                Cursor.SetCursor(placementCursor, cursorHotspot, CursorMode.Auto);
+            }
+        }
+
+        public bool IsCursorActive()
+        {
+            return Cursor.visible;
+        }
+
+        private void OnDisable()
+        {
+            // Reset to default system cursor
+            Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+        }
     }
 }

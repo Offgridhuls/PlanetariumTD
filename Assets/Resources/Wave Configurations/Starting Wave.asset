@@ -28,8 +28,8 @@ MonoBehaviour:
     healthMultiplier: 1
     speedMultiplier: 1
     spawnDelayMultiplier: 1
-    spawnPattern: 0
-    eliteChanceBonus: 0.029
+    spawnPattern: 5
+    eliteChanceBonus: 0.174
   bossWaveSettings:
     firstBossWave: 5
     bossWaveInterval: 5
@@ -71,26 +71,6 @@ MonoBehaviour:
     maxPerWave: 100
     isBoss: 0
     canBeElite: 1
-    eliteChance: 0.162
-    eliteHealthMultiplier: 2
-    eliteSpeedMultiplier: 3
-    eliteDamageMultiplier: 4
-    eliteColor: {r: 0.509434, g: 0.3484336, b: 0.3484336, a: 0}
-    eliteMaterial: {fileID: 2100000, guid: d0c0c8e5922b6884085ac36efc479758, type: 2}
-    preferredSpawnArc: 31
-    minDistanceFromOthers: 3
-    maintainFormation: 0
-  - enemyData: {fileID: 11400000, guid: 8d8d244c50ad8be43a0dc90ad6d93915, type: 2}
-    baseSpawnWeight: 0.07
-    waveProgressionWeight: 0.14
-    healthScaling: 1
-    speedScaling: 1
-    damageScaling: 1
-    minSpawnDelay: 0
-    maxSpawnDelay: 0
-    maxPerWave: 2
-    isBoss: 1
-    canBeElite: 0
     eliteChance: 0.162
     eliteHealthMultiplier: 2
     eliteSpeedMultiplier: 3

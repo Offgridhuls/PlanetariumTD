@@ -3,7 +3,7 @@ using UnityEngine.Audio;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 
-namespace PlanetariumTD.Audio
+namespace Planetarium.Audio
 {
     public class SoundManager : MonoBehaviour
     {
@@ -18,7 +18,7 @@ namespace PlanetariumTD.Audio
         [SerializeField] private AudioSource uiSource;
         
         private Queue<AudioSource> soundPool;
-        private GameState currentState;
+        private AudioState currentState;
 
         private void Awake()
         {
@@ -37,7 +37,7 @@ namespace PlanetariumTD.Audio
         private void Start()
         {
             // Default to PreRound state, override in menu scene if needed
-            SetGameState(GameState.PreRound);
+            SetGameState(AudioState.PreRound);
         }
 
         private void InitializeAudio()
@@ -67,7 +67,7 @@ namespace PlanetariumTD.Audio
             soundPool.Enqueue(source);
         }
 
-        public void SetGameState(GameState newState)
+        public void SetGameState(AudioState newState)
         {
             if (currentState == newState) return;
             currentState = newState;
@@ -75,9 +75,9 @@ namespace PlanetariumTD.Audio
             // Handle music changes
             AudioClip newMusic = newState switch
             {
-                GameState.MainMenu => audioData.mainMenuMusic,
-                GameState.Victory => audioData.victoryMusic,
-                GameState.Defeat => audioData.defeatMusic,
+                AudioState.MainMenu => audioData.mainMenuMusic,
+                AudioState.Victory => audioData.victoryMusic,
+                AudioState.Defeat => audioData.defeatMusic,
                 _ => audioData.gameplayMusic
             };
 

@@ -316,7 +316,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   M_Projectile: {fileID: 8336235883241234670, guid: ce203af8c8438804b8c0201bce8cece1, type: 3}
   M_TurretStats: {fileID: 11400000, guid: 2fb8645421766174ba17577f98a1207b, type: 2}
-  requiresLineOfSight: 1
+  requiresLineOfSight: 0
   lineOfSightMask:
     serializedVersion: 2
     m_Bits: 1
@@ -329,6 +329,7 @@ MonoBehaviour:
   fireSound: {fileID: 0}
   deathSound: {fileID: 0}
   soundVolume: 0.5
+  doesRotate: 0
   onDeath:
     m_PersistentCalls:
       m_Calls: []

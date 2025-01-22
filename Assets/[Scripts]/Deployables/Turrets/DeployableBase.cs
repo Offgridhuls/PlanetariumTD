@@ -8,7 +8,7 @@ public class DeployableBase : MonoBehaviour, IDamageable
 {
     [Header("Turret Components")]
     [SerializeField] protected ProjectileBase M_Projectile;
-    [SerializeField] protected TurretStats M_TurretStats;
+    [SerializeField] public TurretStats M_TurretStats;
     [SerializeField] protected bool requiresLineOfSight = true;
     [SerializeField] protected LayerMask lineOfSightMask;
 
@@ -28,6 +28,7 @@ public class DeployableBase : MonoBehaviour, IDamageable
     [SerializeField] protected AudioClip deathSound;
     [SerializeField] protected float soundVolume = 0.5f;
 
+    [Header("Behaviour")] [SerializeField] protected bool doesRotate = true;
     private bool isDead = false;
     protected EnemyBase ClosestTarget;
     protected Vector3 targetPosition;
@@ -37,6 +38,7 @@ public class DeployableBase : MonoBehaviour, IDamageable
     private const float VELOCITY_UPDATE_INTERVAL = 0.1f;
     protected float FireTimer = 0;
 
+    
     public UnityEvent onDeath = new UnityEvent();
     public UnityEvent<float> onHealthChanged = new UnityEvent<float>();
     public UnityEvent<DeployableBase> OnDeployableDeath = new UnityEvent<DeployableBase>();
@@ -122,7 +124,7 @@ public class DeployableBase : MonoBehaviour, IDamageable
         
            
         CheckClosestTarget();
-        if (ClosestTarget != null)
+        if (ClosestTarget != null && doesRotate)
         { 
             RotateTowardsTarget(targetPosition);
         }
