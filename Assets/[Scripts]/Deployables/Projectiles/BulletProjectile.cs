@@ -17,8 +17,9 @@ public class BulletProjectile : ProjectileBase
         targetEnemy = enemy;
         isInitialized = true;
         
-        Vector3 targetDirection = (target - transform.position).normalized;
-        GetComponent<Rigidbody>().AddForce(targetDirection * projectileSpeed, ForceMode.Impulse);
+        direction = (target - transform.position).normalized;
+        var rb = GetComponent<Rigidbody>();
+        rb.linearVelocity = direction * projectileSpeed;
     }
 
     protected override void Update()
@@ -26,9 +27,8 @@ public class BulletProjectile : ProjectileBase
         base.Update();
         if (!isInitialized) return;
         
-        // Move bullet in straight line
-        direction = (targetPosition - transform.position).normalized;
-        transform.position += direction * projectileSpeed * Time.deltaTime;
+        // Update direction for raycast hit detection
+        direction = GetComponent<Rigidbody>().linearVelocity.normalized;
         
         // Check for hits
         CheckForHits();
@@ -37,7 +37,7 @@ public class BulletProjectile : ProjectileBase
     protected void CheckForHits()
     {
         // Use velocity-based distance for raycast to ensure we don't miss fast-moving targets
-        float checkDistance = Mathf.Max(projectileSpeed * Time.deltaTime * 2f, 2f);
+        float checkDistance = Mathf.Max(GetComponent<Rigidbody>().linearVelocity.magnitude * Time.deltaTime * 2f, 2f);
         RaycastHit[] hits = Physics.RaycastAll(transform.position, direction, checkDistance, targetLayers);
         
         if (hits.Length > 0)
