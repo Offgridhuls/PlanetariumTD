@@ -28,7 +28,7 @@ public class BulletProjectile : ProjectileBase
         
         // Move bullet in straight line
         direction = (targetPosition - transform.position).normalized;
-        transform.position += direction * projectileSpeed * Time.deltaTime;
+       // transform.position += direction * projectileSpeed * Time.deltaTime;
         
         // Check for hits
         CheckForHits();
@@ -36,7 +36,7 @@ public class BulletProjectile : ProjectileBase
 
     protected void CheckForHits()
     {
-        RaycastHit[] hits = Physics.RaycastAll(transform.position, direction, projectileSpeed * Time.deltaTime, targetLayers);
+        RaycastHit[] hits = Physics.RaycastAll(transform.position, direction, 1.5f, targetLayers);
         if (hits.Length > 0)
         {
             // Sort hits by distance

@@ -213,6 +213,9 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   effectLifetime: 4
+  launchSound: {fileID: 0}
+  hitSound: {fileID: 8300000, guid: 8789f6a119f0d413b9ac7d94542888d8, type: 3}
+  soundVolume: 0.5
   penetrationDepth: 0.1
-  bulletTrail: {fileID: 0}
+  bulletTrail: {fileID: 809939136776408274}
   hitEffect: {fileID: 4021103657954561961, guid: 5c755f9bc5253ea418e919994537dcc7, type: 3}

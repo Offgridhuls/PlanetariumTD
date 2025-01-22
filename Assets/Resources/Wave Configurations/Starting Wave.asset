@@ -30,15 +30,6 @@ MonoBehaviour:
     spawnDelayMultiplier: 1
     spawnPattern: 0
     eliteChanceBonus: 0.029
-  - name: Test
-    waveType: 1
-    minWaveNumber: 7
-    enemyCountMultiplier: 1
-    healthMultiplier: 1
-    speedMultiplier: 1
-    spawnDelayMultiplier: 1
-    spawnPattern: 0
-    eliteChanceBonus: 0.099
   bossWaveSettings:
     firstBossWave: 5
     bossWaveInterval: 5
@@ -99,7 +90,7 @@ MonoBehaviour:
     maxSpawnDelay: 0
     maxPerWave: 2
     isBoss: 1
-    canBeElite: 1
+    canBeElite: 0
     eliteChance: 0.162
     eliteHealthMultiplier: 2
     eliteSpeedMultiplier: 3
