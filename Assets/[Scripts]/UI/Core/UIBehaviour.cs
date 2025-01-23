@@ -20,6 +20,7 @@ namespace Planetarium.UI
 
 				return _cachedCanvasGroup;
 			}
+			set => _cachedCanvasGroup = value;
 		}
 
 		public RectTransform RectTransform

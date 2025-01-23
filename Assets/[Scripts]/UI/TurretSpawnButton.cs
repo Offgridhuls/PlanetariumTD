@@ -17,6 +17,6 @@ public class TurretSpawnButton : MonoBehaviour
 
     void OnTurretButtonClicked()
     {
-        GameManager.Instance.EnableSelectedTurret(Turret);
+        //GameManager.Instance.EnableSelectedTurret(Turret);
     }
 }

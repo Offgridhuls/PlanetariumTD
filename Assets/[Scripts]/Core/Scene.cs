@@ -182,7 +182,7 @@ namespace Planetarium
 
         protected virtual void CollectServices()
         {
-            var services = GetComponentsInChildren<SceneService>(true);
+            var services = FindObjectsOfType<SceneService>();
             foreach (var service in services)
             {
                 AddService(service);

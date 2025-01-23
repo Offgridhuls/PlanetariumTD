@@ -17,6 +17,8 @@ namespace Planetarium
         
         public ResourceManager ResourceManager;
         
+        public ResourceInventory ResourceInventory;
+        
         // Camera and Input
         public Camera MainCamera;
         public CursorController CursorController;
@@ -42,5 +44,8 @@ namespace Planetarium
         public bool HasInput = true;
         [HideInInspector]
         public bool IsVisible = true;
+        
+        
+        
     }
 }

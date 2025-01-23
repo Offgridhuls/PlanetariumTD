@@ -11,7 +11,6 @@ namespace Planetarium.UI
         [SerializeField] private CanvasGroup _resourcesGroup;
 
         [Header("Resource Display")]
-        [SerializeField] private TextMeshProUGUI _currencyText;
         [SerializeField] private TextMeshProUGUI _baseHealthText;
         [SerializeField] private TextMeshProUGUI _waveText;
 
@@ -21,12 +20,10 @@ namespace Planetarium.UI
         [SerializeField] private float _punchScale = 1.2f;
         
         private GameStateManager _gameState;
-        private int _displayedCurrency;
         private int _displayedBaseHealth;
         private int _displayedWave;
         
         // Store tweens to kill them when needed
-        private Tween _currencyTween;
         private Tween _baseHealthTween;
         private Tween _waveTween;
 
@@ -37,7 +34,6 @@ namespace Planetarium.UI
             if (_gameState != null)
             {
                 // Subscribe to events
-                _gameState.OnCurrencyChanged += UpdateCurrencyDisplay;
                 _gameState.OnWaveChanged += UpdateWaveDisplay;
 
                 // Initial update
@@ -57,12 +53,10 @@ namespace Planetarium.UI
             if (_gameState != null)
             {
                 // Unsubscribe from events
-                _gameState.OnCurrencyChanged -= UpdateCurrencyDisplay;
                 _gameState.OnWaveChanged -= UpdateWaveDisplay;
             }
             
             // Kill all active tweens
-            _currencyTween?.Kill();
             _baseHealthTween?.Kill();
             _waveTween?.Kill();
         }
@@ -71,7 +65,6 @@ namespace Planetarium.UI
         {
             if (_gameState == null) return;
 
-            UpdateCurrencyDisplay(_gameState.Currency);
             UpdateWaveDisplay(_gameState.CurrentWave);
             
             // Initial base health display without animation
@@ -79,30 +72,6 @@ namespace Planetarium.UI
             {
                 /*_displayedBaseHealth = _gameState.BaseHealth;
                 _baseHealthText.text = $" {displayedBaseHealth}";*/
-            }
-        }
-
-        private void UpdateCurrencyDisplay(int newValue)
-        {
-            if (_currencyText == null) return;
-            
-            // Kill any existing tween
-            _currencyTween?.Kill();
-            
-            // Animate the number
-            _currencyTween = DOTween.To(() => _displayedCurrency, x => 
-            {
-                _displayedCurrency = x;
-                _currencyText.text = $"<sprite=0> {x}";
-            }, newValue, _updateAnimationDuration)
-                .SetEase(_updateEaseType);
-            
-            // Add punch effect if value increased
-            if (newValue > _displayedCurrency)
-            {
-                _currencyText.transform
-                    .DOPunchScale(Vector3.one * _punchScale, _updateAnimationDuration, 1, 0.5f)
-                    .SetEase(_updateEaseType);
             }
         }
 

@@ -75,7 +75,7 @@ namespace Planetarium
         private void Start()
         {
             placementService = FindFirstObjectByType<TurretPlacementService>();
-            gameState = GameStateManager.Instance;
+            gameState = FindFirstObjectByType<GameStateManager>();
             
             if (placementService != null)
             {

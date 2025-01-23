@@ -1,24 +1,23 @@
 using UnityEngine;
 using UnityEngine.Events;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Planetarium
 {
-    public class GameStateChangedEventArgs : EventArgs
+    public enum GameState
     {
-        public GameState PreviousState { get; }
-        public GameState CurrentState { get; }
-
-        public GameStateChangedEventArgs(GameState previousState, GameState currentState)
-        {
-            PreviousState = previousState;
-            CurrentState = currentState;
-        }
+        None,
+        MainMenu,
+        Playing,
+        Paused,
+        GameOver,
+        Victory
     }
 
     [Serializable]
-    public class GameState
+    public class GameStateData
     {
         public int currentWave;
         public int score;
@@ -28,20 +27,37 @@ namespace Planetarium
         public bool isWaveInProgress;
     }
 
-    public class GameStateManager : MonoBehaviour
+    public class GameStateChangedEventArgs : EventArgs
     {
-        public static GameStateManager Instance { get; private set; }
+        public GameStateData PreviousState { get; }
+        public GameStateData CurrentState { get; }
 
+        public GameStateChangedEventArgs(GameStateData previousState, GameStateData currentState)
+        {
+            PreviousState = previousState;
+            CurrentState = currentState;
+        }
+    }
+
+    public class GameStateManager : SceneService
+    {
         // Events
-        public event EventHandler<GameStateChangedEventArgs> OnGameStateChanged;
-        public event Action<int> OnWaveChanged;
         public event Action<float> OnBaseHealthChanged;
-        public event Action<int> OnCurrencyChanged;
-        public event Action<bool> OnWaveProgressChanged;
-        public event Action<bool> OnGameOverChanged;
+        public event Action<int> OnWaveChanged;
+        public event Action<float> OnWaveTimerChanged;
         public event Action<int> OnScoreChanged;
+        public event Action<bool> OnGameOverChanged;
+        public event Action<bool> OnWaveStateChanged;
+        public event Action<float> OnPlayerPerformanceChanged;
+        public event Action<int> OnPlayerLevelChanged;
+        public event Action<int> OnCurrencyChanged;
+        public event Action<Dictionary<string, InventoryItem>> OnInventoryChanged;
+        public event Action<string> OnItemSelected;
+        public event EventHandler<GameStateChangedEventArgs> OnGameStateChanged;
+        public event Action<bool> OnWaveProgressChanged;
 
         // Public Properties
+        public GameState State { get; private set; }
         public int CurrentWave => currentWave;
         public int CurrentScore => currentScore;
         public float CurrentBaseHealth => currentBaseHealth;
@@ -84,29 +100,19 @@ namespace Planetarium
         private float gameStartTime;
         private EnemyManager enemyManager;
         private bool isCheckingWaveEnd;
-        private GameState previousState;
+        private GameStateData previousState;
 
-        private void Awake()
+        protected override void OnInitialize()
         {
-            if (Instance == null)
-            {
-                Instance = this;
-                DontDestroyOnLoad(gameObject);
-                InitializeGame();
-            }
-            else
-            {
-                Destroy(gameObject);
-            }
-        }
-
-        private void Start()
-        {
-            enemyManager = FindFirstObjectByType<EnemyManager>();
+            Debug.Log("GameStateManager: OnInitialize called");
+            InitializeGame();
+            enemyManager = Context.EnemyManager;
+            OnCurrencyChanged?.Invoke(currency);
             if (enemyManager != null)
             {
-                enemyManager.OnEnemySpawned.AddListener(OnEnemySpawned);
-                enemyManager.OnEnemyDied.AddListener(OnEnemyKilled);
+                enemyManager.OnEnemySpawned += OnEnemySpawned;
+                enemyManager.OnEnemyDied += OnEnemyKilled;
+                
             }
             else
             {
@@ -114,14 +120,32 @@ namespace Planetarium
             }
         }
 
-        private void Update()
+        protected override void OnDeinitialize()
+        {
+            if (enemyManager != null)
+            {
+                enemyManager.OnEnemySpawned -= OnEnemySpawned;
+                enemyManager.OnEnemyDied -= OnEnemyKilled;
+            }
+
+            // Clear all event subscribers
+            OnGameStateChanged = null;
+            OnWaveChanged = null;
+            OnBaseHealthChanged = null;
+            OnCurrencyChanged = null;
+            OnWaveProgressChanged = null;
+            OnGameOverChanged = null;
+            OnScoreChanged = null;
+        }
+
+        protected override void OnTick()
         {
             if (isGameOver) return;
 
             if (isWaveInProgress)
             {
                 // Check if wave is complete
-                if (!isCheckingWaveEnd && enemyManager != null && !enemyManager.HasActiveEnemies())
+                if (!isCheckingWaveEnd && enemyManager != null && !(enemyManager.GetActiveEnemyCount() > 0))
                 {
                     isCheckingWaveEnd = true;
                     EndWave();
@@ -130,6 +154,8 @@ namespace Planetarium
             else
             {
                 waveTimer -= Time.deltaTime;
+                OnWaveTimerChanged?.Invoke(waveTimer);
+
                 if (waveTimer <= 0)
                 {
                     StartWave();
@@ -170,6 +196,7 @@ namespace Planetarium
 
         private void InitializeGame()
         {
+            Debug.Log("GameStateManager: Initializing game state");
             // Try to load saved game state
             if (LoadGameState() && shouldLoad)
             {
@@ -178,6 +205,7 @@ namespace Planetarium
             else
             {
                 // Initialize new game
+                State = GameState.None;
                 currentBaseHealth = baseHealth;
                 currency = startingCurrency;
                 currentWave = 0;
@@ -195,7 +223,7 @@ namespace Planetarium
 
         private void NotifyStateChanged()
         {
-            var currentState = new GameState
+            var currentState = new GameStateData
             {
                 currentWave = currentWave,
                 score = currentScore,
@@ -207,6 +235,30 @@ namespace Planetarium
 
             OnGameStateChanged?.Invoke(this, new GameStateChangedEventArgs(previousState, currentState));
             previousState = currentState;
+        }
+
+        public void ChangeState(GameState newState)
+        {
+            if (State == newState) return;
+
+            State = newState;
+            
+            switch (newState)
+            {
+                case GameState.Playing:
+                    Time.timeScale = 1f;
+                    break;
+                case GameState.Paused:
+                    Time.timeScale = 0f;
+                    break;
+                case GameState.GameOver:
+                case GameState.Victory:
+                    Time.timeScale = 0f;
+                    SaveHighScore();
+                    break;
+            }
+
+            NotifyStateChanged();
         }
 
         public void StartWave()
@@ -239,8 +291,7 @@ namespace Planetarium
             
             if (IsLastWave())
             {
-                OnGameOverChanged?.Invoke(true);
-                isGameOver = true;
+                ChangeState(GameState.Victory);
             }
             
             if (autoSaveEnabled) SaveGameState();
@@ -248,21 +299,27 @@ namespace Planetarium
 
         public void TakeDamage(float damage)
         {
+            if (isGameOver) return;
+
             float previousHealth = currentBaseHealth;
             currentBaseHealth = Mathf.Max(0, currentBaseHealth - damage);
             
-            if (currentBaseHealth <= 0 && !isGameOver)
+            if (previousHealth != currentBaseHealth)
             {
-                SetGameOver(true);
+                Debug.Log($"GameStateManager: Base health changed to {currentBaseHealth}");
+                OnBaseHealthChanged?.Invoke(currentBaseHealth);
             }
 
-            OnBaseHealthChanged?.Invoke(currentBaseHealth);
+            if (currentBaseHealth <= 0 && !isGameOver)
+            {
+                ChangeState(GameState.GameOver);
+            }
+
             NotifyStateChanged();
         }
         
         public void AddCurrency(int amount)
         {
-            int previousCurrency = currency;
             currency += amount;
             OnCurrencyChanged?.Invoke(currency);
             NotifyStateChanged();
@@ -282,7 +339,17 @@ namespace Planetarium
 
         private bool IsLastWave()
         {
-            return currentWave >= 30;
+            return currentWave >= 50;
+        }
+
+        private void SaveHighScore()
+        {
+            int currentHighScore = PlayerPrefs.GetInt("HighScore", 0);
+            if (CurrentScore > currentHighScore)
+            {
+                PlayerPrefs.SetInt("HighScore", CurrentScore);
+                PlayerPrefs.Save();
+            }
         }
 
         #region Save/Load System
@@ -293,7 +360,7 @@ namespace Planetarium
         {
             try
             {
-                GameState state = new GameState
+                GameStateData state = new GameStateData
                 {
                     currentWave = currentWave,
                     score = currentScore,
@@ -324,7 +391,7 @@ namespace Planetarium
                 if (File.Exists(SavePath))
                 {
                     string json = File.ReadAllText(SavePath);
-                    GameState state = JsonUtility.FromJson<GameState>(json);
+                    GameStateData state = JsonUtility.FromJson<GameStateData>(json);
 
                     currentWave = state.currentWave;
                     currentScore = state.score;
@@ -379,19 +446,13 @@ namespace Planetarium
         public float GetWaveTimer() => waveTimer;
         public float GetGameTime() => gameTime;
         public int GetEnemiesRemaining() => enemiesRemainingInWave;
-
-        private void OnValidate()
-        {
-            // Ensure starting values are valid
-            baseHealth = Mathf.Max(1f, baseHealth);
-            startingCurrency = Mathf.Max(0, startingCurrency);
-            timeBetweenWaves = Mathf.Max(1f, timeBetweenWaves);
-        }
+        
 
         private void SetGameOver(bool value)
         {
             if (isGameOver != value)
             {
+                Debug.Log($"GameStateManager: Game over state changed to {value}");
                 isGameOver = value;
                 OnGameOverChanged?.Invoke(isGameOver);
                 NotifyStateChanged();
@@ -402,6 +463,7 @@ namespace Planetarium
         {
             if (isWaveInProgress != value)
             {
+                Debug.Log($"GameStateManager: Wave state changed to {value}");
                 isWaveInProgress = value;
                 OnWaveProgressChanged?.Invoke(isWaveInProgress);
                 NotifyStateChanged();
@@ -412,6 +474,7 @@ namespace Planetarium
         {
             if (currentWave != wave)
             {
+                Debug.Log($"GameStateManager: Wave changed to {wave}");
                 currentWave = wave;
                 OnWaveChanged?.Invoke(currentWave);
                 NotifyStateChanged();
@@ -426,6 +489,14 @@ namespace Planetarium
                 OnScoreChanged?.Invoke(currentScore);
                 NotifyStateChanged();
             }
+        }
+
+        private void OnValidate()
+        {
+            // Ensure starting values are valid
+            baseHealth = Mathf.Max(1f, baseHealth);
+            startingCurrency = Mathf.Max(0, startingCurrency);
+            timeBetweenWaves = Mathf.Max(1f, timeBetweenWaves);
         }
     }
 }

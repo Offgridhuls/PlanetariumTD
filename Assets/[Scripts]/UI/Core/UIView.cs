@@ -4,7 +4,7 @@ using UnityEngine.Events;
 namespace Planetarium.UI
 {
     [RequireComponent(typeof(CanvasGroup))]
-    public abstract class UIView : MonoBehaviour
+    public abstract class UIView : UIWidget
     {
         public bool IsOpen { get; private set; }
         public int Priority => priority;
@@ -18,47 +18,71 @@ namespace Planetarium.UI
         public UnityEvent onOpen;
         public UnityEvent onClose;
         
-        protected CanvasGroup canvasGroup;
-        protected UIManager uiManager;
-        
-        protected virtual void Awake()
+        protected override void OnInitialize()
         {
-            canvasGroup = GetComponent<CanvasGroup>();
+            Debug.Log($"UIView: OnInitialize called for {GetType().Name} on {gameObject.name}");
+            base.OnInitialize();
+
+            // Ensure we have a CanvasGroup
+            if (CanvasGroup == null)
+            {
+                Debug.LogWarning($"UIView: Adding missing CanvasGroup to {gameObject.name}");
+                CanvasGroup = gameObject.AddComponent<CanvasGroup>();
+            }
+            
+            // Initialize in closed state
+            IsOpen = false;
+            CanvasGroup.alpha = 0f;
+            CanvasGroup.interactable = false;
+            CanvasGroup.blocksRaycasts = false;
         }
-        
-        protected virtual void Start()
+
+        internal void Initialize(UIManager uiManager, UIWidget owner)
         {
+            base.Initialize(uiManager, owner);
+            
+            // After initialization, open if needed
             if (startOpen)
             {
-                Open();
+                Debug.Log($"UIView: {GetType().Name} is marked as startOpen, opening...");
+                Open(true);
             }
             else
             {
+                Debug.Log($"UIView: {GetType().Name} is not marked as startOpen, closing...");
                 Close(true);
             }
         }
         
-        public virtual void Initialize(UIManager manager)
-        {
-            uiManager = manager;
-        }
-        
         public virtual void Open(bool instant = false)
         {
-            if (IsOpen) return;
+            Debug.Log($"UIView: Opening {GetType().Name} on {gameObject.name} (instant: {instant})");
+            if (IsOpen)
+            {
+                Debug.Log($"UIView: {GetType().Name} is already open, returning");
+                return;
+            }
             
-            gameObject.SetActive(true);
+            // Enable the GameObject first
+            if (!gameObject.activeSelf)
+            {
+                Debug.Log($"UIView: Activating GameObject for {GetType().Name}");
+                gameObject.SetActive(true);
+            }
+            
             IsOpen = true;
             
             if (useAnimation && !instant)
             {
+                Debug.Log($"UIView: Starting open animation for {GetType().Name}");
                 StartCoroutine(AnimateOpen());
             }
             else
             {
-                canvasGroup.alpha = 1f;
-                canvasGroup.interactable = true;
-                canvasGroup.blocksRaycasts = true;
+                Debug.Log($"UIView: Instantly opening {GetType().Name}");
+                CanvasGroup.alpha = 1f;
+                CanvasGroup.interactable = true;
+                CanvasGroup.blocksRaycasts = true;
             }
             
             onOpen?.Invoke();
@@ -66,19 +90,26 @@ namespace Planetarium.UI
         
         public virtual void Close(bool instant = false)
         {
-            if (!IsOpen) return;
+            Debug.Log($"UIView: Closing {GetType().Name} on {gameObject.name} (instant: {instant})");
+            if (!IsOpen)
+            {
+                Debug.Log($"UIView: {GetType().Name} is already closed, returning");
+                return;
+            }
             
             IsOpen = false;
             
             if (useAnimation && !instant)
             {
+                Debug.Log($"UIView: Starting close animation for {GetType().Name}");
                 StartCoroutine(AnimateClose());
             }
             else
             {
-                canvasGroup.alpha = 0f;
-                canvasGroup.interactable = false;
-                canvasGroup.blocksRaycasts = false;
+                Debug.Log($"UIView: Instantly closing {GetType().Name}");
+                CanvasGroup.alpha = 0f;
+                CanvasGroup.interactable = false;
+                CanvasGroup.blocksRaycasts = false;
                 gameObject.SetActive(false);
             }
             
@@ -95,35 +126,35 @@ namespace Planetarium.UI
         
         protected virtual System.Collections.IEnumerator AnimateOpen()
         {
-            canvasGroup.alpha = 0f;
-            canvasGroup.interactable = true;
-            canvasGroup.blocksRaycasts = true;
+            CanvasGroup.alpha = 0f;
+            CanvasGroup.interactable = true;
+            CanvasGroup.blocksRaycasts = true;
             
             float elapsed = 0f;
             while (elapsed < animationDuration)
             {
                 elapsed += Time.deltaTime;
-                canvasGroup.alpha = Mathf.Lerp(0f, 1f, elapsed / animationDuration);
+                CanvasGroup.alpha = Mathf.Lerp(0f, 1f, elapsed / animationDuration);
                 yield return null;
             }
             
-            canvasGroup.alpha = 1f;
+            CanvasGroup.alpha = 1f;
         }
         
         protected virtual System.Collections.IEnumerator AnimateClose()
         {
-            canvasGroup.interactable = false;
-            canvasGroup.blocksRaycasts = false;
+            CanvasGroup.interactable = false;
+            CanvasGroup.blocksRaycasts = false;
             
             float elapsed = 0f;
             while (elapsed < animationDuration)
             {
                 elapsed += Time.deltaTime;
-                canvasGroup.alpha = Mathf.Lerp(1f, 0f, elapsed / animationDuration);
+                CanvasGroup.alpha = Mathf.Lerp(1f, 0f, elapsed / animationDuration);
                 yield return null;
             }
             
-            canvasGroup.alpha = 0f;
+            CanvasGroup.alpha = 0f;
             gameObject.SetActive(false);
         }
     }

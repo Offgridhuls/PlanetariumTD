@@ -3,54 +3,41 @@ using UnityEngine.Events;
 using System.Collections.Generic;
 using Planetarium;
 
-public class EnemyManager : MonoBehaviour
+public class EnemyManager : SceneService
 {
-    public static EnemyManager Instance { get; private set; }
-
     [Header("Wave Configuration")]
     public WaveConfiguration waveConfig;
     [SerializeField] private Transform spawnParent;
     [SerializeField] private float spawnHeight = 10f;
 
-    private PlanetBase planet;
     private Queue<(EnemySpawnData data, float delay)> currentWaveQueue = new Queue<(EnemySpawnData data, float delay)>();
     private List<EnemyBase> activeEnemies = new List<EnemyBase>();
     private float nextSpawnTime;
     private float playerPerformance = 1f;
+    private GameStateManager gameState;
 
     // Events with proper parameters
-    public UnityEvent<EnemyBase> OnEnemySpawned = new UnityEvent<EnemyBase>();
-    public UnityEvent<EnemyBase> OnEnemyDied = new UnityEvent<EnemyBase>();
+    public event System.Action<EnemyBase> OnEnemySpawned;
+    public event System.Action<EnemyBase> OnEnemyDied;
 
-    private void Awake()
+    protected override void OnInitialize()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-        }
-        else
-        {
-            Destroy(gameObject);
-            return;
-        }
-    }
-
-    private void Start()
-    {
-        planet = FindFirstObjectByType<PlanetBase>();
-        if (planet == null)
-        {
-            Debug.LogError("No planet found in scene!");
-            return;
-        }
-
+        gameState = Context.GameState;
+        
         if (spawnParent == null)
         {
             spawnParent = transform;
         }
     }
 
-    private void Update()
+    protected override void OnDeinitialize()
+    {
+        ClearWave();
+        OnEnemySpawned = null;
+        OnEnemyDied = null;
+    }
+
+    protected override void OnTick()
     {
         if (currentWaveQueue.Count > 0 && Time.time >= nextSpawnTime)
         {
@@ -109,7 +96,7 @@ public class EnemyManager : MonoBehaviour
         if (enemyData == null) return;
 
         // Get current wave modifier for spawn pattern
-        var modifier = waveConfig.GetWaveModifier(GameStateManager.Instance.GetCurrentWave());
+        var modifier = waveConfig.GetWaveModifier(gameState.GetCurrentWave());
         var spawnPattern = modifier != null ? modifier.spawnPattern : WaveConfiguration.SpawnPattern.Random;
 
         // Calculate spawn position using pattern
@@ -117,9 +104,9 @@ public class EnemyManager : MonoBehaviour
             spawnPattern,
             GetTotalEnemiesInWave() - currentWaveQueue.Count,
             GetTotalEnemiesInWave(),
-            planet.transform.position,
+            Context.CurrentPlanet.transform.position,
             spawnHeight,
-            planet.GetPlanetRadius()
+            Context.CurrentPlanet.GetPlanetRadius()
         );
 
         GameObject enemyObject = Instantiate(enemyData.enemyPrefab, spawnPosition, Quaternion.identity, spawnParent);
@@ -137,7 +124,7 @@ public class EnemyManager : MonoBehaviour
 
     private void ConfigureEnemy(EnemyBase enemy, EnemySpawnData spawnData)
     {
-        int currentWave = GameStateManager.Instance.GetCurrentWave();
+        int currentWave = gameState.GetCurrentWave();
         
         // Get wave-specific configuration
         var enemyConfig = waveConfig.enemyTypes.Find(x => x.enemyData == spawnData);
@@ -204,9 +191,23 @@ public class EnemyManager : MonoBehaviour
         activeEnemies.Clear();
     }
 
-    public int GetActiveEnemyCount() => activeEnemies.Count;
-    public int GetRemainingEnemies() => currentWaveQueue.Count;
-    public int GetTotalEnemiesInWave() => GetActiveEnemyCount() + GetRemainingEnemies();
-    public List<EnemyBase> GetActiveEnemies() => activeEnemies;
-    public bool HasActiveEnemies() => activeEnemies.Count > 0 || currentWaveQueue.Count > 0;
+    public int GetActiveEnemyCount()
+    {
+        return activeEnemies.Count;
+    }
+
+    public int GetRemainingEnemies()
+    {
+        return currentWaveQueue.Count + activeEnemies.Count;
+    }
+
+    public int GetTotalEnemiesInWave()
+    {
+        return currentWaveQueue.Count + activeEnemies.Count;
+    }
+
+    private void OnValidate()
+    {
+        spawnHeight = Mathf.Max(1f, spawnHeight);
+    }
 }

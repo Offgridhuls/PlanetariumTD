@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Planetarium;
 
+[RequireComponent(typeof(Rigidbody))]
 public class PlayerSphericalMovementComponent : MonoBehaviour
 {
     [SerializeField]
@@ -9,6 +11,7 @@ public class PlayerSphericalMovementComponent : MonoBehaviour
 
     public Animator playerAnimator;
 
+    [Header("Movement Settings")]
     [SerializeField, Range(0f, 100f)]
     float maxSpeed = 10f;
 
@@ -50,6 +53,7 @@ public class PlayerSphericalMovementComponent : MonoBehaviour
         rb.useGravity = false;
         OnValidate();
     }
+
     void Update() // use update to get user input
     {
         //movement
@@ -82,6 +86,7 @@ public class PlayerSphericalMovementComponent : MonoBehaviour
 
         if (IsRunning)
             transform.rotation = Quaternion.LookRotation((forwardAxis * playerInput.y) + (playerInput.x * rightAxis), upAxis);
+        
         //jump
         desiredJump |= Input.GetButtonDown("Jump");
     }
@@ -99,6 +104,7 @@ public class PlayerSphericalMovementComponent : MonoBehaviour
             desiredJump = false;
             Jump(gravity);
         }
+
         velocity += gravity * Time.deltaTime;
         //Debug.Log("Current Gravity: " + gravity.ToString());
         rb.linearVelocity = velocity; // update rb velocity with local velocity value

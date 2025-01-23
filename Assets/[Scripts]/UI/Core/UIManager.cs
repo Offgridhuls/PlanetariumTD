@@ -3,109 +3,196 @@ using UnityEngine;
 
 namespace Planetarium.UI
 {
-    public class UIManager : MonoBehaviour
+    public class UIManager : SceneService
     {
-        [Header("Default Views")]
+        // PUBLIC MEMBERS
+        public Canvas Canvas { get; private set; }
+        public Camera UICamera { get; private set; }
+
+        // PRIVATE MEMBERS
         [SerializeField] private UIView[] defaultViews;
         
         private List<UIView> activeViews = new List<UIView>();
         private Dictionary<string, UIView> viewCache = new Dictionary<string, UIView>();
-        
-        private void Awake()
+        private UIView[] allViews;
+
+        // PROTECTED METHODS
+        protected override void OnInitialize()
         {
-            // Find and cache all UI views in the scene
-            UIView[] allViews = GetComponentsInChildren<UIView>(true);
+            Debug.Log("UIManager: OnInitialize called");
+            Canvas = GetComponent<Canvas>();
+            UICamera = Canvas.worldCamera;
+
+            // Find and cache all UI views
+            allViews = GetComponentsInChildren<UIView>(true);
+            Debug.Log($"UIManager: Found {allViews.Length} UI views");
+            
             foreach (var view in allViews)
             {
-                view.Initialize(this);
+                if (view == null)
+                {
+                    Debug.LogError("UIManager: Found null view in hierarchy!");
+                    continue;
+                }
+
+                Debug.Log($"UIManager: Initializing view {view.GetType().Name} on GameObject {view.gameObject.name}");
+                
+                // Ensure the view has a CanvasGroup
+                var canvasGroup = view.GetComponent<CanvasGroup>();
+                if (canvasGroup == null)
+                {
+                    Debug.LogWarning($"UIManager: Adding missing CanvasGroup to {view.gameObject.name}");
+                    canvasGroup = view.gameObject.AddComponent<CanvasGroup>();
+                }
+
+                // Initialize the view
+                view.Initialize(this, null);
                 viewCache[view.GetType().Name] = view;
             }
-        }
-        
-        private void Start()
-        {
-            // Open default views
-            foreach (var view in defaultViews)
+
+            // Log all cached views
+            Debug.Log("UIManager: Cached views:");
+            foreach (var kvp in viewCache)
             {
-                if (view != null)
-                    view.Open();
+                Debug.Log($"- {kvp.Key}: {kvp.Value.gameObject.name}");
+            }
+
+            // Open default views
+            if (defaultViews != null && defaultViews.Length > 0)
+            {
+                Debug.Log("UIManager: Opening default views:");
+                foreach (var view in defaultViews)
+                {
+                    if (view != null)
+                    {
+                        Debug.Log($"- Opening default view: {view.GetType().Name}");
+                        view.Open(true);
+                    }
+                }
             }
         }
-        
+
+        protected override void OnDeinitialize()
+        {
+            Debug.Log("UIManager: OnDeinitialize called");
+            if (allViews != null)
+            {
+                for (int i = 0; i < allViews.Length; i++)
+                {
+                    if (allViews[i] != null)
+                    {
+                        Debug.Log($"UIManager: Deinitializing view {allViews[i].GetType().Name}");
+                        allViews[i].Deinitialize();
+                    }
+                }
+            }
+
+            activeViews.Clear();
+            viewCache.Clear();
+            allViews = null;
+        }
+
+        protected override void OnActivate()
+        {
+            Debug.Log("UIManager: OnActivate called");
+            base.OnActivate();
+
+            // Ensure Canvas is enabled
+            if (Canvas != null)
+            {
+                Canvas.enabled = true;
+            }
+        }
+
+        protected override void OnDeactivate()
+        {
+            Debug.Log("UIManager: OnDeactivate called");
+            base.OnDeactivate();
+
+            // Close all views
+            if (allViews != null)
+            {
+                foreach (var view in allViews)
+                {
+                    if (view != null)
+                    {
+                        Debug.Log($"UIManager: Closing view {view.GetType().Name}");
+                        view.Close(true);
+                    }
+                }
+            }
+
+            // Disable Canvas
+            if (Canvas != null)
+            {
+                Canvas.enabled = false;
+            }
+        }
+
         public T GetView<T>() where T : UIView
         {
             string viewName = typeof(T).Name;
-            return viewCache.TryGetValue(viewName, out UIView view) ? view as T : null;
+            if (viewCache.TryGetValue(viewName, out UIView view))
+            {
+                return view as T;
+            }
+
+            Debug.LogWarning($"UIManager: View {viewName} not found in cache");
+            return null;
         }
-        
-        public T OpenView<T>() where T : UIView
+
+        public UIView GetView(string viewName)
         {
-            T view = GetView<T>();
+            if (viewCache.TryGetValue(viewName, out UIView view))
+            {
+                return view;
+            }
+
+            Debug.LogWarning($"UIManager: View {viewName} not found in cache");
+            return null;
+        }
+
+        public void OpenView<T>(bool instant = false) where T : UIView
+        {
+            var view = GetView<T>();
             if (view != null)
             {
-                OpenView(view);
-            }
-            return view;
-        }
-        
-        public void OpenView(UIView view)
-        {
-            if (view == null) return;
-            
-            // Close lower priority views if they block interaction
-            foreach (var activeView in activeViews.ToArray())
-            {
-                if (activeView.Priority < view.Priority)
+                Debug.Log($"UIManager: Opening view {typeof(T).Name}");
+                view.Open(instant);
+                if (!activeViews.Contains(view))
                 {
-                    activeView.Close();
+                    activeViews.Add(view);
                 }
             }
-            
-            view.Open();
-            if (!activeViews.Contains(view))
-            {
-                activeViews.Add(view);
-                activeViews.Sort((a, b) => b.Priority.CompareTo(a.Priority));
-            }
         }
-        
-        public T CloseView<T>() where T : UIView
+
+        public void CloseView<T>(bool instant = false) where T : UIView
         {
-            T view = GetView<T>();
+            var view = GetView<T>();
             if (view != null)
             {
-                CloseView(view);
+                Debug.Log($"UIManager: Closing view {typeof(T).Name}");
+                view.Close(instant);
+                activeViews.Remove(view);
             }
-            return view;
         }
-        
-        public void CloseView(UIView view)
+
+        protected override void OnTick()
         {
-            if (view == null) return;
-            
-            view.Close();
-            activeViews.Remove(view);
-        }
-        
-        public void CloseAllViews()
-        {
-            foreach (var view in activeViews.ToArray())
+            base.OnTick();
+
+            // Tick all active views
+            for (int i = activeViews.Count - 1; i >= 0; i--)
             {
-                view.Close();
+                if (activeViews[i] != null)
+                {
+                    activeViews[i].Tick();
+                }
+                else
+                {
+                    activeViews.RemoveAt(i);
+                }
             }
-            activeViews.Clear();
-        }
-        
-        public bool IsViewOpen<T>() where T : UIView
-        {
-            T view = GetView<T>();
-            return view != null && view.IsOpen;
-        }
-        
-        public bool IsTopView(UIView view)
-        {
-            if (!view.IsOpen || activeViews.Count == 0) return false;
-            return activeViews[0] == view;
         }
     }
 }

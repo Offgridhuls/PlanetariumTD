@@ -17,6 +17,7 @@ namespace Planetarium
         [SerializeField] private float dragAmount = 1f;
         [SerializeField] private float floatHeight = 0.5f;
         [SerializeField] private LayerMask planetLayer;
+        [SerializeField] private LayerMask playerLayer;
         
         [Header("Rotation Settings")]
         [SerializeField] private float rotationSpeed = 45f;
@@ -28,12 +29,14 @@ namespace Planetarium
         [SerializeField] private float warningStartTime = 5f; // Start warning 5 seconds before despawn
         [SerializeField] private float blinkSpeed = 2f; // How fast to blink when near despawn
         [SerializeField] private float fadeStartTime = 2f; // Start fading 2 seconds before despawn
+        [SerializeField] private ParticleSystem collectEffect;
 
         private PlanetBase targetPlanet;
         private Rigidbody rb;
         private SphereCollider sphereCollider;
         private SpriteRenderer spriteRenderer;
         private ResourceManager resourceManager;
+        private ResourceInventory resourceInventory;
         private bool isInitialized;
         private bool isCollected;
         private bool isFloating;
@@ -46,6 +49,8 @@ namespace Planetarium
         private float lifeTime;
         private const float MAX_LIFETIME = 30f; // Maximum time before auto-collecting
         private Color originalColor;
+
+        public bool IsCollectible => !isCollected;
 
         private void Awake()
         {
@@ -71,6 +76,7 @@ namespace Planetarium
             
             targetPlanet = context.CurrentPlanet;
             resourceManager = manager;
+            resourceInventory = context.ResourceInventory;
             lifeTime = 0f;
             isCollected = false;
             isFloating = false;
@@ -98,6 +104,17 @@ namespace Planetarium
             isInitialized = true;
         }
 
+        private void OnTriggerEnter(Collider other)
+        {
+            if (isCollected || !isInitialized) return;
+
+            // Check if the colliding object is on the player layer
+            if (((1 << other.gameObject.layer) & playerLayer) != 0)
+            {
+                TryCollect();
+            }
+        }
+
         private void FixedUpdate()
         {
             if (!isInitialized || isCollected || !targetPlanet) return;
@@ -106,7 +123,7 @@ namespace Planetarium
             lifeTime += Time.fixedDeltaTime;
             if (lifeTime >= MAX_LIFETIME)
             {
-                CollectResource();
+                TryCollect();
                 return;
             }
 
@@ -182,25 +199,30 @@ namespace Planetarium
             }
         }
 
-        private void CollectResource()
+        public bool TryCollect()
         {
-            if (isCollected) return;
+            if (isCollected || !isInitialized) return false;
             isCollected = true;
 
+            // Play collection effect if assigned
+            if (collectEffect != null)
+            {
+                var effect = Instantiate(collectEffect, transform.position, Quaternion.identity);
+                effect.Play();
+                Destroy(effect.gameObject, effect.main.duration);
+            }
+
+            // Add to inventory if available
+            if (resourceInventory != null)
+            {
+                resourceInventory.AddResource(resourceType, amount);
+            }
+
+            // Notify resource manager
             resourceManager.CollectResource(resourceType, amount);
             resourceManager.ReleaseResource(this);
-        }
 
-        private void OnTriggerEnter(Collider other)
-        {
-            if (isCollected) return;
-
-            /*// Check for player pickup
-            PlayerController player = other.GetComponent<PlayerController>();
-            if (player != null)
-            {
-                CollectResource();
-            }*/
+            return true;
         }
     }
 }

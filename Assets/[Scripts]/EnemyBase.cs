@@ -9,7 +9,7 @@ public abstract class EnemyBase : FSMC_Executer, IDamageable
 {
     [Header("Components")]
     protected PlanetBase currentPlanet;
-    [SerializeField] protected EnemySpawnData enemyStats;
+    [SerializeField] public EnemySpawnData enemyStats;
 
     [Header("Enemy Settings")]
     [SerializeField] protected float maxHealth = 100f;

@@ -132,11 +132,11 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.8197503
+  m_Radius: 3.5
   m_Center: {x: 0, y: 0, z: 0.3197503}
 --- !u!114 &6489844815902205090
 MonoBehaviour:
@@ -159,9 +159,17 @@ MonoBehaviour:
   planetLayer:
     serializedVersion: 2
     m_Bits: 512
+  playerLayer:
+    serializedVersion: 2
+    m_Bits: 1024
   rotationSpeed: 45
   wobbleAmount: 5
   wobbleSpeed: 2
+  despawnWarningColor: {r: 1, g: 0.5, b: 0, a: 1}
+  warningStartTime: 5
+  blinkSpeed: 2
+  fadeStartTime: 2
+  collectEffect: {fileID: 9139305265192252157, guid: 6f105a576857cfa4da8f9a65ac1f80fe, type: 3}
 --- !u!1 &4294913077158361771
 GameObject:
   m_ObjectHideFlags: 0
