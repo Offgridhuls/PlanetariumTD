@@ -36,7 +36,7 @@ public class MachineGun : DeployableBase
         
         
         
-        ProjectileBase projectile = Instantiate(M_Projectile, transform.position, transform.rotation);
+        ProjectileBase projectile = Instantiate(M_Projectile, TurretMuzzle.position, transform.rotation);
         projectile.Initialize(M_TurretStats.GetDamage(), targetPos, M_TurretStats.GetProjectileSpeed());
         projectile.ShootProjectile(targetPosition, ClosestTarget.gameObject);
     }

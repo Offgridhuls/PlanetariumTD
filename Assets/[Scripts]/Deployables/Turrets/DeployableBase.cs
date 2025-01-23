@@ -30,7 +30,7 @@ public class DeployableBase : MonoBehaviour, IDamageable
     [SerializeField] protected float soundVolume = 0.5f;
 
     [Header("Behaviour")] [SerializeField] protected bool doesRotate = true;
-    private bool isDead = false;
+    protected bool isDead = false;
     protected EnemyBase ClosestTarget;
     protected Vector3 targetPosition;
     private Vector3 previousPosition;
