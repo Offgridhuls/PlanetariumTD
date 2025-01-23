@@ -155,7 +155,7 @@ MonoBehaviour:
   initialUpwardForce: 5
   initialRandomForce: 2
   dragAmount: 1
-  floatHeight: 1
+  floatHeight: 0.6
   planetLayer:
     serializedVersion: 2
     m_Bits: 512
