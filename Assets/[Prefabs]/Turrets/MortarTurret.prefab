@@ -104,7 +104,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   mortarBarrel: {fileID: 586792035984310925}
-  barrelRotationSpeed: 45
+  barrelRotationSpeed: 100
   minFiringAngle: 45
   maxFiringAngle: 75
   firePoint: {fileID: 783985615814814798}

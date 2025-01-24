@@ -16,7 +16,7 @@ MonoBehaviour:
   healthPoints: 100
   damage: 10
   fireInterval: 1
-  agroRadius: 70
+  agroRadius: 10
   rotationSpeed: 180
   projectileSpeed: 11
   projectileLifetime: 4

@@ -17,10 +17,6 @@ public class MortarTurret : DeployableBase
     {
         base.Start();
         planet = FindFirstObjectByType<PlanetBase>();
-        if (planet == null)
-        {
-            Debug.LogError("No planet found in scene!");
-        }
 
         // Initialize barrel angle
         currentBarrelAngle = minFiringAngle;
@@ -44,34 +40,41 @@ public class MortarTurret : DeployableBase
     }
 
     
-    protected virtual void RotateTowardsTarget(Vector3 target)
+    protected override void RotateTowardsTarget(Vector3 target)
     {
-        if (TurretPivot == null || planet == null) return;
-
-        // Get the up direction based on planet position
-        Vector3 upDirection = (transform.position - planet.transform.position).normalized;
-        
-        // Get direction to target projected on the plane perpendicular to up
+        if (TurretPivot == null || planet == null) 
+        {
+            return;
+        }
+        Debug.Log("Rotating");
+        // Get direction to target in world space
         Vector3 toTarget = target - transform.position;
+        Vector3 upDirection = (transform.position - planet.transform.position).normalized;
+
+        // Project target direction onto the plane perpendicular to up direction
         Vector3 projectedDirection = Vector3.ProjectOnPlane(toTarget, upDirection).normalized;
 
-        // Create rotation for TurretPivot (Y-axis only)
+        // Calculate yaw angle for base rotation (around Y axis)
         float targetYaw = Mathf.Atan2(projectedDirection.x, projectedDirection.z) * Mathf.Rad2Deg;
-        Quaternion pivotRotation = Quaternion.Euler(0, targetYaw, 0);
-        
-        // Apply Y rotation to pivot
-        TurretPivot.rotation = Quaternion.RotateTowards(
-            TurretPivot.rotation,
-            pivotRotation,
+
+        // Create base rotation (Y-axis only)
+        Quaternion baseRotation = Quaternion.Euler(0, targetYaw, 0);
+
+        // Apply base rotation
+        TurretPivot.localRotation = Quaternion.RotateTowards(
+            TurretPivot.localRotation,
+            baseRotation,
             M_TurretStats.GetRotationSpeed() * Time.deltaTime
         );
 
         // Update barrel rotation (X-axis only)
         if (mortarBarrel != null)
         {
+            // Oscillate barrel angle
             currentBarrelAngle = Mathf.PingPong(Time.time * barrelRotationSpeed, maxFiringAngle - minFiringAngle) + minFiringAngle;
-            Quaternion barrelRotation = Quaternion.Euler(currentBarrelAngle, 0, 0);
-            mortarBarrel.localRotation = barrelRotation;  // Using localRotation to make it relative to pivot
+            
+            // Apply barrel rotation (X-axis only)
+            mortarBarrel.localRotation = Quaternion.Euler(currentBarrelAngle, 0, 0);
         }
     }
     protected override void FireTurret()

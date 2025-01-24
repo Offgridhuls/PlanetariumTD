@@ -47,21 +47,21 @@ public class RicochetTurret : DeployableBase
 
     protected override void RotateTowardsTarget(Vector3 target)
     {
-        if (TurretMuzzle != null)
-        {
-            // Rotate only the muzzle, not the entire turret
-            Vector3 targetDirection = target - transform.position;
-            Quaternion targetRotation = Quaternion.LookRotation(targetDirection);
-            transform.rotation = Quaternion.RotateTowards(
-                transform.rotation,
-                targetRotation,
-                M_TurretStats.GetRotationSpeed() * Time.deltaTime
-            );
-        }
-        else
-        {
-            base.RotateTowardsTarget(target);
-        }
+       // if (TurretMuzzle != null)
+       // {
+       //     // Rotate only the muzzle, not the entire turret
+       //     Vector3 targetDirection = target - transform.position;
+       //     Quaternion targetRotation = Quaternion.LookRotation(targetDirection);
+       //     transform.rotation = Quaternion.RotateTowards(
+       //         transform.rotation,
+       //         targetRotation,
+       //         M_TurretStats.GetRotationSpeed() * Time.deltaTime
+       //     );
+       // }
+       // else
+       // {
+       //     base.RotateTowardsTarget(target);
+       // }
     }
 
 #if UNITY_EDITOR

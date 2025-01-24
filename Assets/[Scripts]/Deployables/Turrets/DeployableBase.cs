@@ -124,16 +124,13 @@ public class DeployableBase : MonoBehaviour, IDamageable
             previousPosition = ClosestTarget.gameObject.transform.position;
         }
 
-        
-           
         CheckClosestTarget();
+        Debug.Log($"[{gameObject.name}] ClosestTarget: {ClosestTarget != null}, doesRotate: {doesRotate}");
         if (ClosestTarget != null && doesRotate)
         { 
+            Debug.Log($"[{gameObject.name}] Calling RotateTowardsTarget with position: {targetPosition}");
             RotateTowardsTarget(targetPosition);
         }
-        
-       
-        
     }
     
     void CheckClosestTarget()

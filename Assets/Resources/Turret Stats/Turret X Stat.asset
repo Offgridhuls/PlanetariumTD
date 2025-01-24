@@ -17,7 +17,7 @@ MonoBehaviour:
   damage: 10
   fireInterval: 0.1
   agroRadius: 300
-  rotationSpeed: 180
+  rotationSpeed: 1000
   projectileSpeed: 30
   projectileLifetime: 3
   scrapCost: 10
