@@ -17,7 +17,8 @@ public class TurretManager : MonoBehaviour
     [Header("Turret Settings")]
     [SerializeField] private List<TurretData> availableTurrets;
     [SerializeField] private LayerMask placementSurface;
-    [SerializeField] private float placementHeight = 0.5f;
+    [SerializeField] private float placementOffset = 0f; // Offset from surface if needed
+    private PlanetBase planet;
 
     private GameObject currentTurretPreview;
     private TurretData selectedTurret;
@@ -28,6 +29,11 @@ public class TurretManager : MonoBehaviour
         if (instance == null)
         {
             instance = this;
+            planet = FindFirstObjectByType<PlanetBase>();
+            if (planet == null)
+            {
+                Debug.LogError("No planet found in scene!");
+            }
         }
         else
         {
@@ -58,17 +64,27 @@ public class TurretManager : MonoBehaviour
 
     private void Update()
     {
-        if (!isPlacing || currentTurretPreview == null) return;
+        if (!isPlacing || currentTurretPreview == null || planet == null) return;
 
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, out RaycastHit hit, 100f, placementSurface))
         {
-            Vector3 position = hit.point + Vector3.up * placementHeight;
+            // Calculate up direction from planet to hit point
+            Vector3 upDirection = (hit.point - planet.transform.position).normalized;
+            
+            // Position with offset along surface normal
+            Vector3 position = hit.point + upDirection * placementOffset;
+            
+            // Set position and rotate to align with planet surface
             currentTurretPreview.transform.position = position;
+            currentTurretPreview.transform.rotation = Quaternion.LookRotation(
+                Vector3.ProjectOnPlane(currentTurretPreview.transform.forward, upDirection),
+                upDirection
+            );
 
             if (Input.GetMouseButtonDown(0) && CanPlaceTurret(position))
             {
-                PlaceTurret(position);
+                PlaceTurret(position, currentTurretPreview.transform.rotation);
             }
         }
 
@@ -85,9 +101,9 @@ public class TurretManager : MonoBehaviour
         return true;
     }
 
-    private void PlaceTurret(Vector3 position)
+    private void PlaceTurret(Vector3 position, Quaternion rotation)
     {
-        GameObject newTurret = Instantiate(selectedTurret.turretPrefab, position, Quaternion.identity);
+        GameObject newTurret = Instantiate(selectedTurret.turretPrefab, position, rotation);
         // Additional setup for the placed turret if needed
 
         CancelPlacement();

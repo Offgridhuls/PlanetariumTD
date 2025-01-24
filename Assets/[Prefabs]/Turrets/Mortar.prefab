@@ -213,7 +213,7 @@ MonoBehaviour:
   maxLifetime: 15
   targetLayers:
     serializedVersion: 2
-    m_Bits: 65
+    m_Bits: 576
   effectLifetime: 10
   launchSound: {fileID: 0}
   hitSound: {fileID: 0}
