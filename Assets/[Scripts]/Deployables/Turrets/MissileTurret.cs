@@ -7,6 +7,28 @@ public class MissileTurret : DeployableBase
     [Header("Missile Settings")]
     [SerializeField] private Transform firePoint;
 
+    protected override void RotateTowardsTarget(Vector3 target)
+    {
+        if (TurretPivot == null) return;
+
+        // Get direction to target
+        Vector3 targetDirection = (target - TurretPivot.position).normalized;
+        
+        // Project the direction onto the XZ plane for yaw
+        Vector3 flatDirection = new Vector3(targetDirection.x, 0, targetDirection.z).normalized;
+        float yaw = Mathf.Atan2(flatDirection.x, flatDirection.z) * Mathf.Rad2Deg;
+        
+        // Calculate pitch based on the angle between flat direction and actual direction
+        float pitch = -Vector3.SignedAngle(flatDirection, targetDirection, Vector3.Cross(flatDirection, Vector3.up));
+
+        // Create and apply rotation
+        Quaternion targetRotation = Quaternion.Euler(pitch, yaw, 0);
+        TurretPivot.rotation = Quaternion.RotateTowards(
+            TurretPivot.rotation,
+            targetRotation,
+            M_TurretStats.GetRotationSpeed() * Time.deltaTime
+        );
+    }
 
     protected override void Update()
     {

@@ -522,6 +522,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 560514384}
+  - {fileID: 1841079529}
   - {fileID: 1617099709}
   - {fileID: 1435304316}
   - {fileID: 1210265159}
@@ -1743,6 +1744,130 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &576634962
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 229123512}
+    m_Modifications:
+    - target: {fileID: 224518021029883207, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: m_text
+      value: 'Ricochet
+
+'
+      objectReference: {fileID: 0}
+    - target: {fileID: 2760973287559198343, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: turretName
+      value: Ricochet
+      objectReference: {fileID: 0}
+    - target: {fileID: 2760973287559198343, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: turretPrefab
+      value: 
+      objectReference: {fileID: 4977211964224693009, guid: 3e246a7c2ac71f94e9cb89a5decbf785, type: 3}
+    - target: {fileID: 2760973287559198343, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: turretDescription
+      value: Mortar is an effective weapon for large swarms of smaller enemies.
+      objectReference: {fileID: 0}
+    - target: {fileID: 4046173483883964446, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: m_Name
+      value: CostText
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153549040705100833, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153549040705100833, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: m_Pivot.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153549040705100833, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153549040705100833, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153549040705100833, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153549040705100833, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153549040705100833, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 75
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153549040705100833, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 75
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153549040705100833, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153549040705100833, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153549040705100833, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153549040705100833, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153549040705100833, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153549040705100833, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153549040705100833, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153549040705100833, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153549040705100833, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153549040705100833, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153549040705100833, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7153549040705100833, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8252687779785647742, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: m_Name
+      value: Ricochet
+      objectReference: {fileID: 0}
+    - target: {fileID: 8827412684176308732, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+      propertyPath: m_Name
+      value: Name
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 4196481609757072672, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
 --- !u!1 &660931380
 GameObject:
   m_ObjectHideFlags: 0
@@ -4250,6 +4375,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1839938998}
   m_CullTransparentMesh: 1
+--- !u!224 &1841079529 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 7153549040705100833, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
+  m_PrefabInstance: {fileID: 576634962}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1855487412
 GameObject:
   m_ObjectHideFlags: 0
