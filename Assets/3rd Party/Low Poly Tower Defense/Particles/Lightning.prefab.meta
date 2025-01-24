@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4075bb19d8b11a7458f50fe3853c4f5e
+timeCreated: 1486562363
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 82908
+  packageName: Low Poly Tower Defense
+  packageVersion: 1.0
+  assetPath: Assets/Low Poly Tower Defense/Particles/Lightning.prefab
+  uploadId: 161916

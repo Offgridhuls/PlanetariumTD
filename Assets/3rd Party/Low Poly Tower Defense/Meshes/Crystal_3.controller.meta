@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 7f8644cbb6036b947846d9486e3194bb
+timeCreated: 1486551064
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 82908
+  packageName: Low Poly Tower Defense
+  packageVersion: 1.0
+  assetPath: Assets/Low Poly Tower Defense/Meshes/Crystal_3.controller
+  uploadId: 161916

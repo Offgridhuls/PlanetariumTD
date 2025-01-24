@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f4e2063cf46c5d6439e804c24a9daa42
+timeCreated: 1486560883
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 82908
+  packageName: Low Poly Tower Defense
+  packageVersion: 1.0
+  assetPath: Assets/Low Poly Tower Defense/Prefabs/Props/Rock_4.prefab
+  uploadId: 161916

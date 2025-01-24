@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b4cbc3a77b849ed4b8652f9f023ccaaf
+timeCreated: 1486550989
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 82908
+  packageName: Low Poly Tower Defense
+  packageVersion: 1.0
+  assetPath: Assets/Low Poly Tower Defense/Prefabs/Turrets/Crystal_1.prefab
+  uploadId: 161916

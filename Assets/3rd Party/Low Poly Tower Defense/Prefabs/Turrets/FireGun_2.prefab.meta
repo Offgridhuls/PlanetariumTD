@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b42c11a0e4c2982439913a03ebe2d9d0
+timeCreated: 1486551097
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 82908
+  packageName: Low Poly Tower Defense
+  packageVersion: 1.0
+  assetPath: Assets/Low Poly Tower Defense/Prefabs/Turrets/FireGun_2.prefab
+  uploadId: 161916

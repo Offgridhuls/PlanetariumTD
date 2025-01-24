@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4021199daaf56514a9ffb89fb82c1558
+timeCreated: 1486551145
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 82908
+  packageName: Low Poly Tower Defense
+  packageVersion: 1.0
+  assetPath: Assets/Low Poly Tower Defense/Prefabs/Turrets/Mortar_2.prefab
+  uploadId: 161916

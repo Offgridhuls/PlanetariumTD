@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0fc1653a47ef2564898253fe79ab8961
+timeCreated: 1486551157
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 82908
+  packageName: Low Poly Tower Defense
+  packageVersion: 1.0
+  assetPath: Assets/Low Poly Tower Defense/Prefabs/Props/Mushrooms_1A.prefab
+  uploadId: 161916

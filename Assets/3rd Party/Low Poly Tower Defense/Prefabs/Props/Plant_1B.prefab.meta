@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b0a8d8de456d1234190283d0db9d843b
+timeCreated: 1486551171
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 82908
+  packageName: Low Poly Tower Defense
+  packageVersion: 1.0
+  assetPath: Assets/Low Poly Tower Defense/Prefabs/Props/Plant_1B.prefab
+  uploadId: 161916

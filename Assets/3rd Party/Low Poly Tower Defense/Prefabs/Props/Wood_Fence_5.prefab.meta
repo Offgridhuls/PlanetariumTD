@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 308e0e0531fb8d9448daac5ea778cbef
+timeCreated: 1486563484
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 82908
+  packageName: Low Poly Tower Defense
+  packageVersion: 1.0
+  assetPath: Assets/Low Poly Tower Defense/Prefabs/Props/Wood_Fence_5.prefab
+  uploadId: 161916

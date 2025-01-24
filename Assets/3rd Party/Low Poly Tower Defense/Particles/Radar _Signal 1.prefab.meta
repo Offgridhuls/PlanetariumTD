@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 1af36408b21f4cf49b907084f14ca4e6
+timeCreated: 1486556741
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 82908
+  packageName: Low Poly Tower Defense
+  packageVersion: 1.0
+  assetPath: Assets/Low Poly Tower Defense/Particles/Radar _Signal 1.prefab
+  uploadId: 161916

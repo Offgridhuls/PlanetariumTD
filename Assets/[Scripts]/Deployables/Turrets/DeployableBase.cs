@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using System;
+using UnityEditor.iOS;
 
 public class DeployableBase : MonoBehaviour, IDamageable
 {
@@ -10,6 +11,7 @@ public class DeployableBase : MonoBehaviour, IDamageable
     [SerializeField] protected ProjectileBase M_Projectile;
     [SerializeField] public TurretStats M_TurretStats;
     [SerializeField] protected Transform TurretMuzzle;
+    [SerializeField] protected Transform TurretPivot;
     [SerializeField] protected bool requiresLineOfSight = true;
     [SerializeField] protected LayerMask lineOfSightMask;
 

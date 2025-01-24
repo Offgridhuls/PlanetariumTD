@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e7e1d5b903d7d7d419a0276849613638
+timeCreated: 1486555602
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 82908
+  packageName: Low Poly Tower Defense
+  packageVersion: 1.0
+  assetPath: Assets/Low Poly Tower Defense/Particles/Materials/Glow_1.mat
+  uploadId: 161916

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 6a0edc00326040f4eb6a58a46d6c9280
+timeCreated: 1486551127
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 82908
+  packageName: Low Poly Tower Defense
+  packageVersion: 1.0
+  assetPath: Assets/Low Poly Tower Defense/Prefabs/Turrets/MachineGun_1.prefab
+  uploadId: 161916

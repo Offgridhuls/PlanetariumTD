@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 40cf49876a0441241b23fe75c8901c33
+timeCreated: 1486551109
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 82908
+  packageName: Low Poly Tower Defense
+  packageVersion: 1.0
+  assetPath: Assets/Low Poly Tower Defense/Prefabs/Turrets/Gatling_1.prefab
+  uploadId: 161916

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: be8f9a411b652de4488396bb89e42b03
+timeCreated: 1486562378
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 82908
+  packageName: Low Poly Tower Defense
+  packageVersion: 1.0
+  assetPath: Assets/Low Poly Tower Defense/Prefabs/Turrets/Tesla_1.prefab
+  uploadId: 161916

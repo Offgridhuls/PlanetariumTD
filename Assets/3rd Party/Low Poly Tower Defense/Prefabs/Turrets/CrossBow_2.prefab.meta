@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2bbdcb6ee724a004ba5a8a6464f3e6be
+timeCreated: 1486550924
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 82908
+  packageName: Low Poly Tower Defense
+  packageVersion: 1.0
+  assetPath: Assets/Low Poly Tower Defense/Prefabs/Turrets/CrossBow_2.prefab
+  uploadId: 161916

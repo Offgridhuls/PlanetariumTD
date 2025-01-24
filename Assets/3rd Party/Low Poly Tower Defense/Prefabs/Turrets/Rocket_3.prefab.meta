@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 6700ee77dd07fc346b98150961704571
+timeCreated: 1486560967
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 82908
+  packageName: Low Poly Tower Defense
+  packageVersion: 1.0
+  assetPath: Assets/Low Poly Tower Defense/Prefabs/Turrets/Rocket_3.prefab
+  uploadId: 161916

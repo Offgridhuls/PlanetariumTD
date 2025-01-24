@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2de43df9c81d1fb41b517f6c975d31a6
+timeCreated: 1486563423
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 82908
+  packageName: Low Poly Tower Defense
+  packageVersion: 1.0
+  assetPath: Assets/Low Poly Tower Defense/Prefabs/Props/Tree_7.prefab
+  uploadId: 161916

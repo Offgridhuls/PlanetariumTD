@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 9c84d282d106e49419bd1fb2ee064155
+timeCreated: 1486991072
+licenseType: Store
+TextScriptImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 82908
+  packageName: Low Poly Tower Defense
+  packageVersion: 1.0
+  assetPath: Assets/Low Poly Tower Defense/Demo/ReadmeInfo/ReadMe.txt
+  uploadId: 161916

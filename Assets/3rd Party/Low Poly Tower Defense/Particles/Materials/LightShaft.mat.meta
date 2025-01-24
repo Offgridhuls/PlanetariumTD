@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ce808d103ce100e4dab7f0572d319bfd
+timeCreated: 1486563662
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 82908
+  packageName: Low Poly Tower Defense
+  packageVersion: 1.0
+  assetPath: Assets/Low Poly Tower Defense/Particles/Materials/LightShaft.mat
+  uploadId: 161916

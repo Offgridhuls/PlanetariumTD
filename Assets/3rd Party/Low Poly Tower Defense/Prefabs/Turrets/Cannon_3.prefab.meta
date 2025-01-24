@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 121a7a8ed8eab3a43828124d23ed95a8
+timeCreated: 1486550894
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 82908
+  packageName: Low Poly Tower Defense
+  packageVersion: 1.0
+  assetPath: Assets/Low Poly Tower Defense/Prefabs/Turrets/Cannon_3.prefab
+  uploadId: 161916

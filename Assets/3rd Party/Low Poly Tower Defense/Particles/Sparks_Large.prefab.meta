@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 1b46fcb574dfbbb4092a3eeb69501d9a
+timeCreated: 1486833595
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 82908
+  packageName: Low Poly Tower Defense
+  packageVersion: 1.0
+  assetPath: Assets/Low Poly Tower Defense/Particles/Sparks_Large.prefab
+  uploadId: 161916

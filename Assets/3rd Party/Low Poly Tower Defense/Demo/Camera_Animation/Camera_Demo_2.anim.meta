@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 56c8cfc69b52b404e8d6ad9d50164524
+timeCreated: 1486905080
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 82908
+  packageName: Low Poly Tower Defense
+  packageVersion: 1.0
+  assetPath: Assets/Low Poly Tower Defense/Demo/Camera_Animation/Camera_Demo_2.anim
+  uploadId: 161916
