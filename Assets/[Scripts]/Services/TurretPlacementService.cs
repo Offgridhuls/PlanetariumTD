@@ -8,7 +8,7 @@ namespace Planetarium
     public class TurretPlacementService : SceneService
     {
         [Header("Placement Settings")]
-        [SerializeField] private float placementOffset = 0.15f;
+        [SerializeField] private float placementOffset = -1.5f;  // Much deeper below surface
         [SerializeField] private LayerMask planetLayer;
         [SerializeField] private Color validPlacementColor = new Color(0, 1, 0, 0.5f);
         [SerializeField] private Color invalidPlacementColor = new Color(1, 0, 0, 0.5f);
@@ -144,11 +144,15 @@ namespace Planetarium
             {
                 if (hit.collider.CompareTag("Planet"))
                 {
-                    Vector3 position = hit.point + hit.normal * placementOffset;
-                    Quaternion rotation = Quaternion.FromToRotation(Vector3.up, hit.normal);
+                    // Get direction towards planet center (opposite of up direction)
+                    Vector3 upDirection = (hit.point - hit.transform.position).normalized;
+                    Vector3 downDirection = -upDirection;  // Direction towards planet center
+                    
+                    // Place below surface by moving towards planet center
+                    Vector3 position = hit.point + (downDirection * Mathf.Abs(placementOffset));
                     
                     previewTurret.transform.position = position;
-                    previewTurret.transform.rotation = rotation;
+                    previewTurret.transform.up = upDirection;  // Keep turret oriented away from planet
                     
                     // TODO: Add additional placement validation (e.g., distance from other turrets)
                     isValidPlacement = true;
@@ -182,7 +186,7 @@ namespace Planetarium
                 return;
             }
 
-            // Create the actual turret at the preview location
+            // Create the actual turret at the preview location and rotation
             var placedTurret = Instantiate(selectedTurret, previewTurret.transform.position, previewTurret.transform.rotation);
             
             // Clean up and select new turret for continuous placement

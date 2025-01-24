@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Planetarium;
 
 public class TurretManager : MonoBehaviour
 {
@@ -72,15 +73,12 @@ public class TurretManager : MonoBehaviour
             // Calculate up direction from planet to hit point
             Vector3 upDirection = (hit.point - planet.transform.position).normalized;
             
-            // Position with offset along surface normal
-            Vector3 position = hit.point + upDirection * placementOffset;
+            // Position exactly at hit point
+            Vector3 position = hit.point;
             
             // Set position and rotate to align with planet surface
             currentTurretPreview.transform.position = position;
-            currentTurretPreview.transform.rotation = Quaternion.LookRotation(
-                Vector3.ProjectOnPlane(currentTurretPreview.transform.forward, upDirection),
-                upDirection
-            );
+            currentTurretPreview.transform.up = upDirection;
 
             if (Input.GetMouseButtonDown(0) && CanPlaceTurret(position))
             {
@@ -104,7 +102,10 @@ public class TurretManager : MonoBehaviour
     private void PlaceTurret(Vector3 position, Quaternion rotation)
     {
         GameObject newTurret = Instantiate(selectedTurret.turretPrefab, position, rotation);
-        // Additional setup for the placed turret if needed
+        
+        // Ensure the placed turret is aligned with the planet surface
+        Vector3 upDirection = (position - planet.transform.position).normalized;
+        newTurret.transform.up = upDirection;
 
         CancelPlacement();
     }
