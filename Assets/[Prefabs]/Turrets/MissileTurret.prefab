@@ -83,7 +83,7 @@ MonoBehaviour:
   requiresLineOfSight: 1
   lineOfSightMask:
     serializedVersion: 2
-    m_Bits: 512
+    m_Bits: 513
   maxHealth: 100
   currentHealth: 0
   integrity: 1
