@@ -124,13 +124,16 @@ public class DeployableBase : MonoBehaviour, IDamageable
             previousPosition = ClosestTarget.gameObject.transform.position;
         }
 
+        
+           
         CheckClosestTarget();
-        Debug.Log($"[{gameObject.name}] ClosestTarget: {ClosestTarget != null}, doesRotate: {doesRotate}");
         if (ClosestTarget != null && doesRotate)
         { 
-            Debug.Log($"[{gameObject.name}] Calling RotateTowardsTarget with position: {targetPosition}");
             RotateTowardsTarget(targetPosition);
         }
+        
+       
+        
     }
     
     void CheckClosestTarget()
@@ -171,18 +174,26 @@ public class DeployableBase : MonoBehaviour, IDamageable
     {
         if (!requiresLineOfSight) return true;
 
-        Vector3 directionToTarget = (target.position - transform.position).normalized;
-        float distanceToTarget = Vector3.Distance(transform.position, target.position);
+        // Use turret pivot or muzzle as starting point, falling back to transform position if neither exists
+        Vector3 startPosition = TurretMuzzle.position;
+        
+        Vector3 directionToTarget = (target.position - startPosition).normalized;
+        float distanceToTarget = Vector3.Distance(startPosition, target.position);
 
         // Raycast to check for obstacles
         RaycastHit hit;
-        if (Physics.Raycast(transform.position, directionToTarget, out hit, distanceToTarget, lineOfSightMask))
+        bool didHit = Physics.Raycast(startPosition, directionToTarget, out hit, distanceToTarget, lineOfSightMask);
+        
+        // Draw debug ray in scene view
+        #if UNITY_EDITOR
+        Debug.DrawLine(startPosition, startPosition + directionToTarget * distanceToTarget, 
+            didHit && hit.transform != target ? Color.red : Color.green, 0.1f);
+        #endif
+
+        // If we hit something and it's not the target, we don't have line of sight
+        if (didHit && hit.transform != target)
         {
-            // If we hit something that's not the target, we don't have line of sight
-            if (hit.transform != target)
-            {
-                return false;
-            }
+            return false;
         }
 
         return true;
