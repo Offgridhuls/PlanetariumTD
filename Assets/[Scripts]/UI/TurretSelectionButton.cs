@@ -1,3 +1,4 @@
+using Planetarium.UI;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -5,7 +6,7 @@ using TMPro;
 namespace Planetarium
 {
     [RequireComponent(typeof(Button))]
-    public class TurretSelectionButton : MonoBehaviour
+    public class TurretSelectionButton : UIBehaviour
     {
         [Header("Turret Configuration")]
         [SerializeField] private DeployableBase turretPrefab;
@@ -20,85 +21,65 @@ namespace Planetarium
         [SerializeField] private TextMeshProUGUI nameText;
         [SerializeField] private TextMeshProUGUI costText;
         [SerializeField] private TextMeshProUGUI descriptionText;
-        
-        [Header("Button Text")]
-        [SerializeField] private string turretName = "Basic Turret";
-        [SerializeField, TextArea(2, 4)] private string turretDescription = "A basic defensive turret";
+        [SerializeField] private TextMeshProUGUI statsText;
         
         [Header("Visual Settings")]
         [SerializeField] private Color defaultBackgroundColor = new Color(0.2f, 0.2f, 0.2f, 1f);
         [SerializeField] private Color selectedBackgroundColor = new Color(0.4f, 0.4f, 0.4f, 1f);
         [SerializeField] private Color unaffordableBackgroundColor = new Color(0.3f, 0.2f, 0.2f, 1f);
+        [SerializeField] private Color lockedBackgroundColor = new Color(0.2f, 0.2f, 0.2f, 0.5f);
         [SerializeField] private Color cancelButtonColor = new Color(0.7f, 0.3f, 0.3f, 1f);
         
         private TurretPlacementService placementService;
         private GameStateManager gameState;
+        private TurretStats turretStats;
         private bool isSelected;
+        private bool isInitialized;
+        private bool isUnlocked;
 
-        private void Awake()
+        public void Initialize()
         {
+            if (isInitialized) return;
+
+            // Get required components
             if (button == null) button = GetComponent<Button>();
-            SetupUIComponents();
-        }
-
-        private void SetupUIComponents()
-        {
-            button.onClick.AddListener(OnButtonClicked);
-            
-            if (isCancelButton)
-            {
-                if (backgroundImage != null) backgroundImage.color = cancelButtonColor;
-                if (nameText != null) nameText.text = "Cancel";
-                if (descriptionText != null) descriptionText.text = "Cancel turret placement";
-                if (costText != null) costText.gameObject.SetActive(false);
-                return;
-            }
-            
-            // Set text components if available
-            if (nameText != null) nameText.text = turretName;
-            if (descriptionText != null) descriptionText.text = turretDescription;
-            
-            // Set icon if available
-            if (turretIcon != null && turretPrefab != null)
-            {
-                var turretIconProvider = turretPrefab.GetComponent<SpriteRenderer>();
-                if (turretIconProvider != null && turretIconProvider.sprite != null)
-                {
-                    turretIcon.sprite = turretIconProvider.sprite;
-                }
-            }
-            
-            // Set initial background color
-            UpdateVisuals(false, true);
-        }
-
-        private void Start()
-        {
             placementService = FindFirstObjectByType<TurretPlacementService>();
             gameState = FindFirstObjectByType<GameStateManager>();
-            
+
+            // Get turret stats
+            if (turretPrefab != null)
+            {
+                turretStats = turretPrefab.M_TurretStats;
+                if (turretStats == null)
+                {
+                    Debug.LogError($"TurretSelectionButton: No TurretStats found on {turretPrefab.name}");
+                    return;
+                }
+            }
+
+            // Setup UI
+            SetupUIComponents();
+
+            // Setup service connections
             if (placementService != null)
             {
                 placementService.OnTurretSelectionChanged += HandleTurretSelectionChanged;
             }
             
-            if (!isCancelButton)
+            if (!isCancelButton && gameState != null)
             {
-                if (costText != null && turretPrefab != null)
-                {
-                    UpdateCostText();
-                }
-
-                if (gameState != null)
-                {
-                    gameState.OnCurrencyChanged += UpdateButtonState;
-                    UpdateButtonState(gameState.Currency);
-                }
+                gameState.OnCurrencyChanged += UpdateButtonState;
+                UpdateButtonState(gameState.Currency);
             }
+
+            isInitialized = true;
         }
 
-        private void OnDestroy()
+        public void Cleanup()
         {
+            if (!isInitialized) return;
+
+            // Cleanup service connections
             if (gameState != null && !isCancelButton)
             {
                 gameState.OnCurrencyChanged -= UpdateButtonState;
@@ -113,6 +94,49 @@ namespace Planetarium
             {
                 button.onClick.RemoveListener(OnButtonClicked);
             }
+
+            isInitialized = false;
+        }
+
+        private void SetupUIComponents()
+        {
+            button.onClick.AddListener(OnButtonClicked);
+            
+            if (isCancelButton)
+            {
+                if (backgroundImage != null) backgroundImage.color = cancelButtonColor;
+                if (nameText != null) nameText.text = "Cancel";
+                if (descriptionText != null) descriptionText.text = "Cancel turret placement";
+                if (costText != null) costText.gameObject.SetActive(false);
+                if (statsText != null) statsText.gameObject.SetActive(false);
+                return;
+            }
+            
+            if (turretStats != null)
+            {
+                // Set text components from TurretStats
+                if (nameText != null) nameText.text = turretStats.GetName();
+                if (descriptionText != null) descriptionText.text = turretStats.GetDescription();
+                if (statsText != null) statsText.text = turretStats.GetStatsDescription();
+                
+                // Set icon from TurretStats
+                if (turretIcon != null)
+                {
+                    turretIcon.sprite = turretStats.GetIcon();
+                    turretIcon.gameObject.SetActive(turretIcon.sprite != null);
+                }
+
+                // Set initial unlock state
+                isUnlocked = turretStats.IsUnlockedByDefault();
+            }
+            
+            // Set initial background color
+            UpdateVisuals(false, true);
+        }
+
+        private void OnDestroy()
+        {
+            Cleanup();
         }
 
         private void HandleTurretSelectionChanged(DeployableBase selectedTurret)
@@ -126,6 +150,8 @@ namespace Planetarium
 
         private void OnButtonClicked()
         {
+            if (!isUnlocked) return;
+
             if (placementService != null)
             {
                 if (isCancelButton)
@@ -148,20 +174,31 @@ namespace Planetarium
 
         private void UpdateCostText()
         {
-            if (costText != null && turretPrefab != null)
+            if (costText != null && turretStats != null)
             {
-                int cost = turretPrefab.M_TurretStats.GetCoinCost();
+                int cost = turretStats.GetCoinCost();
                 costText.text = $"{cost} <sprite=0>"; // Assuming coin sprite is index 0 in TMP sprite asset
             }
         }
 
         private void UpdateButtonState(int currentCurrency)
         {
-            if (turretPrefab != null)
+            if (turretStats != null)
             {
-                bool canAfford = currentCurrency >= turretPrefab.M_TurretStats.GetCoinCost();
-                button.interactable = canAfford;
+                bool canAfford = currentCurrency >= turretStats.GetCoinCost();
+                button.interactable = canAfford && isUnlocked;
                 UpdateVisuals(isSelected, canAfford);
+            }
+        }
+
+        public void RefreshDisplay()
+        {
+            if (!isInitialized) return;
+            
+            UpdateCostText();
+            if (!isCancelButton && gameState != null)
+            {
+                UpdateButtonState(gameState.Currency);
             }
         }
 
@@ -172,6 +209,10 @@ namespace Planetarium
                 if (isCancelButton)
                 {
                     backgroundImage.color = cancelButtonColor;
+                }
+                else if (!isUnlocked)
+                {
+                    backgroundImage.color = lockedBackgroundColor;
                 }
                 else
                 {
@@ -184,10 +225,11 @@ namespace Planetarium
             }
 
             // Update text colors based on state
-            Color textColor = affordable ? Color.white : new Color(0.7f, 0.7f, 0.7f, 1f);
+            Color textColor = (affordable && isUnlocked) ? Color.white : new Color(0.7f, 0.7f, 0.7f, 1f);
             if (nameText != null) nameText.color = textColor;
             if (costText != null) costText.color = textColor;
             if (descriptionText != null) descriptionText.color = textColor;
+            if (statsText != null) statsText.color = textColor;
         }
     }
 }

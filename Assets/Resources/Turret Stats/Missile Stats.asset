@@ -20,5 +20,8 @@ MonoBehaviour:
   rotationSpeed: 180
   projectileSpeed: 11
   projectileLifetime: 4
-  scrapCost: 10
-  coinCost: 10
+  scrapCost: 50
+  coinCost: 20
+  turretIcon: {fileID: 21300134, guid: 7ab74e659e1f0a34d9cfec21c478fc12, type: 3}
+  description: Missile Turret Description.
+  isUnlockedByDefault: 1

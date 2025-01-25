@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a377da49b3a3887408b3e2e12a3e9019
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 201717
+  packageName: Modern UI Pack
+  packageVersion: 5.5.25
+  assetPath: Assets/Modern UI Pack/Prefabs/Dropdown/Dropdown Item.prefab
+  uploadId: 718220

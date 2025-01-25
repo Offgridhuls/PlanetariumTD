@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Events;
+using DG.Tweening;
 
 namespace Planetarium.UI
 {
@@ -10,13 +11,16 @@ namespace Planetarium.UI
         public int Priority => priority;
         
         [Header("View Settings")]
-        [SerializeField] protected bool startOpen;
+        [SerializeField] public bool startOpen;
         [SerializeField] protected int priority;
         [SerializeField] protected bool useAnimation;
         [SerializeField] protected float animationDuration = 0.3f;
+        [SerializeField] protected Transform layoutContainer; // Reference to the container holding the layout elements
         
         public UnityEvent onOpen;
         public UnityEvent onClose;
+
+        protected Tweener currentTween;
         
         protected override void OnInitialize()
         {
@@ -29,133 +33,116 @@ namespace Planetarium.UI
                 Debug.LogWarning($"UIView: Adding missing CanvasGroup to {gameObject.name}");
                 CanvasGroup = gameObject.AddComponent<CanvasGroup>();
             }
+
+            // Find layout container if not set
+            if (layoutContainer == null)
+            {
+                // Try to find the first child that might be the layout container
+                if (transform.childCount > 0)
+                {
+                    layoutContainer = transform.GetChild(0);
+                }
+            }
+
+            // Ensure layout container exists
+            if (layoutContainer == null)
+            {
+                Debug.LogWarning($"UIView: No layout container found for {gameObject.name}");
+                return;
+            }
             
-            // Initialize in closed state
-            IsOpen = false;
-            CanvasGroup.alpha = 0f;
-            CanvasGroup.interactable = false;
-            CanvasGroup.blocksRaycasts = false;
+            // Initialize state based on startOpen
+            IsOpen = startOpen;
+
+            // Force everything to start in the correct state
+            if (!startOpen)
+            {
+                // Ensure layout is inactive before setting canvas state
+                layoutContainer.gameObject.SetActive(false);
+                
+                // Set canvas state without animation
+                CanvasGroup.alpha = 0f;
+                CanvasGroup.interactable = false;
+                CanvasGroup.blocksRaycasts = false;
+            }
+            else
+            {
+                // For open state, let SetCanvasState handle it
+                SetCanvasState(true, true);
+            }
         }
 
         internal void Initialize(UIManager uiManager, UIWidget owner)
         {
             base.Initialize(uiManager, owner);
-            
-            // After initialization, open if needed
-            if (startOpen)
+        }
+
+        protected void SetCanvasState(bool isOpen, bool instant = false)
+        {
+            // Kill any existing tween
+            currentTween?.Kill();
+            currentTween = null;
+
+            // Always set layout container active state immediately
+            if (layoutContainer != null)
             {
-                Debug.Log($"UIView: {GetType().Name} is marked as startOpen, opening...");
-                Open(true);
+                layoutContainer.gameObject.SetActive(isOpen);
+            }
+            
+            if (instant)
+            {
+                CanvasGroup.alpha = isOpen ? 1f : 0f;
+                CanvasGroup.interactable = isOpen;
+                CanvasGroup.blocksRaycasts = isOpen;
             }
             else
             {
-                Debug.Log($"UIView: {GetType().Name} is not marked as startOpen, closing...");
-                Close(true);
+                // Set immediate properties
+                CanvasGroup.interactable = isOpen;
+                CanvasGroup.blocksRaycasts = isOpen;
+                
+                // Animate alpha
+                currentTween = CanvasGroup.DOFade(isOpen ? 1f : 0f, animationDuration)
+                    .SetEase(isOpen ? Ease.OutQuad : Ease.InQuad)
+                    .SetUpdate(true);
             }
         }
-        
+
         public virtual void Open(bool instant = false)
         {
-            Debug.Log($"UIView: Opening {GetType().Name} on {gameObject.name} (instant: {instant})");
-            if (IsOpen)
-            {
-                Debug.Log($"UIView: {GetType().Name} is already open, returning");
-                return;
-            }
-            
-            // Enable the GameObject first
-            if (!gameObject.activeSelf)
-            {
-                Debug.Log($"UIView: Activating GameObject for {GetType().Name}");
-                gameObject.SetActive(true);
-            }
-            
+            if (IsOpen) return;
             IsOpen = true;
-            
-            if (useAnimation && !instant)
-            {
-                Debug.Log($"UIView: Starting open animation for {GetType().Name}");
-                StartCoroutine(AnimateOpen());
-            }
-            else
-            {
-                Debug.Log($"UIView: Instantly opening {GetType().Name}");
-                CanvasGroup.alpha = 1f;
-                CanvasGroup.interactable = true;
-                CanvasGroup.blocksRaycasts = true;
-            }
-            
+
+            SetCanvasState(true, instant || !useAnimation);
             onOpen?.Invoke();
+            Debug.Log($"UIView: {GetType().Name} opened");
         }
-        
+
         public virtual void Close(bool instant = false)
         {
-            Debug.Log($"UIView: Closing {GetType().Name} on {gameObject.name} (instant: {instant})");
-            if (!IsOpen)
-            {
-                Debug.Log($"UIView: {GetType().Name} is already closed, returning");
-                return;
-            }
-            
+            if (!IsOpen) return;
             IsOpen = false;
-            
-            if (useAnimation && !instant)
-            {
-                Debug.Log($"UIView: Starting close animation for {GetType().Name}");
-                StartCoroutine(AnimateClose());
-            }
-            else
-            {
-                Debug.Log($"UIView: Instantly closing {GetType().Name}");
-                CanvasGroup.alpha = 0f;
-                CanvasGroup.interactable = false;
-                CanvasGroup.blocksRaycasts = false;
-                gameObject.SetActive(false);
-            }
-            
+
+            SetCanvasState(false, instant || !useAnimation);
             onClose?.Invoke();
+            Debug.Log($"UIView: {GetType().Name} closed");
         }
-        
-        public virtual void Toggle()
+
+        public void Toggle(bool instant = false)
         {
             if (IsOpen)
-                Close();
+                Close(instant);
             else
-                Open();
+                Open(instant);
         }
-        
-        protected virtual System.Collections.IEnumerator AnimateOpen()
+
+        protected override void OnDeinitialize()
         {
-            CanvasGroup.alpha = 0f;
-            CanvasGroup.interactable = true;
-            CanvasGroup.blocksRaycasts = true;
+            base.OnDeinitialize();
             
-            float elapsed = 0f;
-            while (elapsed < animationDuration)
-            {
-                elapsed += Time.deltaTime;
-                CanvasGroup.alpha = Mathf.Lerp(0f, 1f, elapsed / animationDuration);
-                yield return null;
-            }
-            
-            CanvasGroup.alpha = 1f;
-        }
-        
-        protected virtual System.Collections.IEnumerator AnimateClose()
-        {
-            CanvasGroup.interactable = false;
-            CanvasGroup.blocksRaycasts = false;
-            
-            float elapsed = 0f;
-            while (elapsed < animationDuration)
-            {
-                elapsed += Time.deltaTime;
-                CanvasGroup.alpha = Mathf.Lerp(1f, 0f, elapsed / animationDuration);
-                yield return null;
-            }
-            
-            CanvasGroup.alpha = 0f;
-            gameObject.SetActive(false);
+            // Kill any active tween
+            currentTween?.Kill();
+            currentTween = null;
         }
     }
 }

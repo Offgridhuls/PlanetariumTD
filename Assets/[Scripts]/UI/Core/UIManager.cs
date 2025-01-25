@@ -37,14 +37,6 @@ namespace Planetarium.UI
 
                 Debug.Log($"UIManager: Initializing view {view.GetType().Name} on GameObject {view.gameObject.name}");
                 
-                // Ensure the view has a CanvasGroup
-                var canvasGroup = view.GetComponent<CanvasGroup>();
-                if (canvasGroup == null)
-                {
-                    Debug.LogWarning($"UIManager: Adding missing CanvasGroup to {view.gameObject.name}");
-                    canvasGroup = view.gameObject.AddComponent<CanvasGroup>();
-                }
-
                 // Initialize the view
                 view.Initialize(this, null);
                 viewCache[view.GetType().Name] = view;
@@ -57,17 +49,13 @@ namespace Planetarium.UI
                 Debug.Log($"- {kvp.Key}: {kvp.Value.gameObject.name}");
             }
 
-            // Open default views
-            if (defaultViews != null && defaultViews.Length > 0)
+            // Open views based on their startOpen flag
+            foreach (var view in allViews)
             {
-                Debug.Log("UIManager: Opening default views:");
-                foreach (var view in defaultViews)
+                if (view.startOpen)
                 {
-                    if (view != null)
-                    {
-                        Debug.Log($"- Opening default view: {view.GetType().Name}");
-                        view.Open(true);
-                    }
+                    view.Open(false);
+                    activeViews.Add(view);
                 }
             }
         }

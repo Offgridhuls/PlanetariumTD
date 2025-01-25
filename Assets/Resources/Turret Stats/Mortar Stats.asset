@@ -14,11 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   turretName: Mortar
   healthPoints: 100
-  damage: 10
+  damage: 70
   fireInterval: 7
   agroRadius: 400
   rotationSpeed: 180
   projectileSpeed: 3
   projectileLifetime: 20
-  scrapCost: 10
-  coinCost: 10
+  scrapCost: 80
+  coinCost: 40
+  turretIcon: {fileID: 21300002, guid: 66995b6b61aed864daa956ae255d7fee, type: 3}
+  description: Mortar is good for taking out large groups of small enemies.
+  isUnlockedByDefault: 1

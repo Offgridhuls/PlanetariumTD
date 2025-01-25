@@ -22,3 +22,6 @@ MonoBehaviour:
   projectileLifetime: 3
   scrapCost: 10
   coinCost: 10
+  turretIcon: {fileID: 21300000, guid: 30bb156563c1f634ba8b74f10a845186, type: 3}
+  description: A basic defensive turret
+  isUnlockedByDefault: 1

@@ -19,6 +19,11 @@ public class TurretStats : ScriptableObject
     [SerializeField] private int scrapCost = 10;
     [SerializeField] private int coinCost = 10;
 
+    [Header("UI Settings")]
+    [SerializeField] private Sprite turretIcon;
+    [SerializeField, TextArea(2, 4)] private string description = "A basic defensive turret";
+    [SerializeField] private bool isUnlockedByDefault = true;
+
     // Basic Stats
     public string GetName() => turretName;
     public float GetHealth() => healthPoints;
@@ -34,4 +39,16 @@ public class TurretStats : ScriptableObject
     // Costs
     public int GetScrapCost() => scrapCost;
     public int GetCoinCost() => coinCost;
+
+    // UI Properties
+    public Sprite GetIcon() => turretIcon;
+    public string GetDescription() => description;
+    public bool IsUnlockedByDefault() => isUnlockedByDefault;
+
+    public string GetStatsDescription()
+    {
+        return $"Damage: {damage}\n" +
+               $"Fire Rate: {1f/fireInterval:F1}/s\n" +
+               $"Range: {agroRadius:F1}m";
+    }
 }
