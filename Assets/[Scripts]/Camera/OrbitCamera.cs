@@ -116,6 +116,18 @@ public class OrbitCamera : MonoBehaviour
         }
     }
 
+    public void SetOrbitAngles(Vector2 delta)
+    {
+        orbitAngles.x = Mathf.Clamp(orbitAngles.x + delta.x, minVerticalAngle, maxVerticalAngle);
+        orbitAngles.y = (orbitAngles.y + delta.y) % 360f;
+        orbitRotation = Quaternion.Euler(orbitAngles);
+    }
+
+    public void AdjustDistance(float delta)
+    {
+        distance = Mathf.Clamp(distance + delta, 1f, 40f);
+    }
+
     void OnValidate()
     {
         if (maxVerticalAngle < minVerticalAngle)

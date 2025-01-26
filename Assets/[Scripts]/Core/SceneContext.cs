@@ -36,6 +36,9 @@ namespace Planetarium
         
         // UI References
         public Canvas GameplayCanvas;
+
+        //Camera control service
+        public CameraControlService CameraControlService;
         
         // Game Settings
         [HideInInspector]
