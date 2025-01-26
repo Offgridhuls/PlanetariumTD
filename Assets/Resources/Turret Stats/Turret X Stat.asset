@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8dc4c6e22905eaf418e3a0bab31059b7, type: 3}
   m_Name: Turret X Stat
   m_EditorClassIdentifier: 
-  turretName: Default Turret
+  turretName: Machine Gun
   healthPoints: 100
   damage: 10
   fireInterval: 0.1

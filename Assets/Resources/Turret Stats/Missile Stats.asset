@@ -22,6 +22,6 @@ MonoBehaviour:
   projectileLifetime: 4
   scrapCost: 50
   coinCost: 20
-  turretIcon: {fileID: 21300134, guid: 7ab74e659e1f0a34d9cfec21c478fc12, type: 3}
+  turretIcon: {fileID: 21300000, guid: 30bb156563c1f634ba8b74f10a845186, type: 3}
   description: Missile Turret Description.
   isUnlockedByDefault: 1
