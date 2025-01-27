@@ -125,7 +125,7 @@ namespace FSMC.Editor.Inspectors
             var addButton = new Button(() => dropdownMenu.DropDown(root.worldBound, root, true)) { text = "Add Behaviour" };
             stateContainer.Add(addButton);
 
-            StyleSheet styleSheet = (StyleSheet)EditorGUIUtility.Load("Assets/FSMC/Editor/Editor Resources/FSMC_StateInspectorStyles.uss");
+            StyleSheet styleSheet = (StyleSheet)EditorGUIUtility.Load("Assets/3rd Party/FSMC/Editor/Editor Resources/FSMC_StateInspectorStyles.uss");
             stateContainer.styleSheets.Add(styleSheet);
 
             return stateContainer;

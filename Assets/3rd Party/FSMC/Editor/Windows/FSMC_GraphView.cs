@@ -100,7 +100,7 @@ namespace FSMC.Editor.Windows
         }
         private void AddStyles()
         {
-            StyleSheet styleSheet = (StyleSheet)EditorGUIUtility.Load("Assets/FSMC/Editor/Editor Resources/FSMC_GraphViewStyles.uss");
+            StyleSheet styleSheet = (StyleSheet)EditorGUIUtility.Load("Assets/3rd Party/FSMC/Editor/Editor Resources/FSMC_GraphViewStyles.uss");
             styleSheets.Add(styleSheet);
         }
 

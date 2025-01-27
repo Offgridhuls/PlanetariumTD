@@ -169,7 +169,7 @@ namespace FSMC.Editor.Windows
 
         private void AddStyles()
         {
-            StyleSheet styleSheet = (StyleSheet)EditorGUIUtility.Load("Assets/FSMC/Editor/Editor Resources/FSMC_WindowStyles.uss");
+            StyleSheet styleSheet = (StyleSheet)EditorGUIUtility.Load("Assets/3rd Party/FSMC/Editor/Editor Resources/FSMC_WindowStyles.uss");
             rootVisualElement.styleSheets.Add(styleSheet);
         }
 

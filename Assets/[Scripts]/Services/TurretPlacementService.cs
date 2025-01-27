@@ -192,12 +192,6 @@ namespace Planetarium
             // Clean up and select new turret for continuous placement
             var turretToReselect = selectedTurret;
             CancelTurretPlacement();
-
-            // Only try to select new turret if we can afford it
-            if (gameState.Currency >= cost)
-            {
-                SelectTurret(turretToReselect);
-            }
         }
 
         private void SetupPreviewTurret(DeployableBase preview)

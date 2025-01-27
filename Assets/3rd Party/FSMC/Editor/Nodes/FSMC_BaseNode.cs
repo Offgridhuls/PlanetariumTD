@@ -24,7 +24,7 @@ namespace FSMC.Editor.Nodes
         {
             SetPosition(new Rect(pos, Vector2.zero));
 
-            StyleSheet styleSheet = (StyleSheet)EditorGUIUtility.Load("Assets/FSMC/Editor/Editor Resources/FSMC_NodeStyles.uss");
+            StyleSheet styleSheet = (StyleSheet)EditorGUIUtility.Load("Assets/3rd Party/FSMC/Editor/Editor Resources/FSMC_NodeStyles.uss");
             styleSheets.Add(styleSheet);
 
             Draw();
