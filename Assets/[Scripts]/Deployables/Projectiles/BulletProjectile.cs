@@ -37,7 +37,7 @@ public class BulletProjectile : ProjectileBase
     protected void CheckForHits()
     {
         // Use velocity-based distance for raycast to ensure we don't miss fast-moving targets
-        float checkDistance = Mathf.Max(GetComponent<Rigidbody>().linearVelocity.magnitude * Time.deltaTime * 2f, 2f);
+        float checkDistance = Mathf.Max(GetComponent<Rigidbody>().linearVelocity.magnitude * Time.deltaTime, 1f);
         RaycastHit[] hits = Physics.RaycastAll(transform.position, direction, checkDistance, targetLayers);
         
         if (hits.Length > 0)
