@@ -182,7 +182,7 @@ namespace Planetarium
 
         protected virtual void CollectServices()
         {
-            var services = FindObjectsOfType<SceneService>();
+            var services = FindObjectsByType<SceneService>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             foreach (var service in services)
             {
                 AddService(service);
