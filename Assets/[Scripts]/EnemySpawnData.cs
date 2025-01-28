@@ -19,6 +19,13 @@ public class EnemySpawnData : ScriptableObject
     public int scoreValue = 10;
     public int resourceValue = 5;
 
+    
+    [Header("Attacking")]
+    public float attackSpeed = 2f ;
+    public int attackDamage = 20;
+    public int attackRange = 50;
+    public int ProjectileSpeed = 5;
+    
     [Header("Effects")]
     public GameObject spawnEffect;
     public GameObject deathEffect;

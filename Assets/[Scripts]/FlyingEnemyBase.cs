@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class FlyingEnemyBase : EnemyBase
 {
+    [Header("Flying Enemy Components")]
+    [SerializeField] protected Transform firePoint;
+    [SerializeField] protected ProjectileBase projectilePrefab;
+
     private float heightVariation = 2f;
     private float heightChangeSpeed = 1f;
     private float currentHeight;
@@ -15,7 +19,20 @@ public class FlyingEnemyBase : EnemyBase
         base.Start();
         currentHeight = transform.position.y;
         targetHeight = currentHeight + Random.Range(-heightVariation, heightVariation);
+
+        // Ensure we have a fire point
+        if (!firePoint)
+        {
+            // Create a fire point if it doesn't exist
+            GameObject firePointObj = new GameObject("FirePoint");
+            firePoint = firePointObj.transform;
+            firePoint.SetParent(transform);
+            firePoint.localPosition = Vector3.forward; // Adjust position as needed
+        }
     }
+
+    public Transform GetFirePoint() => firePoint;
+    public ProjectileBase GetProjectilePrefab() => projectilePrefab;
 
     public void SetFlightParameters(float variation, float speed)
     {
@@ -39,8 +56,6 @@ public class FlyingEnemyBase : EnemyBase
 
         // Smoothly interpolate to target height
         currentHeight = Mathf.Lerp(currentHeight, targetHeight, Time.deltaTime * heightChangeSpeed);
-        Vector3 position = transform.position;
-        position.y = currentHeight;
-        transform.position = position;
+        //transform.position = position;
     }
 }

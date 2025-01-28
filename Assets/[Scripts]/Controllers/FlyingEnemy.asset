@@ -49,7 +49,8 @@ MonoBehaviour:
     - rid: 997942678108241920
       type: {class: FSMC_State, ns: FSMC.Runtime, asm: FSMC.Runtime}
       data:
-        _behaviours: []
+        _behaviours:
+        - rid: 8864691103939952707
         Position: {x: 562, y: 411}
         _name: Attack
         TransitionsFrom:
@@ -71,7 +72,7 @@ MonoBehaviour:
       type: {class: FSMC_BoolParameter, ns: FSMC.Runtime, asm: FSMC.Runtime}
       data:
         _type: 2
-        _name: IsAttacking
+        _name: TargetReached
         _value: 0
     - rid: 997942678108241924
       type: {class: FSMC_BoolCondition, ns: FSMC.Runtime, asm: FSMC.Runtime}
@@ -79,7 +80,7 @@ MonoBehaviour:
         comparison: 0
         parameter:
           rid: 997942678108241923
-        Value: 1
+        Value: 0
     - rid: 997942678108241925
       type: {class: FSMC_Transition, ns: FSMC.Runtime, asm: FSMC.Runtime}
       data:
@@ -98,3 +99,13 @@ MonoBehaviour:
         parameter:
           rid: 997942678108241923
         Value: 0
+    - rid: 8864691103939952707
+      type: {class: RangedAttackGenerator, ns: , asm: Assembly-CSharp}
+      data:
+        enabled: 1
+        Altitude: 0
+        targetUpdateInterval: 0.5
+        avoidanceRadius: 5
+        avoidanceForce: 10
+        maxAvoidanceAngle: 45
+        arrivalDistance: 2
