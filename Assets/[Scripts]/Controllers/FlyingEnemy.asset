@@ -16,10 +16,12 @@ MonoBehaviour:
   AnyPosition: {x: 200, y: 400}
   States:
   - rid: 997942676252524609
+  - rid: 997942678108241920
   AnyTransitions: []
   StartingState:
     rid: 997942676252524609
-  Parameters: []
+  Parameters:
+  - rid: 997942678108241923
   references:
     version: 2
     RefIds:
@@ -28,13 +30,71 @@ MonoBehaviour:
       data:
         _behaviours:
         - rid: 997942676252524610
-        Position: {x: 562, y: 186}
+        Position: {x: 562, y: 200}
         _name: MoveToNearestGenerator
-        TransitionsFrom: []
-        TransitionsTo: []
+        TransitionsFrom:
+        - rid: 997942678108241921
+        TransitionsTo:
+        - rid: 997942678108241925
     - rid: 997942676252524610
       type: {class: MoveToNearestGenerator, ns: , asm: Assembly-CSharp}
       data:
         enabled: 1
         Altitude: 15
         targetUpdateInterval: 0.5
+        avoidanceRadius: 5
+        avoidanceForce: 10
+        maxAvoidanceAngle: 45
+        arrivalDistance: 2
+    - rid: 997942678108241920
+      type: {class: FSMC_State, ns: FSMC.Runtime, asm: FSMC.Runtime}
+      data:
+        _behaviours: []
+        Position: {x: 562, y: 411}
+        _name: Attack
+        TransitionsFrom:
+        - rid: 997942678108241925
+        TransitionsTo:
+        - rid: 997942678108241921
+    - rid: 997942678108241921
+      type: {class: FSMC_Transition, ns: FSMC.Runtime, asm: FSMC.Runtime}
+      data:
+        conditions:
+        - conditions:
+          - rid: 997942678108241924
+        _originState:
+          rid: 997942676252524609
+        _destinationState:
+          rid: 997942678108241920
+        _name: MoveToNearestGenerator->Attack
+    - rid: 997942678108241923
+      type: {class: FSMC_BoolParameter, ns: FSMC.Runtime, asm: FSMC.Runtime}
+      data:
+        _type: 2
+        _name: IsAttacking
+        _value: 0
+    - rid: 997942678108241924
+      type: {class: FSMC_BoolCondition, ns: FSMC.Runtime, asm: FSMC.Runtime}
+      data:
+        comparison: 0
+        parameter:
+          rid: 997942678108241923
+        Value: 1
+    - rid: 997942678108241925
+      type: {class: FSMC_Transition, ns: FSMC.Runtime, asm: FSMC.Runtime}
+      data:
+        conditions:
+        - conditions:
+          - rid: 997942678108241926
+        _originState:
+          rid: 997942678108241920
+        _destinationState:
+          rid: 997942676252524609
+        _name: Attack->MoveToNearestGenerator
+    - rid: 997942678108241926
+      type: {class: FSMC_BoolCondition, ns: FSMC.Runtime, asm: FSMC.Runtime}
+      data:
+        comparison: 0
+        parameter:
+          rid: 997942678108241923
+        Value: 0

@@ -36,8 +36,8 @@ namespace Planetarium.UI
                 Debug.LogError($"PlayerInfoView on {gameObject.name}: planetHealthText is not assigned!");
             if (healthBarGradient == null)
                 Debug.LogError($"PlayerInfoView on {gameObject.name}: healthBarGradient is not assigned!");
-            if (waveTimerContainer == null)
-                Debug.LogError($"PlayerInfoView on {gameObject.name}: waveTimerContainer is not assigned!");
+            //if (waveTimerContainer == null)
+            //    Debug.LogError($"PlayerInfoView on {gameObject.name}: waveTimerContainer is not assigned!");
         }
 
         protected override void OnInitialize()

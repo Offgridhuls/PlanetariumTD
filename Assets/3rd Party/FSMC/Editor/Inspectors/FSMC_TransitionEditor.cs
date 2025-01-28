@@ -129,7 +129,7 @@ namespace FSMC.Editor.Inspectors
             transitionContainer.Add(orButton);
 
             transitionContainer.AddToClassList("main-container");
-            StyleSheet styleSheet = (StyleSheet)EditorGUIUtility.Load("Assets/FSMC/Editor/Editor Resources/FSMC_TransitionStyles.uss");
+            StyleSheet styleSheet = (StyleSheet)EditorGUIUtility.Load("Assets/3rd Party/FSMC/Editor/Editor Resources/FSMC_TransitionStyles.uss");
             transitionContainer.styleSheets.Add(styleSheet);
 
             return transitionContainer;

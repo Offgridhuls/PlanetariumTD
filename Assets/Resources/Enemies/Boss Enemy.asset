@@ -17,7 +17,7 @@ MonoBehaviour:
   damage: 40
   integrity: 0.3
   RotSpeed: 300
-  MoveSpeed: 10
+  MoveSpeed: 5
   scoreValue: 100
   resourceValue: 50
   spawnEffect: {fileID: 3031766928850544864, guid: a8cb176ac2d6504459d1fb8e59257cda, type: 3}
