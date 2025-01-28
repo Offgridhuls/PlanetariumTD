@@ -17,6 +17,8 @@ public class RicochetProjectile : ProjectileBase
     private HashSet<GameObject> hitTargets = new HashSet<GameObject>();
     private float currentDamage;
     private Dictionary<EnemyBase, Vector3> previousPositions = new Dictionary<EnemyBase, Vector3>();
+    private EnemyBase currentTarget;
+    private Vector3 targetPredictedPos;
 
     public override void ShootProjectile(Vector3 target, GameObject enemy)
     {
@@ -35,9 +37,15 @@ public class RicochetProjectile : ProjectileBase
     {
         base.Update();
         if (!isInitialized) return;
-        
-        // Update direction for raycast hit detection
-        direction = GetComponent<Rigidbody>().linearVelocity.normalized;
+
+        if (currentTarget != null)
+        {
+            // Update predicted position and adjust course
+            targetPredictedPos = PredictEnemyPosition(currentTarget, Vector3.Distance(transform.position, currentTarget.transform.position) / projectileSpeed);
+            direction = (targetPredictedPos - transform.position).normalized;
+            GetComponent<Rigidbody>().linearVelocity = direction * projectileSpeed;
+            transform.rotation = Quaternion.LookRotation(direction);
+        }
         
         // Check for hits
         CheckForHits();
@@ -46,7 +54,7 @@ public class RicochetProjectile : ProjectileBase
     protected void CheckForHits()
     {
         // Use velocity-based distance for raycast to ensure we don't miss fast-moving targets
-        float checkDistance = Mathf.Max(GetComponent<Rigidbody>().linearVelocity.magnitude * Time.deltaTime * 2f, 2f);
+        float checkDistance = Mathf.Max(GetComponent<Rigidbody>().linearVelocity.magnitude * Time.deltaTime * 1f, 1f);
         RaycastHit[] hits = Physics.RaycastAll(transform.position, direction, checkDistance, targetLayers);
         
         if (hits.Length > 0)
@@ -117,62 +125,75 @@ public class RicochetProjectile : ProjectileBase
         // Find all potential targets in range
         Collider[] colliders = Physics.OverlapSphere(hitPosition, ricochetRange, targetLayers);
         
-        // Filter out already hit targets and sort by distance
-        var validTargets = colliders
+        if (colliders.Length == 0) return false;
+
+        // Get current velocity
+        var rb = GetComponent<Rigidbody>();
+        float currentSpeed = projectileSpeed;
+        
+        // Find nearest valid target
+        var nearestTarget = colliders
             .Select(c => {
                 var enemy = c.GetComponent<EnemyBase>();
-                return new { GameObject = c.gameObject, Enemy = enemy };
+                if (enemy == null || hitTargets.Contains(c.gameObject)) return null;
+                
+                Vector3 enemyPos = enemy.transform.position;
+                float distanceToTarget = Vector3.Distance(hitPosition, enemyPos);
+                
+                return new { 
+                    Enemy = enemy,
+                    Distance = distanceToTarget
+                };
             })
-            .Where(obj => !hitTargets.Contains(obj.GameObject) && obj.Enemy != null)
-            .OrderBy(obj => 
-            {
-                // Calculate predicted position for this enemy
-                Vector3 predictedPos = PredictEnemyPosition(obj.Enemy);
-                Vector3 toTarget = predictedPos - hitPosition;
-                float angle = Vector3.Angle(direction, toTarget);
-                // Prefer targets that cause larger direction changes (more interesting bounces)
-                return angle < minBounceAngle ? float.MaxValue : Vector3.Distance(hitPosition, predictedPos);
-            })
-            .ToList();
+            .Where(x => x != null)
+            .OrderBy(x => x.Distance)
+            .FirstOrDefault();
 
-        if (validTargets.Count == 0) return false;
+        if (nearestTarget == null) return false;
 
-        // Get the best target and update projectile direction
-        var nextTarget = validTargets[0];
-        Vector3 predictedPosition = PredictEnemyPosition(nextTarget.Enemy);
-        Vector3 newDirection = (predictedPosition - hitPosition).normalized;
-        
-        // Update projectile
-        direction = newDirection;
-        var rb = GetComponent<Rigidbody>();
+        // Set the new target and initial direction
+        currentTarget = nearestTarget.Enemy;
+        targetPredictedPos = PredictEnemyPosition(currentTarget, nearestTarget.Distance / projectileSpeed);
+        direction = (targetPredictedPos - hitPosition).normalized;
         rb.linearVelocity = direction * projectileSpeed;
         transform.rotation = Quaternion.LookRotation(direction);
 
         return true;
     }
 
-    private Vector3 PredictEnemyPosition(EnemyBase enemy)
+    private Vector3 PredictEnemyPosition(EnemyBase enemy, float predictionTime)
     {
-        if (enemy == null) return enemy.transform.position;
-
-        // Calculate time to reach target based on current distance and projectile speed
-        float distanceToTarget = Vector3.Distance(transform.position, enemy.transform.position);
-        float timeToTarget = distanceToTarget / projectileSpeed;
-
-        // Get enemy velocity using position difference
-        Vector3 enemyVelocity = Vector3.zero;
-        if (!previousPositions.ContainsKey(enemy))
+        if (!previousPositions.TryGetValue(enemy, out Vector3 prevPos))
         {
-            previousPositions[enemy] = enemy.transform.position;
+            prevPos = enemy.transform.position;
+            previousPositions[enemy] = prevPos;
         }
-        else
+
+        Vector3 currentPos = enemy.transform.position;
+        
+        // Calculate velocity based on actual movement
+        Vector3 velocity = (currentPos - prevPos) / Time.deltaTime;
+        previousPositions[enemy] = currentPos;
+
+        // Get the current planet and orbital information
+        var currentPlanet = enemy.GetCurrentPlanet();
+        if (currentPlanet != null)
         {
-            enemyVelocity = (enemy.transform.position - previousPositions[enemy]) / Time.deltaTime;
-            previousPositions[enemy] = enemy.transform.position;
+            Vector3 planetPos = currentPlanet.transform.position;
+            Vector3 toEnemy = currentPos - planetPos;
+            float orbitRadius = toEnemy.magnitude;
+            
+            // Calculate orbital velocity
+            Quaternion currentRotation = Quaternion.LookRotation(toEnemy);
+            Vector3 predictedPos = planetPos + (Quaternion.AngleAxis(velocity.magnitude * Mathf.Rad2Deg * predictionTime, Vector3.up) * toEnemy);
+            
+            // Ensure we maintain the correct orbit radius
+            predictedPos = planetPos + (predictedPos - planetPos).normalized * orbitRadius;
+            return predictedPos;
         }
         
-        // Predict future position
-        return enemy.transform.position + enemyVelocity * timeToTarget;
+        // For non-orbiting enemies, use linear prediction
+        return currentPos + velocity * predictionTime;
     }
 
     private void DestroyProjectile()
