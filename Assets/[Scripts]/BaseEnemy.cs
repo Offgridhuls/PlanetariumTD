@@ -42,7 +42,7 @@ public class BaseEnemy : EnemyBase
     protected override void Update()
     {
         if (isDead || currentPlanet == null) return;
-
+        
         if (isDiving)
         {
             HandleDiving();
@@ -80,16 +80,16 @@ public class BaseEnemy : EnemyBase
     private void CheckForDiveTarget()
     {
         if (Time.time < nextDiveCheckTime) return;
-
+        
         nextDiveCheckTime = Time.time + diveCheckInterval;
-
+        
         // Random chance to initiate dive
         if (Random.value < 0.3f)
         {
             // Find potential targets (IDamageable objects)
             Collider[] colliders = Physics.OverlapSphere(transform.position, detectionRange);
             List<Transform> potentialTargets = new List<Transform>();
-
+        
             foreach (Collider col in colliders)
             {
                 var damageable = col.GetComponent<IDamageable>();
@@ -105,7 +105,7 @@ public class BaseEnemy : EnemyBase
                     }
                 }
             }
-
+        
             // If we found any targets, randomly select one and start diving
             if (potentialTargets.Count > 0)
             {
@@ -129,10 +129,10 @@ public class BaseEnemy : EnemyBase
             ReturnToOrbit();
             return;
         }
-
+        
         // Update dive target position
         diveTarget = currentTarget.position;
-
+        
         // Calculate direction to target
         Vector3 directionToTarget = (diveTarget - transform.position).normalized;
         
@@ -142,7 +142,7 @@ public class BaseEnemy : EnemyBase
         // Face dive direction
         Quaternion targetRotation = Quaternion.LookRotation(directionToTarget);
         transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, enemyStats.RotSpeed * Time.deltaTime);
-
+        
         // Check if we've reached the target
         if (Vector3.Distance(transform.position, diveTarget) < 1f)
         {
@@ -166,22 +166,6 @@ public class BaseEnemy : EnemyBase
         isOrbiting = true;
         currentTarget = null;
         nextDiveCheckTime = Time.time + diveCheckInterval;
-    }
-
-    protected override void OnTriggerEnter(Collider other)
-    {
-        if (isDead) return;
-
-        var damageable = other.GetComponent<IDamageable>();
-        if (damageable != null)
-        {
-            DamageableType targetType = damageable.GetDamageableType();
-            if (targetType != DamageableType.Enemy) // Don't damage other enemies
-            {
-                damageable.TakeDamage(enemyStats.damage);
-                Die();
-            }
-        }
     }
 
     public override DamageableType GetDamageableType()

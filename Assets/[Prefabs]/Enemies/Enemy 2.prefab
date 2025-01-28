@@ -12,8 +12,8 @@ GameObject:
   - component: {fileID: 4965666668053814821}
   - component: {fileID: 4687432802531861276}
   - component: {fileID: 6451041024947094753}
-  - component: {fileID: -8260107237632147141}
   - component: {fileID: 4121028953279603591}
+  - component: {fileID: -862426353876853789}
   m_Layer: 6
   m_Name: Enemy 2
   m_TagString: Enemy
@@ -116,43 +116,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &-8260107237632147141
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3507184854093064820}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 951e64076df616649972c81350a6bf9c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _controller: {fileID: 11400000, guid: 3002eaf9c716ca147abac9daf4bd3b25, type: 2}
-  enemyStats: {fileID: 11400000, guid: 65de817243cb69c4c927e4e90d03a647, type: 2}
-  maxHealth: 100
-  currentHealth: 0
-  integrity: 0.1
-  isDead: 0
-  deathEffect: {fileID: 0}
-  damageEffect: {fileID: 0}
-  healthBarPrefab: {fileID: 0}
-  scoreValue: 10
-  possibleResources:
-  - {fileID: 11400000, guid: 34a83c52de3b36542b7def04caa99464, type: 2}
-  resourceDropRange: {x: 1, y: 3}
-  onHealthChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  onDeath:
-    m_PersistentCalls:
-      m_Calls: []
-  onScoreGained:
-    m_PersistentCalls:
-      m_Calls: []
-  onResourceGained:
-    m_PersistentCalls:
-      m_Calls: []
 --- !u!65 &4121028953279603591
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -174,3 +137,39 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &-862426353876853789
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3507184854093064820}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd22b67eac5f17541958a6f07324f41c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _controller: {fileID: 11400000, guid: 3002eaf9c716ca147abac9daf4bd3b25, type: 2}
+  enemyStats: {fileID: 11400000, guid: 20917f4100764c1428d6b4a2e026e769, type: 2}
+  maxHealth: 100
+  currentHealth: 0
+  integrity: 0.5
+  isDead: 0
+  deathEffect: {fileID: 0}
+  damageEffect: {fileID: 0}
+  healthBarPrefab: {fileID: 0}
+  scoreValue: 10
+  possibleResources: []
+  resourceDropRange: {x: 1, y: 3}
+  onHealthChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  onDeath:
+    m_PersistentCalls:
+      m_Calls: []
+  onScoreGained:
+    m_PersistentCalls:
+      m_Calls: []
+  onResourceGained:
+    m_PersistentCalls:
+      m_Calls: []

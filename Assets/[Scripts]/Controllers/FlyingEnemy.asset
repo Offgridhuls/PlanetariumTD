@@ -14,13 +14,27 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   StartPosition: {x: 200, y: 200}
   AnyPosition: {x: 200, y: 400}
-  States: []
+  States:
+  - rid: 997942676252524609
   AnyTransitions: []
   StartingState:
-    rid: -2
+    rid: 997942676252524609
   Parameters: []
   references:
     version: 2
     RefIds:
-    - rid: -2
-      type: {class: , ns: , asm: }
+    - rid: 997942676252524609
+      type: {class: FSMC_State, ns: FSMC.Runtime, asm: FSMC.Runtime}
+      data:
+        _behaviours:
+        - rid: 997942676252524610
+        Position: {x: 562, y: 186}
+        _name: MoveToNearestGenerator
+        TransitionsFrom: []
+        TransitionsTo: []
+    - rid: 997942676252524610
+      type: {class: MoveToNearestGenerator, ns: , asm: Assembly-CSharp}
+      data:
+        enabled: 1
+        Altitude: 15
+        targetUpdateInterval: 0.5

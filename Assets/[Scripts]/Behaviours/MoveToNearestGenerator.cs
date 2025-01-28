@@ -15,6 +15,18 @@ public class MoveToNearestGenerator : BehaviourBase
     [SerializeField]
     float targetUpdateInterval = 0.5f; // How often to search for new target
 
+    [Header("Collision Avoidance")]
+    [SerializeField]
+    float avoidanceRadius = 5f; // How far to check for other enemies
+    [SerializeField]
+    float avoidanceForce = 10f; // How strongly to avoid other enemies
+    [SerializeField]
+    float maxAvoidanceAngle = 45f; // Maximum angle to deviate from path for avoidance
+
+    [Header("Target Settings")]
+    [SerializeField]
+    float arrivalDistance = 2f; // How close we need to be to count as "arrived"
+
     private float orbitRadius;
     private Vector3 targetPoint;
     private float lastTargetUpdateTime;
@@ -34,7 +46,6 @@ public class MoveToNearestGenerator : BehaviourBase
 
     public override void OnStateUpdate(FSMC_Controller stateMachine, FSMC_Executer executer)
     {
-        // Update target periodically
         if (Time.time - lastTargetUpdateTime >= targetUpdateInterval)
         {
             UpdateTargetGenerator();
@@ -43,9 +54,25 @@ public class MoveToNearestGenerator : BehaviourBase
         Vector3 currentPosition = executer.transform.position;
         Vector3 planetPosition = OwningEnemy.GetCurrentPlanet().transform.position;
 
+        // Check if we've reached the target
+        if (currentTarget != null && Vector3.Distance(currentPosition, targetPoint) < arrivalDistance)
+        {
+            // Face the generator
+            Vector3 directionToGenerator = (currentTarget.transform.position - currentPosition).normalized;
+            Quaternion targetRot = Quaternion.LookRotation(directionToGenerator, executer.transform.up);
+            executer.transform.rotation = Quaternion.Slerp(
+                executer.transform.rotation,
+                targetRot,
+                OwningEnemy.GetStats().RotSpeed * Time.deltaTime
+            );
+
+            // Signal state machine to transition to attack state
+            stateMachine.SetTrigger("TargetReached");
+            return;
+        }
+
         if (currentTarget == null)
         {
-            // If no generator found, orbit randomly like before
             if (Vector3.Distance(targetPoint, currentPosition) < 5)
             {
                 Vector3 randomDirection = UnityEngine.Random.onUnitSphere;
@@ -55,23 +82,29 @@ public class MoveToNearestGenerator : BehaviourBase
         }
         else
         {
-            // Project generator position onto orbital sphere
             Vector3 generatorDirection = (currentTarget.transform.position - planetPosition).normalized;
             targetPoint = planetPosition + generatorDirection * orbitRadius;
             Debug.Log($"Moving to generator at {currentTarget.transform.position}, projected point: {targetPoint}");
         }
 
-        // Calculate direction to target on the orbital sphere
+        // Calculate base movement direction
         Vector3 directionToTarget = (targetPoint - currentPosition).normalized;
         
-        // Move towards target point
-        Vector3 newPosition = currentPosition + directionToTarget * OwningEnemy.GetStats().MoveSpeed * Time.deltaTime;
+        // Apply collision avoidance
+        Vector3 avoidanceDirection = CalculateAvoidanceDirection(currentPosition, planetPosition);
         
-        // Project the new position onto the orbital sphere
+        // Blend target direction with avoidance
+        Vector3 finalDirection = Vector3.Slerp(directionToTarget, avoidanceDirection, 
+            Vector3.Dot(directionToTarget, avoidanceDirection) < 0 ? 0.8f : 0.5f);
+        
+        // Move in the final direction
+        Vector3 newPosition = currentPosition + finalDirection * OwningEnemy.GetStats().MoveSpeed * Time.deltaTime;
+        
+        // Project onto orbital sphere
         Vector3 directionToPlanet = (newPosition - planetPosition).normalized;
         executer.transform.position = planetPosition + directionToPlanet * orbitRadius;
 
-        // Rotate to face movement direction while staying aligned with planet
+        // Rotate to face movement direction
         Vector3 forward = -directionToPlanet;
         Vector3 right = Vector3.Cross(Vector3.up, forward).normalized;
         Vector3 up = Vector3.Cross(forward, right);
@@ -87,21 +120,70 @@ public class MoveToNearestGenerator : BehaviourBase
         Debug.DrawLine(planetPosition, executer.transform.position, Color.blue);
     }
 
+    private Vector3 CalculateAvoidanceDirection(Vector3 currentPosition, Vector3 planetPosition)
+    {
+        // Find nearby enemies
+        var enemies = UnityEngine.Object.FindObjectsByType<EnemyBase>(FindObjectsSortMode.None);
+        Vector3 avoidanceSum = Vector3.zero;
+        int nearbyCount = 0;
+
+        foreach (var enemy in enemies)
+        {
+            if (enemy.gameObject == OwningEnemy.gameObject) continue;
+
+            Vector3 toEnemy = enemy.transform.position - currentPosition;
+            float distance = toEnemy.magnitude;
+
+            if (distance < avoidanceRadius && distance > 0)
+            {
+                // Project the enemy position onto our orbital plane
+                Vector3 dirToPlanet = (currentPosition - planetPosition).normalized;
+                Vector3 projectedToEnemy = Vector3.ProjectOnPlane(toEnemy, dirToPlanet);
+                
+                // Calculate avoidance vector (stronger when closer)
+                float weight = 1.0f - (distance / avoidanceRadius);
+                avoidanceSum -= projectedToEnemy.normalized * weight * avoidanceForce;
+                nearbyCount++;
+            }
+        }
+
+        if (nearbyCount > 0)
+        {
+            // Average the avoidance vectors
+            Vector3 averageAvoidance = avoidanceSum / nearbyCount;
+            
+            // Project the avoidance direction onto the orbital sphere
+            Vector3 dirToPlanet = (currentPosition - planetPosition).normalized;
+            Vector3 projectedAvoidance = Vector3.ProjectOnPlane(averageAvoidance, dirToPlanet).normalized;
+            
+            // Limit the maximum deviation angle
+            Vector3 currentDir = (targetPoint - currentPosition).normalized;
+            float angle = Vector3.Angle(currentDir, projectedAvoidance);
+            if (angle > maxAvoidanceAngle)
+            {
+                projectedAvoidance = Vector3.RotateTowards(currentDir, projectedAvoidance, 
+                    Mathf.Deg2Rad * maxAvoidanceAngle, 0.0f);
+            }
+            
+            return projectedAvoidance;
+        }
+
+        // If no nearby enemies, return direction to target
+        return (targetPoint - currentPosition).normalized;
+    }
+
     private void UpdateTargetGenerator()
     {
         lastTargetUpdateTime = Time.time;
 
-        // Find all generators using FindObjectsByType
         GeneratorBase[] generators = UnityEngine.Object.FindObjectsByType<GeneratorBase>(FindObjectsSortMode.None);
         
         if (generators.Length == 0)
         {
-            Debug.Log("No generators found!");
             currentTarget = null;
             return;
         }
 
-        // Find nearest non-destroyed generator
         float nearestDistance = float.MaxValue;
         GeneratorBase nearestGenerator = null;
 
@@ -123,7 +205,6 @@ public class MoveToNearestGenerator : BehaviourBase
 
         if (nearestGenerator != currentTarget)
         {
-            Debug.Log($"New target found at distance {nearestDistance}");
             currentTarget = nearestGenerator;
         }
 
@@ -138,6 +219,5 @@ public class MoveToNearestGenerator : BehaviourBase
     public override void OnStateExit(FSMC_Controller stateMachine, FSMC_Executer executer)
     {
         currentTarget = null;
-        Debug.Log("Exiting MoveToNearestGenerator state");
     }
 }

@@ -5,7 +5,7 @@ using FSMC.Runtime;
 using Planetarium;
 using UnityEngine.Events;
 
-public abstract class EnemyBase : FSMC_Executer, IDamageable
+public class EnemyBase : FSMC_Executer, IDamageable
 {
     [Header("Components")]
     protected PlanetBase currentPlanet;
@@ -86,6 +86,10 @@ public abstract class EnemyBase : FSMC_Executer, IDamageable
         base.Start();
     }
 
+    protected override void Awake()
+    {
+        base.Awake();
+    }
     public void ProcessSpawnData(EnemySpawnData spawnData, float speedMult, bool elite)
     {
         enemyStats = spawnData;
@@ -106,7 +110,7 @@ public abstract class EnemyBase : FSMC_Executer, IDamageable
         deathEffect = death;
         damageEffect = damage;
         healthBarPrefab = healthBar;
-        
+
         if (healthBarPrefab != null && healthBarInstance == null)
         {
             healthBarInstance = Instantiate(healthBarPrefab, transform);
@@ -135,7 +139,7 @@ public abstract class EnemyBase : FSMC_Executer, IDamageable
         {
             int resourceCount = Random.Range((int)resourceDropRange.x, (int)resourceDropRange.y + 1);
             ResourceManager resourceManager = FindFirstObjectByType<ResourceManager>();
-            
+
             if (resourceManager != null)
             {
                 for (int i = 0; i < resourceCount; i++)
@@ -174,23 +178,19 @@ public abstract class EnemyBase : FSMC_Executer, IDamageable
     {
         return enemyStats;
     }
-
-    protected virtual void OnTriggerEnter(Collider other)
+    protected void OnTriggerEnter(Collider other)
     {
-        // Check for collision with planet
-        PlanetBase planet = other.GetComponent<PlanetBase>();
-        if (planet != null)
+        if (isDead) return;
+
+        var damageable = other.GetComponent<IDamageable>();
+        if (damageable != null)
         {
-            var planetDamageable = planet.GetComponent<IDamageable>();
-            if (planetDamageable != null)
+            DamageableType targetType = damageable.GetDamageableType();
+            if (targetType != DamageableType.Enemy) // Don't damage other enemies
             {
-                planetDamageable.TakeDamage(enemyStats.damage);
+                damageable.TakeDamage(enemyStats.damage);
+                Die();
             }
-            else
-            {
-                Debug.LogWarning($"Planet {planet.name} is not damageable.");
-            }
-            Die();
         }
     }
 }
