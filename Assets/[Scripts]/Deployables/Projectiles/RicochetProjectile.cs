@@ -8,6 +8,7 @@ public class RicochetProjectile : ProjectileBase
     [SerializeField] private int maxRicochets = 3;
     [SerializeField] private float ricochetRange = 10f;
     [SerializeField] private float damageReductionPerBounce = 0.2f; // Each bounce does 20% less damage
+    [SerializeField] private float speedReductionAfterFirstBounce = 0.5f; // Reduces speed by 50% after first bounce
     [SerializeField] private TrailRenderer bulletTrail;
     [SerializeField] private GameObject hitEffect;
     [SerializeField] private float minBounceAngle = 20f; // Minimum angle change on bounce
@@ -25,9 +26,16 @@ public class RicochetProjectile : ProjectileBase
     private int ricochetsRemaining;
     private HashSet<GameObject> hitTargets = new HashSet<GameObject>();
     private float currentDamage;
+    private float currentSpeed;
     private Dictionary<EnemyBase, Vector3> previousPositions = new Dictionary<EnemyBase, Vector3>();
     private EnemyBase currentTarget;
     private Vector3 targetPredictedPos;
+
+    public override void Initialize(int damage, Vector3 target, float speed)
+    {
+        base.Initialize(damage, target, speed);
+        currentDamage = damage;
+    }
 
     public override void ShootProjectile(Vector3 target, GameObject enemy)
     {
@@ -35,11 +43,11 @@ public class RicochetProjectile : ProjectileBase
         targetEnemy = enemy;
         isInitialized = true;
         ricochetsRemaining = maxRicochets;
-        currentDamage = damage;
+        currentSpeed = projectileSpeed;
         
         direction = (target - transform.position).normalized;
         var rb = GetComponent<Rigidbody>();
-        rb.linearVelocity = direction * projectileSpeed;
+        rb.linearVelocity = direction * currentSpeed;
     }
 
     protected override void Update()
@@ -67,7 +75,7 @@ public class RicochetProjectile : ProjectileBase
                 
                 // Calculate velocity to reach next position
                 Vector3 newVelocity = (currentTargetPos - transform.position) / Time.deltaTime;
-                rb.linearVelocity = Vector3.ClampMagnitude(newVelocity, projectileSpeed);
+                rb.linearVelocity = Vector3.ClampMagnitude(newVelocity, currentSpeed);
                 
                 // Update direction for visuals
                 direction = rb.linearVelocity.normalized;
@@ -81,9 +89,9 @@ public class RicochetProjectile : ProjectileBase
         else if (currentTarget != null)
         {
             // Normal target tracking when not arcing
-            targetPredictedPos = PredictEnemyPosition(currentTarget, Vector3.Distance(transform.position, currentTarget.transform.position) / projectileSpeed);
+            targetPredictedPos = PredictEnemyPosition(currentTarget, Vector3.Distance(transform.position, currentTarget.transform.position) / currentSpeed);
             direction = (targetPredictedPos - transform.position).normalized;
-            rb.linearVelocity = direction * projectileSpeed;
+            rb.linearVelocity = direction * currentSpeed;
             transform.rotation = Quaternion.LookRotation(direction);
         }
         
@@ -167,7 +175,6 @@ public class RicochetProjectile : ProjectileBase
             }
             else
             {
-                // No valid targets found, destroy projectile
                 DestroyProjectile();
             }
         }
@@ -186,7 +193,6 @@ public class RicochetProjectile : ProjectileBase
 
         // Get current velocity
         var rb = GetComponent<Rigidbody>();
-        float currentSpeed = projectileSpeed;
         
         // Find nearest valid target
         var nearestTarget = colliders
@@ -208,15 +214,21 @@ public class RicochetProjectile : ProjectileBase
 
         if (nearestTarget == null) return false;
 
+        // Reduce speed after first bounce
+        if (ricochetsRemaining == maxRicochets - 1)
+        {
+            currentSpeed *= speedReductionAfterFirstBounce;
+        }
+
         // Set up arc trajectory
         currentTarget = nearestTarget.Enemy;
-        targetPredictedPos = PredictEnemyPosition(currentTarget, nearestTarget.Distance / projectileSpeed);
+        targetPredictedPos = PredictEnemyPosition(currentTarget, nearestTarget.Distance / currentSpeed);
         
         // Initialize arc parameters
         isArcing = true;
         arcStartTime = Time.time;
         arcStartPos = hitPosition;
-        arcDuration = nearestTarget.Distance / projectileSpeed;
+        arcDuration = nearestTarget.Distance / currentSpeed;
 
         // Calculate a random arc direction perpendicular to the path
         Vector3 directPath = (targetPredictedPos - hitPosition).normalized;
@@ -225,7 +237,7 @@ public class RicochetProjectile : ProjectileBase
         
         // Initial velocity for arc
         direction = (targetPredictedPos - hitPosition).normalized;
-        rb.linearVelocity = direction * projectileSpeed;
+        rb.linearVelocity = direction * currentSpeed;
         transform.rotation = Quaternion.LookRotation(direction);
 
         return true;

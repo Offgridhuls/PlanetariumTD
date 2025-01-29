@@ -55,6 +55,5 @@ public class MissileTurret : DeployableBase
         ProjectileBase projectile = Instantiate(M_Projectile, firePoint.position, Quaternion.LookRotation(directionToTarget));
         projectile.Initialize(M_TurretStats.GetDamage(), ClosestTarget.transform.position, M_TurretStats.GetProjectileSpeed());
         projectile.ShootProjectile(ClosestTarget.transform.position, ClosestTarget.gameObject);
-    
     }
 }
