@@ -41,27 +41,14 @@ public class RicochetTurret : DeployableBase
 
             // Spawn and initialize projectile
             ProjectileBase projectile = Instantiate(M_Projectile, TurretMuzzle.position, Quaternion.identity);
+            projectile.Initialize(M_TurretStats.GetDamage(), targetPos, M_TurretStats.GetProjectileSpeed());
             projectile.ShootProjectile(targetPos, ClosestTarget.gameObject);
         }
     }
 
     protected override void RotateTowardsTarget(Vector3 target)
     {
-       // if (TurretMuzzle != null)
-       // {
-       //     // Rotate only the muzzle, not the entire turret
-       //     Vector3 targetDirection = target - transform.position;
-       //     Quaternion targetRotation = Quaternion.LookRotation(targetDirection);
-       //     transform.rotation = Quaternion.RotateTowards(
-       //         transform.rotation,
-       //         targetRotation,
-       //         M_TurretStats.GetRotationSpeed() * Time.deltaTime
-       //     );
-       // }
-       // else
-       // {
-       //     base.RotateTowardsTarget(target);
-       // }
+        // Empty override - ricochet turret doesn't need to rotate
     }
 
 #if UNITY_EDITOR

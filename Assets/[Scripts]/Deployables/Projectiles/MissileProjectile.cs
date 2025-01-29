@@ -13,6 +13,11 @@ public class MissileProjectile : ProjectileBase
     private Vector3 currentVelocity;
     private bool hasExploded = false;
 
+    public override void Initialize(int damage, Vector3 target, float speed)
+    {
+        base.Initialize(damage, target, speed);
+    }
+
     public override void ShootProjectile(Vector3 target, GameObject enemy)
     {
         targetPosition = target;

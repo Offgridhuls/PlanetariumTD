@@ -8,15 +8,34 @@ public class RicochetProjectile : ProjectileBase
     [SerializeField] private int maxRicochets = 3;
     [SerializeField] private float ricochetRange = 10f;
     [SerializeField] private float damageReductionPerBounce = 0.2f; // Each bounce does 20% less damage
+    [SerializeField] private float speedReductionAfterFirstBounce = 0.5f; // Reduces speed by 50% after first bounce
     [SerializeField] private TrailRenderer bulletTrail;
     [SerializeField] private GameObject hitEffect;
     [SerializeField] private float minBounceAngle = 20f; // Minimum angle change on bounce
+
+    [Header("Arc Settings")]
+    [SerializeField] private float arcHeight = 5f;
+    [SerializeField] private float gravityScale = 5f;
+    private bool isArcing = false;
+    private float arcStartTime;
+    private Vector3 arcStartPos;
+    private float arcDuration;
+    private Vector3 arcUpDirection; // Direction for the arc's "up"
 
     private Vector3 direction;
     private int ricochetsRemaining;
     private HashSet<GameObject> hitTargets = new HashSet<GameObject>();
     private float currentDamage;
+    private float currentSpeed;
     private Dictionary<EnemyBase, Vector3> previousPositions = new Dictionary<EnemyBase, Vector3>();
+    private EnemyBase currentTarget;
+    private Vector3 targetPredictedPos;
+
+    public override void Initialize(int damage, Vector3 target, float speed)
+    {
+        base.Initialize(damage, target, speed);
+        currentDamage = damage;
+    }
 
     public override void ShootProjectile(Vector3 target, GameObject enemy)
     {
@@ -24,20 +43,57 @@ public class RicochetProjectile : ProjectileBase
         targetEnemy = enemy;
         isInitialized = true;
         ricochetsRemaining = maxRicochets;
-        currentDamage = damage;
+        currentSpeed = projectileSpeed;
         
         direction = (target - transform.position).normalized;
         var rb = GetComponent<Rigidbody>();
-        rb.linearVelocity = direction * projectileSpeed;
+        rb.linearVelocity = direction * currentSpeed;
     }
 
     protected override void Update()
     {
         base.Update();
         if (!isInitialized) return;
+
+        var rb = GetComponent<Rigidbody>();
         
-        // Update direction for raycast hit detection
-        direction = GetComponent<Rigidbody>().linearVelocity.normalized;
+        if (isArcing)
+        {
+            float timeSinceArc = Time.time - arcStartTime;
+            if (timeSinceArc < arcDuration)
+            {
+                // Calculate arc trajectory
+                float progress = timeSinceArc / arcDuration;
+                float heightOffset = Mathf.Sin(progress * Mathf.PI) * arcHeight;
+                
+                // Update position towards target with arc
+                Vector3 directPath = targetPredictedPos - arcStartPos;
+                Vector3 currentTargetPos = arcStartPos + (directPath * progress);
+                
+                // Apply height offset in the random arc direction
+                currentTargetPos += arcUpDirection * heightOffset;
+                
+                // Calculate velocity to reach next position
+                Vector3 newVelocity = (currentTargetPos - transform.position) / Time.deltaTime;
+                rb.linearVelocity = Vector3.ClampMagnitude(newVelocity, currentSpeed);
+                
+                // Update direction for visuals
+                direction = rb.linearVelocity.normalized;
+                transform.rotation = Quaternion.LookRotation(direction);
+            }
+            else
+            {
+                isArcing = false;
+            }
+        }
+        else if (currentTarget != null)
+        {
+            // Normal target tracking when not arcing
+            targetPredictedPos = PredictEnemyPosition(currentTarget, Vector3.Distance(transform.position, currentTarget.transform.position) / currentSpeed);
+            direction = (targetPredictedPos - transform.position).normalized;
+            rb.linearVelocity = direction * currentSpeed;
+            transform.rotation = Quaternion.LookRotation(direction);
+        }
         
         // Check for hits
         CheckForHits();
@@ -45,8 +101,19 @@ public class RicochetProjectile : ProjectileBase
 
     protected void CheckForHits()
     {
-        // Use velocity-based distance for raycast to ensure we don't miss fast-moving targets
-        float checkDistance = Mathf.Max(GetComponent<Rigidbody>().linearVelocity.magnitude * Time.deltaTime * 2f, 2f);
+        // Check if we're close enough to current target for direct hit
+        if (currentTarget != null)
+        {
+            float distanceToTarget = Vector3.Distance(transform.position, currentTarget.transform.position);
+            if (distanceToTarget < 1f && !hitTargets.Contains(currentTarget.gameObject))
+            {
+                HandleHit(currentTarget.gameObject);
+                return;
+            }
+        }
+
+        // Backup raycast check
+        float checkDistance = Mathf.Max(GetComponent<Rigidbody>().linearVelocity.magnitude * Time.deltaTime * 1f, 1f);
         RaycastHit[] hits = Physics.RaycastAll(transform.position, direction, checkDistance, targetLayers);
         
         if (hits.Length > 0)
@@ -92,6 +159,12 @@ public class RicochetProjectile : ProjectileBase
             damageable.ProcessDamage(damageData);
         }
 
+        // Clear current target since we hit it
+        if (currentTarget != null && currentTarget.gameObject == hitObject)
+        {
+            currentTarget = null;
+        }
+
         // If we have ricochets remaining, find next target
         if (ricochetsRemaining > 0)
         {
@@ -102,7 +175,6 @@ public class RicochetProjectile : ProjectileBase
             }
             else
             {
-                // No valid targets found, destroy projectile
                 DestroyProjectile();
             }
         }
@@ -117,62 +189,93 @@ public class RicochetProjectile : ProjectileBase
         // Find all potential targets in range
         Collider[] colliders = Physics.OverlapSphere(hitPosition, ricochetRange, targetLayers);
         
-        // Filter out already hit targets and sort by distance
-        var validTargets = colliders
+        if (colliders.Length == 0) return false;
+
+        // Get current velocity
+        var rb = GetComponent<Rigidbody>();
+        
+        // Find nearest valid target
+        var nearestTarget = colliders
             .Select(c => {
                 var enemy = c.GetComponent<EnemyBase>();
-                return new { GameObject = c.gameObject, Enemy = enemy };
+                if (enemy == null || hitTargets.Contains(c.gameObject)) return null;
+                
+                Vector3 enemyPos = enemy.transform.position;
+                float distanceToTarget = Vector3.Distance(hitPosition, enemyPos);
+                
+                return new { 
+                    Enemy = enemy,
+                    Distance = distanceToTarget
+                };
             })
-            .Where(obj => !hitTargets.Contains(obj.GameObject) && obj.Enemy != null)
-            .OrderBy(obj => 
-            {
-                // Calculate predicted position for this enemy
-                Vector3 predictedPos = PredictEnemyPosition(obj.Enemy);
-                Vector3 toTarget = predictedPos - hitPosition;
-                float angle = Vector3.Angle(direction, toTarget);
-                // Prefer targets that cause larger direction changes (more interesting bounces)
-                return angle < minBounceAngle ? float.MaxValue : Vector3.Distance(hitPosition, predictedPos);
-            })
-            .ToList();
+            .Where(x => x != null)
+            .OrderBy(x => x.Distance)
+            .FirstOrDefault();
 
-        if (validTargets.Count == 0) return false;
+        if (nearestTarget == null) return false;
 
-        // Get the best target and update projectile direction
-        var nextTarget = validTargets[0];
-        Vector3 predictedPosition = PredictEnemyPosition(nextTarget.Enemy);
-        Vector3 newDirection = (predictedPosition - hitPosition).normalized;
+        // Reduce speed after first bounce
+        if (ricochetsRemaining == maxRicochets - 1)
+        {
+            currentSpeed *= speedReductionAfterFirstBounce;
+        }
+
+        // Set up arc trajectory
+        currentTarget = nearestTarget.Enemy;
+        targetPredictedPos = PredictEnemyPosition(currentTarget, nearestTarget.Distance / currentSpeed);
         
-        // Update projectile
-        direction = newDirection;
-        var rb = GetComponent<Rigidbody>();
-        rb.linearVelocity = direction * projectileSpeed;
+        // Initialize arc parameters
+        isArcing = true;
+        arcStartTime = Time.time;
+        arcStartPos = hitPosition;
+        arcDuration = nearestTarget.Distance / currentSpeed;
+
+        // Calculate a random arc direction perpendicular to the path
+        Vector3 directPath = (targetPredictedPos - hitPosition).normalized;
+        Vector3 randomPerp = Vector3.Cross(directPath, Random.onUnitSphere).normalized;
+        arcUpDirection = randomPerp;
+        
+        // Initial velocity for arc
+        direction = (targetPredictedPos - hitPosition).normalized;
+        rb.linearVelocity = direction * currentSpeed;
         transform.rotation = Quaternion.LookRotation(direction);
 
         return true;
     }
 
-    private Vector3 PredictEnemyPosition(EnemyBase enemy)
+    private Vector3 PredictEnemyPosition(EnemyBase enemy, float predictionTime)
     {
-        if (enemy == null) return enemy.transform.position;
-
-        // Calculate time to reach target based on current distance and projectile speed
-        float distanceToTarget = Vector3.Distance(transform.position, enemy.transform.position);
-        float timeToTarget = distanceToTarget / projectileSpeed;
-
-        // Get enemy velocity using position difference
-        Vector3 enemyVelocity = Vector3.zero;
-        if (!previousPositions.ContainsKey(enemy))
+        if (!previousPositions.TryGetValue(enemy, out Vector3 prevPos))
         {
-            previousPositions[enemy] = enemy.transform.position;
+            prevPos = enemy.transform.position;
+            previousPositions[enemy] = prevPos;
         }
-        else
+
+        Vector3 currentPos = enemy.transform.position;
+        
+        // Calculate velocity based on actual movement
+        Vector3 velocity = (currentPos - prevPos) / Time.deltaTime;
+        previousPositions[enemy] = currentPos;
+
+        // Get the current planet and orbital information
+        var currentPlanet = enemy.GetCurrentPlanet();
+        if (currentPlanet != null)
         {
-            enemyVelocity = (enemy.transform.position - previousPositions[enemy]) / Time.deltaTime;
-            previousPositions[enemy] = enemy.transform.position;
+            Vector3 planetPos = currentPlanet.transform.position;
+            Vector3 toEnemy = currentPos - planetPos;
+            float orbitRadius = toEnemy.magnitude;
+            
+            // Calculate orbital velocity
+            Quaternion currentRotation = Quaternion.LookRotation(toEnemy);
+            Vector3 predictedPos = planetPos + (Quaternion.AngleAxis(velocity.magnitude * Mathf.Rad2Deg * predictionTime, Vector3.up) * toEnemy);
+            
+            // Ensure we maintain the correct orbit radius
+            predictedPos = planetPos + (predictedPos - planetPos).normalized * orbitRadius;
+            return predictedPos;
         }
         
-        // Predict future position
-        return enemy.transform.position + enemyVelocity * timeToTarget;
+        // For non-orbiting enemies, use linear prediction
+        return currentPos + velocity * predictionTime;
     }
 
     private void DestroyProjectile()
