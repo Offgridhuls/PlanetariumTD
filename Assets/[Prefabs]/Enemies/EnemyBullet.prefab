@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 807763393247112747}
   - component: {fileID: 2526509629052936677}
   m_Layer: 8
-  m_Name: 'Bullet                '
+  m_Name: EnemyBullet
   m_TagString: Projectile
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -211,7 +211,7 @@ MonoBehaviour:
   maxLifetime: 4
   targetLayers:
     serializedVersion: 2
-    m_Bits: 2112
+    m_Bits: 2048
   effectLifetime: 4
   launchSound: {fileID: 0}
   hitSound: {fileID: 8300000, guid: 8789f6a119f0d413b9ac7d94542888d8, type: 3}

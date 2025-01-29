@@ -132,6 +132,14 @@ namespace Planetarium
 
             Vector3 directionToPlanet = (targetPlanet.transform.position - transform.position);
             float distanceToCenter = directionToPlanet.magnitude;
+            
+            // Prevent division by zero and NaN
+            if (distanceToCenter < 0.001f)
+            {
+                directionToPlanet = Vector3.up;
+                distanceToCenter = 0.001f;
+            }
+            
             directionToPlanet = directionToPlanet / distanceToCenter;
 
             // Only raycast periodically
@@ -142,35 +150,74 @@ namespace Planetarium
                 {
                     float distanceToSurface = raycastHits[0].distance;
                     isFloating = distanceToSurface <= floatHeight;
+                    lastGravityDir = directionToPlanet;
                 }
                 else
                 {
                     isFloating = false;
+                    lastGravityDir = directionToPlanet;
                 }
 
                 nextRaycastTime = Time.time + RAYCAST_INTERVAL;
+            }
+
+            // Ensure lastGravityDir is valid
+            if (lastGravityDir == Vector3.zero)
+            {
                 lastGravityDir = directionToPlanet;
             }
 
             // Apply forces
-            if (isFloating)
+            if (isFloating && raycastHits[0].distance > 0)
             {
-                float upwardForce = (floatHeight - raycastHits[0].distance) * resourceType.gravitationSpeed;
-                rb.AddForce(-lastGravityDir * upwardForce, ForceMode.Force);
+                float upwardForce = Mathf.Clamp((floatHeight - raycastHits[0].distance) * resourceType.gravitationSpeed, -100f, 100f);
+                Vector3 force = -lastGravityDir * upwardForce;
+                
+                // Prevent NaN forces
+                if (!float.IsNaN(force.x) && !float.IsNaN(force.y) && !float.IsNaN(force.z))
+                {
+                    rb.AddForce(force, ForceMode.Force);
+                }
                 
                 currentRotation += rotationSpeed * Time.fixedDeltaTime;
                 float wobble = Mathf.Sin((Time.time + wobbleOffset) * wobbleSpeed) * wobbleAmount;
                 
-                Quaternion targetRotation = Quaternion.FromToRotation(Vector3.up, -lastGravityDir) 
-                    * Quaternion.Euler(wobble, currentRotation, 0);
+                // Ensure we have a valid up vector for rotation
+                Vector3 upVector = -lastGravityDir;
+                if (upVector.magnitude < 0.001f)
+                {
+                    upVector = Vector3.up;
+                }
                 
-                transform.rotation = targetRotation;
+                try
+                {
+                    // Create rotation safely
+                    Quaternion baseRotation = Quaternion.FromToRotation(Vector3.up, upVector);
+                    Quaternion wobbleRotation = Quaternion.Euler(wobble, currentRotation, 0);
+                    transform.rotation = baseRotation * wobbleRotation;
+                }
+                catch
+                {
+                    // Fallback rotation if something goes wrong
+                    transform.rotation = Quaternion.identity;
+                }
             }
             else
             {
                 float gravitationalForce = resourceType.gravitationSpeed * resourceManager.GetGravitationMultiplier();
-                rb.AddForce(directionToPlanet * gravitationalForce, ForceMode.Force);
-                transform.rotation = Quaternion.FromToRotation(Vector3.up, -directionToPlanet);
+                Vector3 force = directionToPlanet * gravitationalForce;
+                
+                // Prevent NaN forces
+                if (!float.IsNaN(force.x) && !float.IsNaN(force.y) && !float.IsNaN(force.z))
+                {
+                    rb.AddForce(force, ForceMode.Force);
+                }
+                
+                // Safe rotation
+                if (directionToPlanet.magnitude >= 0.001f)
+                {
+                    transform.rotation = Quaternion.FromToRotation(Vector3.up, -directionToPlanet);
+                }
             }
         }
 

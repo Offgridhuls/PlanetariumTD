@@ -9,35 +9,33 @@ using Planetarium;
 [Serializable]
 public class RangedAttackGenerator : BehaviourBase
 {
-    [SerializeField]
-    float Altitude;
+    [SerializeField] float Altitude = 10f;
+    [SerializeField] float targetUpdateInterval = 0.5f;
     
-    [SerializeField]
-    float targetUpdateInterval = 0.5f; // How often to search for new target
-
-    [Header("Collision Avoidance")]
-    [SerializeField]
-    float avoidanceRadius = 5f; // How far to check for other enemies
-    [SerializeField]
-    float avoidanceForce = 10f; // How strongly to avoid other enemies
-    [SerializeField]
-    float maxAvoidanceAngle = 45f; // Maximum angle to deviate from path for avoidance
-
-    [Header("Target Settings")]
-    [SerializeField]
-    float arrivalDistance = 2f; // How close we need to be to count as "arrived"
-
-    
-   
     [Header("Attack Settings")]
+    [SerializeField] float attackRange = 15f;
+    [SerializeField] float optimalAttackRange = 12f; // Optimal distance to maintain
+    [SerializeField] float smoothTime = 0.5f;
+    [SerializeField] float maxSpeed = 15f;
+
+    [Header("Flocking Settings")]
+    [SerializeField] private bool useFlocking = true;
+    [SerializeField] private float cohesionWeight = 0.8f;  // Less cohesion during attack
+    [SerializeField] private float separationWeight = 2.5f; // More separation during attack
+    [SerializeField] private float alignmentWeight = 0.8f;  // Less alignment during attack
+    [SerializeField] private float targetWeight = 2.0f;     // More focus on target during attack
+    [SerializeField] private float neighborRadius = 5f;
+    [SerializeField] private float separationRadius = 3f;
+
     private Transform firePoint;
     private ProjectileBase projectilePrefab;
     private float attackTimer;
-
+    private Vector3 currentVelocity;
     private float orbitRadius;
-    private Vector3 targetPoint;
-    private float lastTargetUpdateTime;
     private GeneratorBase currentTarget;
+    private float lastTargetUpdateTime;
+    private FlockingHelper flockingHelper;
+    private Vector3 velocityChange;
 
     public override void StateInit(FSMC_Controller stateMachine, FSMC_Executer executer)
     {
@@ -46,10 +44,29 @@ public class RangedAttackGenerator : BehaviourBase
 
     public override void OnStateEnter(FSMC_Controller stateMachine, FSMC_Executer executer)
     {
-        orbitRadius = OwningEnemy.GetCurrentPlanet().GetPlanetRadius() + Altitude;
-        UpdateTargetGenerator();
+        base.OnStateEnter(stateMachine, executer);
+        
+        orbitRadius = OwningEnemy.CurrentPlanet.GetPlanetRadius() + Altitude;
+        
+        if (useFlocking)
+        {
+            flockingHelper = new FlockingHelper
+            {
+                cohesionWeight = this.cohesionWeight,
+                separationWeight = this.separationWeight,
+                alignmentWeight = this.alignmentWeight,
+                targetWeight = this.targetWeight,
+                neighborRadius = this.neighborRadius,
+                separationRadius = this.separationRadius,
+                maxSpeed = OwningEnemy.GetStats().MoveSpeed,
+                maxSteerForce = OwningEnemy.GetStats().MoveSpeed * 0.5f
+            };
+        }
+        
+        currentVelocity = Vector3.zero;
         attackTimer = 0f;
-        Debug.Log($"MoveToNearestGenerator: Entered state, orbit radius: {orbitRadius}");
+        
+        OwningEnemy.rb.linearVelocity = Vector3.zero;
         
         // Get references from the FlyingEnemyBase
         if (OwningEnemy is FlyingEnemyBase flyingEnemy)
@@ -61,199 +78,154 @@ public class RangedAttackGenerator : BehaviourBase
         {
             Debug.LogError("RangedAttackGenerator requires a FlyingEnemyBase!");
         }
+
+        UpdateTargetGenerator();
     }
 
     public override void OnStateUpdate(FSMC_Controller stateMachine, FSMC_Executer executer)
     {
+        if (!OwningEnemy || !executer) return;
+
+        Vector3 currentPosition = executer.transform.position;
+        
         if (Time.time - lastTargetUpdateTime >= targetUpdateInterval)
         {
             UpdateTargetGenerator();
         }
-
-        Vector3 currentPosition = executer.transform.position;
-        Vector3 planetPosition = OwningEnemy.GetCurrentPlanet().transform.position;
-
-        // Check if we've reached the target
-        if (currentTarget != null && Vector3.Distance(currentPosition, targetPoint) < arrivalDistance)
+        
+        if (currentTarget == null || currentTarget.IsDestroyed)
         {
-            // Face the generator
-            Vector3 directionToGenerator = (currentTarget.transform.position - currentPosition).normalized;
-            Quaternion targetRot = Quaternion.LookRotation(directionToGenerator, executer.transform.up);
-            executer.transform.rotation = Quaternion.Slerp(
-                executer.transform.rotation,
-                targetRot,
-                OwningEnemy.GetStats().RotSpeed * Time.deltaTime
-            );
-
-            // Attack logic
-            attackTimer += Time.deltaTime;
-            if (attackTimer >= OwningEnemy.GetStats().attackSpeed)
-            {
-                attackTimer = 0f;
-                FireAtGenerator();
-            }
-
-            // Signal state machine to transition to attack state
-            stateMachine.SetTrigger("TargetReached");
+            // Return to movement state if target is lost
+            stateMachine.SetBool("TargetLost", true);
             return;
         }
 
-        if (currentTarget == null)
-        {
-            if (Vector3.Distance(targetPoint, currentPosition) < 5)
-            {
-                Vector3 randomDirection = UnityEngine.Random.onUnitSphere;
-                targetPoint = planetPosition + randomDirection * orbitRadius;
-                Debug.Log($"No target, new random point: {targetPoint}");
-            }
-        }
-        else
-        {
-            Vector3 generatorDirection = (currentTarget.transform.position - planetPosition).normalized;
-            targetPoint = planetPosition + generatorDirection * orbitRadius;
-            Debug.Log($"Moving to generator at {currentTarget.transform.position}, projected point: {targetPoint}");
-        }
+        Vector3 targetPoint = currentTarget.transform.position;
+        float distanceToTarget = Vector3.Distance(currentPosition, targetPoint);
 
-        // Calculate base movement direction
+        // Calculate optimal attack position (at attack range)
         Vector3 directionToTarget = (targetPoint - currentPosition).normalized;
-        
-        // Apply collision avoidance
-        Vector3 avoidanceDirection = CalculateAvoidanceDirection(currentPosition, planetPosition);
-        
-        // Blend target direction with avoidance
-        Vector3 finalDirection = Vector3.Slerp(directionToTarget, avoidanceDirection, 
-            Vector3.Dot(directionToTarget, avoidanceDirection) < 0 ? 0.8f : 0.5f);
-        
-        // Move in the final direction
-        Vector3 newPosition = currentPosition + finalDirection * OwningEnemy.GetStats().MoveSpeed * Time.deltaTime;
-        
-        // Project onto orbital sphere
-        Vector3 directionToPlanet = (newPosition - planetPosition).normalized;
-        executer.transform.position = planetPosition + directionToPlanet * orbitRadius;
+        Vector3 optimalPosition = targetPoint - directionToTarget * attackRange;
 
-        // Rotate to face movement direction
-        Vector3 forward = -directionToPlanet;
-        Vector3 right = Vector3.Cross(Vector3.up, forward).normalized;
-        Vector3 up = Vector3.Cross(forward, right);
+        // Calculate movement
+        Vector3 moveDirection = (optimalPosition - currentPosition).normalized;
+        Vector3 targetVelocity = moveDirection * OwningEnemy.GetStats().MoveSpeed;
+
+        if (useFlocking && flockingHelper != null)
+        {
+            // Add flocking force to the target velocity
+            Vector3 flockingForce = GetFlockingForce(optimalPosition);
+            targetVelocity += flockingForce;
+            targetVelocity = Vector3.ClampMagnitude(targetVelocity, OwningEnemy.GetStats().MoveSpeed);
+        }
+
+        // Smoothly interpolate current velocity
+        currentVelocity = Vector3.SmoothDamp(
+            currentVelocity,
+            targetVelocity,
+            ref velocityChange,
+            0.1f,
+            OwningEnemy.GetStats().MoveSpeed
+        );
+
+        // Update position using rigidbody
+        if (OwningEnemy.rb != null)
+        {
+            OwningEnemy.rb.linearVelocity = currentVelocity;
+        }
+
+        // Update rotation to face target
+        Quaternion targetRotation = Quaternion.LookRotation(
+            directionToTarget,
+            -CalculateGravityDirection(currentPosition)
+        );
         
-        Quaternion targetRotation = Quaternion.LookRotation(forward, up);
-        executer.transform.rotation = Quaternion.Slerp(
+        executer.transform.rotation = Quaternion.RotateTowards(
             executer.transform.rotation,
             targetRotation,
             OwningEnemy.GetStats().RotSpeed * Time.deltaTime
         );
 
-        Debug.DrawLine(currentPosition, targetPoint, Color.red);
-        Debug.DrawLine(planetPosition, executer.transform.position, Color.blue);
+        // Attack if in range and facing target
+        if (distanceToTarget <= attackRange)
+        {
+            float angleToTarget = Vector3.Angle(executer.transform.forward, directionToTarget);
+            if (angleToTarget < 30f) // Allow some tolerance for attack
+            {
+                attackTimer += Time.deltaTime;
+                if (attackTimer >= OwningEnemy.GetStats().attackSpeed)
+                {
+                    FireAtGenerator();
+                    attackTimer = 0f;
+                }
+            }
+        }
     }
 
-    private Vector3 CalculateAvoidanceDirection(Vector3 currentPosition, Vector3 planetPosition)
+    private Vector3 CalculateGravityDirection(Vector3 position)
     {
-        // Find nearby enemies
-        var enemies = UnityEngine.Object.FindObjectsByType<EnemyBase>(FindObjectsSortMode.None);
-        Vector3 avoidanceSum = Vector3.zero;
-        int nearbyCount = 0;
+        if (OwningEnemy == null || OwningEnemy.CurrentPlanet == null) return Vector3.down;
+        return -(position - OwningEnemy.CurrentPlanet.transform.position).normalized;
+    }
 
-        foreach (var enemy in enemies)
-        {
-            if (enemy.gameObject == OwningEnemy.gameObject) continue;
+    private Vector3 GetFlockingForce(Vector3 targetPoint)
+    {
+        if (!useFlocking || flockingHelper == null || !(OwningEnemy is FlyingEnemyBase)) return Vector3.zero;
+        return flockingHelper.CalculateFlockingForce(OwningEnemy as FlyingEnemyBase, targetPoint);
+    }
 
-            Vector3 toEnemy = enemy.transform.position - currentPosition;
-            float distance = toEnemy.magnitude;
+    private void FireAtGenerator()
+    {
+        if (currentTarget == null || firePoint == null || projectilePrefab == null) return;
 
-            if (distance < avoidanceRadius && distance > 0)
-            {
-                // Project the enemy position onto our orbital plane
-                Vector3 dirToPlanet = (currentPosition - planetPosition).normalized;
-                Vector3 projectedToEnemy = Vector3.ProjectOnPlane(toEnemy, dirToPlanet);
-                
-                // Calculate avoidance vector (stronger when closer)
-                float weight = 1.0f - (distance / avoidanceRadius);
-                avoidanceSum -= projectedToEnemy.normalized * weight * avoidanceForce;
-                nearbyCount++;
-            }
-        }
+        Vector3 targetPos = currentTarget.transform.position;
+        
+        // Spawn and initialize projectile
+        ProjectileBase projectile = UnityEngine.Object.Instantiate(
+            projectilePrefab,
+            firePoint.position,
+            firePoint.rotation
+        );
 
-        if (nearbyCount > 0)
-        {
-            // Average the avoidance vectors
-            Vector3 averageAvoidance = avoidanceSum / nearbyCount;
-            
-            // Project the avoidance direction onto the orbital sphere
-            Vector3 dirToPlanet = (currentPosition - planetPosition).normalized;
-            Vector3 projectedAvoidance = Vector3.ProjectOnPlane(averageAvoidance, dirToPlanet).normalized;
-            
-            // Limit the maximum deviation angle
-            Vector3 currentDir = (targetPoint - currentPosition).normalized;
-            float angle = Vector3.Angle(currentDir, projectedAvoidance);
-            if (angle > maxAvoidanceAngle)
-            {
-                projectedAvoidance = Vector3.RotateTowards(currentDir, projectedAvoidance, 
-                    Mathf.Deg2Rad * maxAvoidanceAngle, 0.0f);
-            }
-            
-            return projectedAvoidance;
-        }
-
-        // If no nearby enemies, return direction to target
-        return (targetPoint - currentPosition).normalized;
+        projectile.Initialize(
+            OwningEnemy.GetStats().attackDamage,
+            targetPos,
+            OwningEnemy.GetStats().ProjectileSpeed
+        );
+        
+        projectile.ShootProjectile(targetPos, currentTarget.gameObject);
     }
 
     private void UpdateTargetGenerator()
     {
         lastTargetUpdateTime = Time.time;
+        currentTarget = FindNearestGenerator();
+    }
 
-        GeneratorBase[] generators = UnityEngine.Object.FindObjectsByType<GeneratorBase>(FindObjectsSortMode.None);
-        
-        if (generators.Length == 0)
-        {
-            currentTarget = null;
-            return;
-        }
-
+    private GeneratorBase FindNearestGenerator()
+    {
+        GeneratorBase[] generators = UnityEngine.Object.FindObjectsOfType<GeneratorBase>();
+        GeneratorBase nearest = null;
         float nearestDistance = float.MaxValue;
-        GeneratorBase nearestGenerator = null;
 
         foreach (var generator in generators)
         {
             if (generator.IsDestroyed) continue;
 
-            float distance = Vector3.Distance(
-                OwningEnemy.transform.position,
-                generator.transform.position
-            );
-
+            float distance = Vector3.Distance(OwningEnemy.transform.position, generator.transform.position);
             if (distance < nearestDistance)
             {
                 nearestDistance = distance;
-                nearestGenerator = generator;
+                nearest = generator;
             }
         }
 
-        if (nearestGenerator != currentTarget)
-        {
-            currentTarget = nearestGenerator;
-        }
-
-        // If we found a target, update target point
-        if (currentTarget != null)
-        {
-            Vector3 directionToGenerator = (currentTarget.transform.position - OwningEnemy.GetCurrentPlanet().transform.position).normalized;
-            targetPoint = OwningEnemy.GetCurrentPlanet().transform.position + directionToGenerator * orbitRadius;
-        }
+        return nearest;
     }
 
-    private void FireAtGenerator()
+    public GeneratorBase GetCurrentTarget()
     {
-        if (currentTarget == null || !firePoint || !projectilePrefab) return;
-
-        // Calculate direction to target with prediction
-        Vector3 directionToTarget = (currentTarget.transform.position - firePoint.position).normalized;
-        
-        // Spawn and initialize projectile
-        ProjectileBase projectile = UnityEngine.Object.Instantiate(projectilePrefab, firePoint.position, Quaternion.LookRotation(directionToTarget));
-        projectile.Initialize(OwningEnemy.GetStats().attackDamage, directionToTarget, OwningEnemy.GetStats().ProjectileSpeed);
-
+        return currentTarget;
     }
 
     public override void OnStateExit(FSMC_Controller stateMachine, FSMC_Executer executer)

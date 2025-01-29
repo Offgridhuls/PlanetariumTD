@@ -34,8 +34,7 @@ MonoBehaviour:
         _name: MoveToNearestGenerator
         TransitionsFrom:
         - rid: 997942678108241921
-        TransitionsTo:
-        - rid: 997942678108241925
+        TransitionsTo: []
     - rid: 997942676252524610
       type: {class: MoveToNearestGenerator, ns: , asm: Assembly-CSharp}
       data:
@@ -53,8 +52,7 @@ MonoBehaviour:
         - rid: 8864691103939952707
         Position: {x: 562, y: 411}
         _name: Attack
-        TransitionsFrom:
-        - rid: 997942678108241925
+        TransitionsFrom: []
         TransitionsTo:
         - rid: 997942678108241921
     - rid: 997942678108241921
@@ -80,25 +78,7 @@ MonoBehaviour:
         comparison: 0
         parameter:
           rid: 997942678108241923
-        Value: 0
-    - rid: 997942678108241925
-      type: {class: FSMC_Transition, ns: FSMC.Runtime, asm: FSMC.Runtime}
-      data:
-        conditions:
-        - conditions:
-          - rid: 997942678108241926
-        _originState:
-          rid: 997942678108241920
-        _destinationState:
-          rid: 997942676252524609
-        _name: Attack->MoveToNearestGenerator
-    - rid: 997942678108241926
-      type: {class: FSMC_BoolCondition, ns: FSMC.Runtime, asm: FSMC.Runtime}
-      data:
-        comparison: 0
-        parameter:
-          rid: 997942678108241923
-        Value: 0
+        Value: 1
     - rid: 8864691103939952707
       type: {class: RangedAttackGenerator, ns: , asm: Assembly-CSharp}
       data:

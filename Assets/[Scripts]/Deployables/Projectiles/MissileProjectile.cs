@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Linq;
 
 public class MissileProjectile : ProjectileBase
 {
@@ -9,6 +10,7 @@ public class MissileProjectile : ProjectileBase
     [SerializeField] private LayerMask explosionLayers;
     [SerializeField] private GameObject explosionEffect;
     [SerializeField] private TrailRenderer missileTrail;
+    [SerializeField] private float searchRadius = 10f;
 
     private Vector3 currentVelocity;
     private bool hasExploded = false;
@@ -29,6 +31,12 @@ public class MissileProjectile : ProjectileBase
     protected override void Update()
     {
         if (!isInitialized || hasExploded) return;
+
+        // Check if we need to find a new target
+        if (targetEnemy == null)
+        {
+            FindNewTarget();
+        }
 
         // Update target position if enemy is still alive
         if (targetEnemy != null)
@@ -51,6 +59,24 @@ public class MissileProjectile : ProjectileBase
 
         // Check for hits
         CheckForHits();
+    }
+
+    private void FindNewTarget()
+    {
+        // Find all colliders in range
+        Collider[] colliders = Physics.OverlapSphere(transform.position, searchRadius);
+        
+        // Filter for enemies and find the closest one
+        var nearestEnemy = colliders
+            .Where(c => c.GetComponent<EnemyBase>() != null)
+            .OrderBy(c => Vector3.Distance(transform.position, c.transform.position))
+            .FirstOrDefault();
+
+        if (nearestEnemy != null)
+        {
+            targetEnemy = nearestEnemy.gameObject;
+            targetPosition = targetEnemy.transform.position;
+        }
     }
 
     protected void CheckForHits()
@@ -128,12 +154,5 @@ public class MissileProjectile : ProjectileBase
         {
             missileTrail.enabled = false;
         }
-    }
-
-    private void OnDrawGizmosSelected()
-    {
-        // Draw explosion radius in editor
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, explosionRadius);
     }
 }

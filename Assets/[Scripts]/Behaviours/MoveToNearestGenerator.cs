@@ -9,11 +9,13 @@ using Planetarium;
 [Serializable]
 public class MoveToNearestGenerator : BehaviourBase
 {
-    [SerializeField]
-    float Altitude;
-    
-    [SerializeField]
-    float targetUpdateInterval = 0.5f; // How often to search for new target
+    [SerializeField] float Altitude = 10f;
+    [SerializeField] float targetUpdateInterval = 0.5f;
+    [SerializeField] float arrivalDistance = 15f; // Increased to match RangedAttackGenerator's attack range
+
+    [Header("Movement Settings")]
+    [SerializeField] float smoothTime = 0.5f;
+    [SerializeField] float maxSpeed = 20f;
 
     [Header("Collision Avoidance")]
     [SerializeField]
@@ -23,14 +25,22 @@ public class MoveToNearestGenerator : BehaviourBase
     [SerializeField]
     float maxAvoidanceAngle = 45f; // Maximum angle to deviate from path for avoidance
 
-    [Header("Target Settings")]
-    [SerializeField]
-    float arrivalDistance = 2f; // How close we need to be to count as "arrived"
+    [Header("Flocking Settings")]
+    [SerializeField] private bool useFlocking = true;
+    [SerializeField] private float cohesionWeight = 1.0f;
+    [SerializeField] private float separationWeight = 2.0f;
+    [SerializeField] private float alignmentWeight = 1.0f;
+    [SerializeField] private float targetWeight = 1.5f;
+    [SerializeField] private float neighborRadius = 5f;
+    [SerializeField] private float separationRadius = 3f;
 
     private float orbitRadius;
     private Vector3 targetPoint;
     private float lastTargetUpdateTime;
     private GeneratorBase currentTarget;
+    private Vector3 currentVelocity;
+    private Vector3 velocityChange;
+    private FlockingHelper flockingHelper;
 
     public override void StateInit(FSMC_Controller stateMachine, FSMC_Executer executer)
     {
@@ -39,85 +49,108 @@ public class MoveToNearestGenerator : BehaviourBase
 
     public override void OnStateEnter(FSMC_Controller stateMachine, FSMC_Executer executer)
     {
+        base.OnStateEnter(stateMachine, executer);
+        
+        if (useFlocking)
+        {
+            flockingHelper = new FlockingHelper
+            {
+                cohesionWeight = this.cohesionWeight,
+                separationWeight = this.separationWeight,
+                alignmentWeight = this.alignmentWeight,
+                targetWeight = this.targetWeight,
+                neighborRadius = this.neighborRadius,
+                separationRadius = this.separationRadius,
+                maxSpeed = OwningEnemy.GetStats().MoveSpeed,
+                maxSteerForce = OwningEnemy.GetStats().MoveSpeed * 0.5f
+            };
+        }
+        
         orbitRadius = OwningEnemy.GetCurrentPlanet().GetPlanetRadius() + Altitude;
+        currentVelocity = Vector3.zero;
+        currentTarget = null;
         UpdateTargetGenerator();
-        Debug.Log($"MoveToNearestGenerator: Entered state, orbit radius: {orbitRadius}");
     }
 
     public override void OnStateUpdate(FSMC_Controller stateMachine, FSMC_Executer executer)
     {
-        if (Time.time - lastTargetUpdateTime >= targetUpdateInterval)
-        {
-            UpdateTargetGenerator();
-        }
+        if (!OwningEnemy || !executer) return;
 
         Vector3 currentPosition = executer.transform.position;
-        Vector3 planetPosition = OwningEnemy.GetCurrentPlanet().transform.position;
-
-        // Check if we've reached the target
-        if (currentTarget != null && Vector3.Distance(currentPosition, targetPoint) < arrivalDistance)
+        
+        if (currentTarget == null || currentTarget.IsDestroyed)
         {
-            // Face the generator
-            Vector3 directionToGenerator = (currentTarget.transform.position - currentPosition).normalized;
-            Quaternion targetRot = Quaternion.LookRotation(directionToGenerator, executer.transform.up);
+            UpdateTargetGenerator();
+            if (currentTarget == null)
+            {
+                return;
+            }
+        }
+
+        Vector3 targetPoint = currentTarget.transform.position;
+        float distanceToGenerator = Vector3.Distance(currentPosition, targetPoint);
+
+        if (distanceToGenerator <= arrivalDistance)
+        {
+            // Face the generator before transitioning
+            Vector3 d2t = (currentTarget.transform.position - currentPosition).normalized;
+            Quaternion targetRot = Quaternion.LookRotation(d2t, executer.transform.up);
             executer.transform.rotation = Quaternion.Slerp(
                 executer.transform.rotation,
                 targetRot,
                 OwningEnemy.GetStats().RotSpeed * Time.deltaTime
             );
 
-            // Signal state machine to transition to attack state
-            stateMachine.SetTrigger("TargetReached");
-            return;
-        }
-
-        if (currentTarget == null)
-        {
-            if (Vector3.Distance(targetPoint, currentPosition) < 5)
+            // Only transition if we're facing the target
+            float angleToTarget = Vector3.Angle(executer.transform.forward, d2t);
+            if (angleToTarget < 30f) // Allow some tolerance
             {
-                Vector3 randomDirection = UnityEngine.Random.onUnitSphere;
-                targetPoint = planetPosition + randomDirection * orbitRadius;
-                Debug.Log($"No target, new random point: {targetPoint}");
+                stateMachine.SetBool("TargetReached", true);
+                return;
             }
         }
-        else
+
+        // Calculate movement direction
+        Vector3 moveDirection = (targetPoint - currentPosition).normalized;
+        Vector3 targetVelocity = moveDirection * OwningEnemy.GetStats().MoveSpeed;
+
+        if (useFlocking && flockingHelper != null)
         {
-            Vector3 generatorDirection = (currentTarget.transform.position - planetPosition).normalized;
-            targetPoint = planetPosition + generatorDirection * orbitRadius;
-            Debug.Log($"Moving to generator at {currentTarget.transform.position}, projected point: {targetPoint}");
+            // Add flocking force to the target velocity
+            Vector3 flockingForce = GetFlockingForce(targetPoint);
+            targetVelocity += flockingForce;
+            targetVelocity = Vector3.ClampMagnitude(targetVelocity, OwningEnemy.GetStats().MoveSpeed);
         }
 
-        // Calculate base movement direction
-        Vector3 directionToTarget = (targetPoint - currentPosition).normalized;
-        
-        // Apply collision avoidance
-        Vector3 avoidanceDirection = CalculateAvoidanceDirection(currentPosition, planetPosition);
-        
-        // Blend target direction with avoidance
-        Vector3 finalDirection = Vector3.Slerp(directionToTarget, avoidanceDirection, 
-            Vector3.Dot(directionToTarget, avoidanceDirection) < 0 ? 0.8f : 0.5f);
-        
-        // Move in the final direction
-        Vector3 newPosition = currentPosition + finalDirection * OwningEnemy.GetStats().MoveSpeed * Time.deltaTime;
-        
-        // Project onto orbital sphere
-        Vector3 directionToPlanet = (newPosition - planetPosition).normalized;
-        executer.transform.position = planetPosition + directionToPlanet * orbitRadius;
-
-        // Rotate to face movement direction
-        Vector3 forward = -directionToPlanet;
-        Vector3 right = Vector3.Cross(Vector3.up, forward).normalized;
-        Vector3 up = Vector3.Cross(forward, right);
-        
-        Quaternion targetRotation = Quaternion.LookRotation(forward, up);
-        executer.transform.rotation = Quaternion.Slerp(
-            executer.transform.rotation,
-            targetRotation,
-            OwningEnemy.GetStats().RotSpeed * Time.deltaTime
+        // Smoothly interpolate current velocity
+        currentVelocity = Vector3.SmoothDamp(
+            currentVelocity,
+            targetVelocity,
+            ref velocityChange,
+            0.1f,
+            OwningEnemy.GetStats().MoveSpeed
         );
 
-        Debug.DrawLine(currentPosition, targetPoint, Color.red);
-        Debug.DrawLine(planetPosition, executer.transform.position, Color.blue);
+        // Update position using rigidbody
+        if (OwningEnemy.rb != null)
+        {
+            OwningEnemy.rb.linearVelocity = currentVelocity;
+        }
+
+        // Update rotation to face movement direction if we're moving
+        if (currentVelocity.magnitude > 0.1f)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(
+                currentVelocity.normalized,
+                -CalculateGravityDirection(currentPosition)
+            );
+            
+            executer.transform.rotation = Quaternion.RotateTowards(
+                executer.transform.rotation,
+                targetRotation,
+                OwningEnemy.GetStats().RotSpeed * Time.deltaTime
+            );
+        }
     }
 
     private Vector3 CalculateAvoidanceDirection(Vector3 currentPosition, Vector3 planetPosition)
@@ -172,48 +205,48 @@ public class MoveToNearestGenerator : BehaviourBase
         return (targetPoint - currentPosition).normalized;
     }
 
+    private Vector3 CalculateGravityDirection(Vector3 position)
+    {
+        if (OwningEnemy == null || OwningEnemy.GetCurrentPlanet() == null) return Vector3.down;
+        return (position - OwningEnemy.GetCurrentPlanet().transform.position).normalized;
+    }
+
+    private Vector3 GetFlockingForce(Vector3 targetPoint)
+    {
+        if (!useFlocking || flockingHelper == null || !(OwningEnemy is FlyingEnemyBase)) return Vector3.zero;
+        return flockingHelper.CalculateFlockingForce(OwningEnemy as FlyingEnemyBase, targetPoint);
+    }
+
     private void UpdateTargetGenerator()
     {
         lastTargetUpdateTime = Time.time;
+        currentTarget = FindNearestGenerator();
+    }
 
-        GeneratorBase[] generators = UnityEngine.Object.FindObjectsByType<GeneratorBase>(FindObjectsSortMode.None);
-        
-        if (generators.Length == 0)
-        {
-            currentTarget = null;
-            return;
-        }
-
+    private GeneratorBase FindNearestGenerator()
+    {
+        GeneratorBase[] generators = UnityEngine.Object.FindObjectsOfType<GeneratorBase>();
+        GeneratorBase nearest = null;
         float nearestDistance = float.MaxValue;
-        GeneratorBase nearestGenerator = null;
 
         foreach (var generator in generators)
         {
             if (generator.IsDestroyed) continue;
 
-            float distance = Vector3.Distance(
-                OwningEnemy.transform.position,
-                generator.transform.position
-            );
-
+            float distance = Vector3.Distance(OwningEnemy.transform.position, generator.transform.position);
             if (distance < nearestDistance)
             {
                 nearestDistance = distance;
-                nearestGenerator = generator;
+                nearest = generator;
             }
         }
 
-        if (nearestGenerator != currentTarget)
-        {
-            currentTarget = nearestGenerator;
-        }
+        return nearest;
+    }
 
-        // If we found a target, update target point
-        if (currentTarget != null)
-        {
-            Vector3 directionToGenerator = (currentTarget.transform.position - OwningEnemy.GetCurrentPlanet().transform.position).normalized;
-            targetPoint = OwningEnemy.GetCurrentPlanet().transform.position + directionToGenerator * orbitRadius;
-        }
+    public GeneratorBase GetCurrentTarget()
+    {
+        return currentTarget;
     }
 
     public override void OnStateExit(FSMC_Controller stateMachine, FSMC_Executer executer)

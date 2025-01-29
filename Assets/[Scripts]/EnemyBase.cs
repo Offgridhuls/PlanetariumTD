@@ -28,6 +28,9 @@ public class EnemyBase : FSMC_Executer, IDamageable
     [SerializeField] protected ResourceType[] possibleResources;
     [SerializeField] protected Vector2 resourceDropRange = new Vector2(1, 3);
 
+    
+    public Rigidbody rb;
+    
     public UnityEvent<float> onHealthChanged = new UnityEvent<float>();
     public UnityEvent onDeath = new UnityEvent();
     public UnityEvent<int> onScoreGained;
@@ -67,6 +70,7 @@ public class EnemyBase : FSMC_Executer, IDamageable
     public bool IsAlive => currentHealth > 0;
     public float CurrentHealth => currentHealth;
     public float MaxHealth => maxHealth;
+    public PlanetBase CurrentPlanet => currentPlanet;
 
     protected override void Start()
     {
@@ -77,6 +81,8 @@ public class EnemyBase : FSMC_Executer, IDamageable
             Debug.LogError("No planet found in scene!");
             return;
         }
+        
+        rb = GetComponent<Rigidbody>();
 
         if (healthBarPrefab != null)
         {
@@ -167,11 +173,6 @@ public class EnemyBase : FSMC_Executer, IDamageable
     {
         if (!IsAlive) return;
         base.Update();
-    }
-
-    public PlanetBase GetCurrentPlanet()
-    {
-        return currentPlanet;
     }
 
     public EnemySpawnData GetStats()

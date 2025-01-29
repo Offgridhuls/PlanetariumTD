@@ -118,7 +118,7 @@ namespace Planetarium.UI
 
         private void UpdatePlanetHealth(float currentHealth)
         {
-            Debug.Log($"PlayerInfoView: UpdatePlanetHealth called with health: {currentHealth} on {gameObject.name}");
+           // Debug.Log($"PlayerInfoView: UpdatePlanetHealth called with health: {currentHealth} on {gameObject.name}");
             if (planetHealthText != null)
             {
                 planetHealthText.text = $"{Mathf.CeilToInt(currentHealth)}/{gameState.MaxBaseHealth}";
@@ -175,7 +175,7 @@ namespace Planetarium.UI
 
         private void UpdateScore(int newScore)
         {
-            Debug.Log($"PlayerInfoView: UpdateScore called with score: {newScore} on {gameObject.name}");
+            //Debug.Log($"PlayerInfoView: UpdateScore called with score: {newScore} on {gameObject.name}");
             if (scoreText != null)
             {
                 scoreText.text = $"Score: {newScore}";

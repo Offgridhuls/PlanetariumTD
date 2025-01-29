@@ -1,9 +1,11 @@
 using UnityEngine;
 using System;
+using UnityEngine.Events;
+using Planetarium;
 
 namespace Planetarium
 {
-    public class GeneratorBase : MonoBehaviour
+    public class GeneratorBase : CoreBehaviour, IDamageable
     {
         [Header("Generator Settings")]
         [SerializeField] protected float maxHealth = 100f;
@@ -20,34 +22,57 @@ namespace Planetarium
         [SerializeField] protected AudioClip destructionSound;
 
         public float CurrentHealth { get; private set; }
+        public float MaxHealth => maxHealth;
         public bool IsDestroyed { get; private set; }
+        public bool IsAlive => !IsDestroyed;
+        
         public event Action<float> OnHealthChanged;
         public event Action OnDestroyed;
 
         private float lastRepairTime;
+        private GameStateManager gameStateManager;
 
         protected virtual void Awake()
         {
             CurrentHealth = maxHealth;
+            IsDestroyed = false;
+            gameStateManager = FindFirstObjectByType<GameStateManager>();
         }
 
-        protected virtual void Update()
+        protected virtual void Start()
         {
-            if (!IsDestroyed && CurrentHealth < maxHealth)
+            // Register this generator with GameStateManager
+            if (gameStateManager != null)
             {
-                if (Time.time - lastRepairTime >= repairInterval)
-                {
-                    Repair();
-                    lastRepairTime = Time.time;
-                }
+                gameStateManager.RegisterGenerator(this);
             }
         }
 
-        public virtual void TakeDamage(float damage)
+        protected virtual void OnDestroy()
+        {
+            // Unregister from GameStateManager when destroyed
+            if (gameStateManager != null)
+            {
+                gameStateManager.UnregisterGenerator(this);
+            }
+        }
+
+        public DamageableType GetDamageableType()
+        {
+            return DamageableType.Structure;
+        }
+
+        public void ProcessDamage(DamageData data)
+        {
+            if (IsDestroyed) return;
+            TakeDamage(data.Damage);
+        }
+
+        public void TakeDamage(float damage)
         {
             if (IsDestroyed) return;
 
-            CurrentHealth -= damage;
+            CurrentHealth = Mathf.Max(0, CurrentHealth - damage);
             OnHealthChanged?.Invoke(CurrentHealth / maxHealth);
 
             if (damageEffect != null)
@@ -66,12 +91,12 @@ namespace Planetarium
             }
         }
 
-        protected virtual void Repair()
+        public void Repair(float amount)
         {
             if (IsDestroyed) return;
 
             float previousHealth = CurrentHealth;
-            CurrentHealth = Mathf.Min(CurrentHealth + repairRate, maxHealth);
+            CurrentHealth = Mathf.Min(maxHealth, CurrentHealth + amount);
 
             if (CurrentHealth > previousHealth)
             {
@@ -91,6 +116,8 @@ namespace Planetarium
 
         protected virtual void Die()
         {
+            if (IsDestroyed) return;
+
             IsDestroyed = true;
             OnDestroyed?.Invoke();
 
@@ -104,9 +131,20 @@ namespace Planetarium
                 generatorAudioSource.PlayOneShot(destructionSound);
             }
 
-            // Optional: You might want to disable the generator's mesh or other components here
-            // but keep the GameObject alive for the particle effects to finish
-            Destroy(gameObject, 2f); // Destroy after effects finish
+            // Optionally destroy the GameObject
+            // Destroy(gameObject);
+        }
+
+        protected virtual void Update()
+        {
+            if (IsDestroyed) return;
+
+            // Auto-repair logic
+            if (Time.time - lastRepairTime >= repairInterval)
+            {
+                lastRepairTime = Time.time;
+                Repair(repairRate * repairInterval);
+            }
         }
 
         public float GetHealthPercentage()

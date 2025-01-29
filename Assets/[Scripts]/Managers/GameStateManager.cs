@@ -102,11 +102,19 @@ namespace Planetarium
         private bool isCheckingWaveEnd;
         private GameStateData previousState;
 
+        // Generator tracking
+        private List<GeneratorBase> activeGenerators = new List<GeneratorBase>();
+        private float totalGeneratorHealth;
+        private float maxTotalGeneratorHealth;
+
         protected override void OnInitialize()
         {
             Debug.Log("GameStateManager: OnInitialize called");
             InitializeGame();
             enemyManager = Context.EnemyManager;
+            activeGenerators = new List<GeneratorBase>();
+            totalGeneratorHealth = 0f;
+            maxTotalGeneratorHealth = 0f;
             OnCurrencyChanged?.Invoke(currency);
             if (enemyManager != null)
             {
@@ -302,22 +310,24 @@ namespace Planetarium
             if (isGameOver) return;
 
             float previousHealth = currentBaseHealth;
-            currentBaseHealth = Mathf.Max(0, currentBaseHealth - damage);
-            
+            currentBaseHealth = Mathf.Max(0f, currentBaseHealth - damage);
+
             if (previousHealth != currentBaseHealth)
             {
                 Debug.Log($"GameStateManager: Base health changed to {currentBaseHealth}");
-                OnBaseHealthChanged?.Invoke(currentBaseHealth);
+                UpdateBaseHealthUI();
             }
 
             if (currentBaseHealth <= 0 && !isGameOver)
             {
-                ChangeState(GameState.GameOver);
+                EndGame(false);
             }
-
-            NotifyStateChanged();
         }
-        
+
+        private void EndGame(bool isGameOver)
+        {
+            
+        }
         public void AddCurrency(int amount)
         {
             currency += amount;
@@ -497,6 +507,67 @@ namespace Planetarium
             baseHealth = Mathf.Max(1f, baseHealth);
             startingCurrency = Mathf.Max(0, startingCurrency);
             timeBetweenWaves = Mathf.Max(1f, timeBetweenWaves);
+        }
+
+        public void RegisterGenerator(GeneratorBase generator)
+        {
+            if (!activeGenerators.Contains(generator))
+            {
+                activeGenerators.Add(generator);
+                maxTotalGeneratorHealth += generator.MaxHealth;
+                totalGeneratorHealth += generator.CurrentHealth;
+                
+                // Subscribe to generator health changes
+                generator.OnHealthChanged += (percentage) =>
+                {
+                    UpdateTotalGeneratorHealth();
+                };
+                
+                generator.OnDestroyed += () =>
+                {
+                    activeGenerators.Remove(generator);
+                    UpdateTotalGeneratorHealth();
+                };
+
+                // Update UI
+                UpdateBaseHealthUI();
+            }
+        }
+
+        public void UnregisterGenerator(GeneratorBase generator)
+        {
+            if (activeGenerators.Contains(generator))
+            {
+                activeGenerators.Remove(generator);
+                UpdateTotalGeneratorHealth();
+            }
+        }
+
+        private void UpdateTotalGeneratorHealth()
+        {
+            totalGeneratorHealth = 0f;
+            maxTotalGeneratorHealth = 0f;
+
+            foreach (var generator in activeGenerators)
+            {
+                totalGeneratorHealth += generator.CurrentHealth;
+                maxTotalGeneratorHealth += generator.MaxHealth;
+            }
+
+            UpdateBaseHealthUI();
+        }
+
+        private void UpdateBaseHealthUI()
+        {
+            // Calculate total health including generators
+            float totalHealth = currentBaseHealth + totalGeneratorHealth;
+            float maxTotalHealth = baseHealth + maxTotalGeneratorHealth;
+            
+            // Convert to percentage out of 100
+            float healthPercentage = (totalHealth / maxTotalHealth) * 100f;
+            
+            // Notify UI of health change
+            OnBaseHealthChanged?.Invoke(healthPercentage);
         }
     }
 }

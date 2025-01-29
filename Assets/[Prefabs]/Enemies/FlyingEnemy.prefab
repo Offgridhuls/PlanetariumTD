@@ -163,6 +163,7 @@ MonoBehaviour:
   possibleResources:
   - {fileID: 11400000, guid: 34a83c52de3b36542b7def04caa99464, type: 2}
   resourceDropRange: {x: 1, y: 3}
+  rb: {fileID: 0}
   onHealthChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -176,7 +177,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   firePoint: {fileID: 4568147509268017655}
-  projectilePrefab: {fileID: 2526509629052936677, guid: 756ffe6ec469fbf4693bd5795d17ae5a, type: 3}
+  projectilePrefab: {fileID: 2526509629052936677, guid: 3f270dfdc506de546b772760313af985, type: 3}
 --- !u!1 &4031500842320831187
 GameObject:
   m_ObjectHideFlags: 0

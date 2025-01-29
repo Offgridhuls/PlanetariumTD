@@ -40,6 +40,26 @@ public class FlyingEnemyBase : EnemyBase
         heightChangeSpeed = speed;
     }
 
+    public Vector3 GetCurrentTargetPosition()
+    {
+        // Try to get target from current behavior state
+        var moveState = StateMachine.GetState("MoveToGenerator")?.GetBehaviour() as MoveToNearestGenerator;
+        if (moveState != null && StateMachine.GetState("MoveToGenerator").IsActive)
+        {
+            var target = moveState.GetCurrentTarget();
+            return target != null ? target.transform.position : Vector3.zero;
+        }
+
+        var attackState = StateMachine.GetState("RangedAttackGenerator")?.GetBehaviour() as RangedAttackGenerator;
+        if (attackState != null && StateMachine.GetState("RangedAttackGenerator").IsActive)
+        {
+            var target = attackState.GetCurrentTarget();
+           
+        }
+
+        return target != null ? target.transform.position : Vector3.zero;
+    }
+
     protected override void Update()
     {
         if (!IsAlive) return;
