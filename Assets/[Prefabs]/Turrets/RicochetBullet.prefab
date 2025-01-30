@@ -97,8 +97,8 @@ TrailRenderer:
         inWeight: 0.33333334
         outWeight: 1
       - serializedVersion: 3
-        time: 0.10795443
-        value: 0.46402907
+        time: 0.09342043
+        value: 0.20745254
         inSlope: 0.55874306
         outSlope: 0.55874306
         tangentMode: 0
@@ -106,8 +106,8 @@ TrailRenderer:
         inWeight: 1
         outWeight: 1
       - serializedVersion: 3
-        time: 0.26853323
-        value: 0.4560228
+        time: 0.2539916
+        value: 0.094183505
         inSlope: -0.31125328
         outSlope: -0.31125328
         tangentMode: 0
@@ -217,8 +217,11 @@ MonoBehaviour:
   hitSound: {fileID: 0}
   soundVolume: 0.5
   maxRicochets: 3
-  ricochetRange: 1
+  ricochetRange: 4
   damageReductionPerBounce: 0.2
+  speedReductionAfterFirstBounce: 0.5
   bulletTrail: {fileID: 809939136776408274}
   hitEffect: {fileID: 2600134310280567883, guid: 327ae4572fa06694aa9922e1f4be7f7b, type: 3}
   minBounceAngle: 20
+  arcHeight: 5
+  gravityScale: 5

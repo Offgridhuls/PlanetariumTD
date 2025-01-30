@@ -15,7 +15,7 @@ MonoBehaviour:
   turretName: Missile
   healthPoints: 100
   damage: 10
-  fireInterval: 1
+  fireInterval: 0.75
   agroRadius: 10
   rotationSpeed: 180
   projectileSpeed: 11
