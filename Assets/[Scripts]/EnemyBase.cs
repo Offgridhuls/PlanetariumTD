@@ -75,15 +75,15 @@ public class EnemyBase : FSMC_Executer, IDamageable
     protected override void Start()
     {
         currentHealth = maxHealth;
-        currentPlanet = Object.FindFirstObjectByType<PlanetBase>();
+        currentPlanet = FindFirstObjectByType<PlanetBase>();
+        rb = GetComponent<Rigidbody>();
         if (currentPlanet == null)
         {
             Debug.LogError("No planet found in scene!");
             return;
         }
         
-        rb = GetComponent<Rigidbody>();
-
+       
         if (healthBarPrefab != null)
         {
             healthBarInstance = Instantiate(healthBarPrefab, transform);

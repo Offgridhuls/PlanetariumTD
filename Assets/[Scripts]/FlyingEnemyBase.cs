@@ -14,12 +14,20 @@ public class FlyingEnemyBase : EnemyBase
     private float targetHeight;
     private float heightTimer;
 
+    protected override void Awake()
+    {
+        base.Awake();
+        
+        rb = GetComponent<Rigidbody>();
+    }
+
     protected override void Start()
     {
         base.Start();
         currentHeight = transform.position.y;
         targetHeight = currentHeight + Random.Range(-heightVariation, heightVariation);
 
+       
         // Ensure we have a fire point
         if (!firePoint)
         {

@@ -95,6 +95,7 @@ namespace Planetarium
         {
             if (neighbors.Count == 0) return Vector3.zero;
 
+            
             return neighbors.Aggregate(
                 Vector3.zero,
                 (sum, enemy) => sum + enemy.rb.linearVelocity
