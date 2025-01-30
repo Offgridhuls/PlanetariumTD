@@ -65,8 +65,8 @@ public class MoveToNearestGenerator : BehaviourBase
                 maxSteerForce = OwningEnemy.GetStats().MoveSpeed * 0.5f
             };
         }
-        
-        orbitRadius = OwningEnemy.GetCurrentPlanet().GetPlanetRadius() + Altitude;
+
+        orbitRadius = 15;
         currentVelocity = Vector3.zero;
         currentTarget = null;
         UpdateTargetGenerator();
@@ -207,8 +207,8 @@ public class MoveToNearestGenerator : BehaviourBase
 
     private Vector3 CalculateGravityDirection(Vector3 position)
     {
-        if (OwningEnemy == null || OwningEnemy.GetCurrentPlanet() == null) return Vector3.down;
-        return (position - OwningEnemy.GetCurrentPlanet().transform.position).normalized;
+        if (OwningEnemy == null) return Vector3.down;
+        return (position - OwningEnemy.CurrentPlanet.transform.position).normalized;
     }
 
     private Vector3 GetFlockingForce(Vector3 targetPoint)

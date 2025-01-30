@@ -258,7 +258,7 @@ public class RicochetProjectile : ProjectileBase
         previousPositions[enemy] = currentPos;
 
         // Get the current planet and orbital information
-        var currentPlanet = enemy.GetCurrentPlanet();
+        var currentPlanet = enemy.CurrentPlanet;
         if (currentPlanet != null)
         {
             Vector3 planetPos = currentPlanet.transform.position;
