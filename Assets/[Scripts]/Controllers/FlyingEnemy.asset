@@ -39,9 +39,9 @@ MonoBehaviour:
       type: {class: MoveToNearestGenerator, ns: , asm: Assembly-CSharp}
       data:
         enabled: 1
-        Altitude: 15
+        Altitude: 20
         targetUpdateInterval: 0.5
-        arrivalDistance: 2
+        arrivalDistance: 5
         smoothTime: 0.5
         maxSpeed: 20
         avoidanceRadius: 5

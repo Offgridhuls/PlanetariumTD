@@ -88,10 +88,10 @@ public class RangedAttackGenerator : BehaviourBase
 
         Vector3 currentPosition = executer.transform.position;
         
-        if (Time.time - lastTargetUpdateTime >= targetUpdateInterval)
+        /*if (Time.time - lastTargetUpdateTime >= targetUpdateInterval)
         {
             UpdateTargetGenerator();
-        }
+        }*/
         
         if (currentTarget == null || currentTarget.IsDestroyed)
         {
@@ -100,7 +100,16 @@ public class RangedAttackGenerator : BehaviourBase
             return;
         }
 
-        Vector3 targetPoint = currentTarget.transform.position;
+        
+        attackTimer += Time.deltaTime;
+        if (attackTimer >= OwningEnemy.GetStats().attackSpeed)
+        {
+            FireAtGenerator();
+            attackTimer = 0f;
+        }
+        
+        
+        /*Vector3 targetPoint = currentTarget.transform.position;
         float distanceToTarget = Vector3.Distance(currentPosition, targetPoint);
 
         // Calculate optimal attack position (at attack range)
@@ -109,8 +118,9 @@ public class RangedAttackGenerator : BehaviourBase
 
         // Calculate movement
         Vector3 moveDirection = (optimalPosition - currentPosition).normalized;
-        Vector3 targetVelocity = moveDirection * OwningEnemy.GetStats().MoveSpeed;
+        Vector3 targetVelocity = moveDirection * OwningEnemy.GetStats().MoveSpeed;*/
 
+        /*
         if (useFlocking && flockingHelper != null)
         {
             // Add flocking force to the target velocity
@@ -126,15 +136,17 @@ public class RangedAttackGenerator : BehaviourBase
             ref velocityChange,
             0.1f,
             OwningEnemy.GetStats().MoveSpeed
-        );
+        );*/
 
+        /*
         // Update position using rigidbody
         if (OwningEnemy.rb != null)
         {
             OwningEnemy.rb.linearVelocity = currentVelocity;
         }
+        */
 
-        // Update rotation to face target
+        /*// Update rotation to face target
         Quaternion targetRotation = Quaternion.LookRotation(
             directionToTarget,
             -CalculateGravityDirection(currentPosition)
@@ -144,15 +156,10 @@ public class RangedAttackGenerator : BehaviourBase
             executer.transform.rotation,
             targetRotation,
             OwningEnemy.GetStats().RotSpeed * Time.deltaTime
-        );
+        );*/
 
        
-                attackTimer += Time.deltaTime;
-                if (attackTimer >= OwningEnemy.GetStats().attackSpeed)
-                {
-                    FireAtGenerator();
-                    attackTimer = 0f;
-                }
+              
             
         
     }

@@ -87,7 +87,6 @@ public class MoveToNearestGenerator : BehaviourBase
             }
         }
 
-        
         Vector3 targetPoint = currentTarget.transform.position;
         float distanceToGenerator = Vector3.Distance(currentPosition, targetPoint);
 
@@ -102,16 +101,13 @@ public class MoveToNearestGenerator : BehaviourBase
                 OwningEnemy.GetStats().RotSpeed * Time.deltaTime
             );
 
-            // Only transition if we're facing the target
-            float angleToTarget = Vector3.Angle(executer.transform.forward, d2t);
-            if (angleToTarget < 30f) // Allow some tolerance
-            {
+            
                 stateMachine.SetBool("TargetReached", true);
                 return;
-            }
+            
         }
 
-        /*// Calculate movement direction
+        // Calculate movement direction
         Vector3 moveDirection = (targetPoint - currentPosition).normalized;
         Vector3 targetVelocity = moveDirection * OwningEnemy.GetStats().MoveSpeed;
 
@@ -130,7 +126,7 @@ public class MoveToNearestGenerator : BehaviourBase
             ref velocityChange,
             0.1f,
             OwningEnemy.GetStats().MoveSpeed
-        );*/
+        );
 
         // Update position using rigidbody
         if (OwningEnemy.rb != null)
