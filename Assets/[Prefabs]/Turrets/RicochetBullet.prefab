@@ -217,7 +217,7 @@ MonoBehaviour:
   hitSound: {fileID: 0}
   soundVolume: 0.5
   maxRicochets: 3
-  ricochetRange: 4
+  ricochetRange: 10
   damageReductionPerBounce: 0.2
   speedReductionAfterFirstBounce: 0.5
   bulletTrail: {fileID: 809939136776408274}

@@ -4859,7 +4859,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   panSpeed: 25
   zoomSpeed: 1
-  minZoom: 50
+  minZoom: 30
   maxZoom: 5
   smoothSpeed: 10
   maxVerticalAngle: 85
