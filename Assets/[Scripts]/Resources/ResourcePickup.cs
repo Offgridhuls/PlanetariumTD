@@ -3,7 +3,6 @@ using Planetarium;
 
 namespace Planetarium
 {
-    [RequireComponent(typeof(Rigidbody))]
     [RequireComponent(typeof(SphereCollider))]
     public class ResourcePickup : CoreBehaviour
     {
@@ -11,63 +10,39 @@ namespace Planetarium
         public ResourceType resourceType;
         public int amount = 1;
 
-        [Header("Physics Settings")]
-        [SerializeField] private float initialUpwardForce = 5f;
-        [SerializeField] private float initialRandomForce = 2f;
-        [SerializeField] private float dragAmount = 1f;
-        [SerializeField] private float floatHeight = 0.5f;
+        [Header("Drop Settings")]
+        [SerializeField] private float dropSpeed = 10f;
+        [SerializeField] private float pickupRadius = 1f;
         [SerializeField] private LayerMask planetLayer;
         [SerializeField] private LayerMask playerLayer;
         
-        [Header("Rotation Settings")]
-        [SerializeField] private float rotationSpeed = 45f;
-        [SerializeField] private float wobbleAmount = 5f;
-        [SerializeField] private float wobbleSpeed = 2f;
+        [Header("Pickup Settings")]
+        [SerializeField] private float pickupRange = 5f;
+        [SerializeField] private LayerMask raycastLayers;
 
-        [Header("Despawn Visual Settings")]
-        [SerializeField] private Color despawnWarningColor = new Color(1f, 0.5f, 0f, 1f); // Orange warning color
-        [SerializeField] private float warningStartTime = 5f; // Start warning 5 seconds before despawn
-        [SerializeField] private float blinkSpeed = 2f; // How fast to blink when near despawn
-        [SerializeField] private float fadeStartTime = 2f; // Start fading 2 seconds before despawn
-        [SerializeField] private ParticleSystem collectEffect;
+        [Header("Despawn Settings")]
+        [SerializeField] private float lifeTime = 30f;
+        [SerializeField] private float warningStartTime = 5f;
 
         private PlanetBase targetPlanet;
-        private Rigidbody rb;
         private SphereCollider sphereCollider;
-        private SpriteRenderer spriteRenderer;
         private ResourceManager resourceManager;
         private ResourceInventory resourceInventory;
+        private Camera mainCamera;
         private bool isInitialized;
         private bool isCollected;
-        private bool isFloating;
-        private float wobbleOffset;
-        private static readonly RaycastHit[] raycastHits = new RaycastHit[1];
-        private float nextRaycastTime;
-        private const float RAYCAST_INTERVAL = 0.1f;
-        private Vector3 lastGravityDir;
-        private float currentRotation;
-        private float lifeTime;
-        private const float MAX_LIFETIME = 30f; // Maximum time before auto-collecting
-        private Color originalColor;
+        private bool isLocked;
+        private Vector3 surfaceNormal;
+        private float currentLifeTime;
 
         public bool IsCollectible => !isCollected;
 
         private void Awake()
         {
-            // Get and cache components
-            rb = GetComponent<Rigidbody>();
             sphereCollider = GetComponent<SphereCollider>();
-            spriteRenderer = GetComponent<SpriteRenderer>();
-
-            // Configure Rigidbody
-            rb.useGravity = false;
-            rb.linearDamping = dragAmount;
-            rb.interpolation = RigidbodyInterpolation.Interpolate;
-            rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
-            rb.constraints = RigidbodyConstraints.FreezeRotation;
-            
-            // Configure Collider
             sphereCollider.isTrigger = true;
+            sphereCollider.radius = pickupRadius;
+            mainCamera = Camera.main;
         }
 
         public void Initialize(SceneContext context, ResourceManager manager)
@@ -77,199 +52,82 @@ namespace Planetarium
             targetPlanet = context.CurrentPlanet;
             resourceManager = manager;
             resourceInventory = context.ResourceInventory;
-            lifeTime = 0f;
+            currentLifeTime = 0f;
             isCollected = false;
-            isFloating = false;
+            isLocked = false;
+            isInitialized = true;
+        }
 
-            // Update collider radius
-            sphereCollider.radius = resourceType.pickupRadius;
+        private void Update()
+        {
+            if (!isInitialized || isCollected) return;
 
-            if (spriteRenderer && resourceType)
+            currentLifeTime += Time.deltaTime;
+            if (currentLifeTime >= lifeTime)
             {
-                spriteRenderer.color = resourceType.resourceColor;
-                originalColor = resourceType.resourceColor;
+                Collect();
+                return;
             }
 
-            // Add initial forces
-            Vector3 randomDirection = Random.insideUnitSphere;
-            randomDirection.y = Mathf.Abs(randomDirection.y);
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-            rb.AddForce((Vector3.up * initialUpwardForce + randomDirection * initialRandomForce), ForceMode.Impulse);
+            if (!isLocked)
+            {
+                // Drop towards planet
+                Vector3 toPlanet = (targetPlanet.transform.position - transform.position).normalized;
+                transform.position += toPlanet * dropSpeed * Time.deltaTime;
 
-            // Initialize rotation values
-            wobbleOffset = Random.value * Mathf.PI * 2f;
-            currentRotation = Random.value * 360f;
+                // Check for planet surface
+                RaycastHit hit;
+                if (Physics.Raycast(transform.position, toPlanet, out hit, 1f, planetLayer))
+                {
+                    surfaceNormal = hit.normal;
+                    isLocked = true;
+                }
+            }
+            else
+            {
+                // Stay locked to planet surface
+                Vector3 toPlanet = (targetPlanet.transform.position - transform.position).normalized;
+                RaycastHit hit;
+                if (Physics.Raycast(transform.position, toPlanet, out hit, 2f, planetLayer))
+                {
+                    transform.position = hit.point + hit.normal * 0.5f;
+                    surfaceNormal = hit.normal;
+                }
+                transform.rotation = Quaternion.FromToRotation(Vector3.up, surfaceNormal);
+            }
 
-            isInitialized = true;
+            // Check for touch/click input
+            if (Input.GetMouseButtonDown(0) && mainCamera != null)
+            {
+                Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+                RaycastHit hit;
+                
+                // Use the same layer as the sphere collider
+                int resourceLayer = gameObject.layer;
+                if (Physics.Raycast(ray, out hit))
+                {
+                    // Check if we hit this resource
+                    if (hit.collider.gameObject == gameObject)
+                {
+                        Debug.Log("Hit resource: " + gameObject.name);
+                    Collect();
+                }
+            }
+        }
         }
 
         private void OnTriggerEnter(Collider other)
         {
-            if (isCollected || !isInitialized) return;
-
-            // Check if the colliding object is on the player layer
-            if (((1 << other.gameObject.layer) & playerLayer) != 0)
-            {
-                TryCollect();
-            }
+            // Left empty intentionally - collection now handled through clicking/tapping
         }
 
-        private void FixedUpdate()
+        private void Collect()
         {
-            if (!isInitialized || isCollected || !targetPlanet) return;
-
-            // Update lifetime and check for auto-collection
-            lifeTime += Time.fixedDeltaTime;
-            if (lifeTime >= MAX_LIFETIME)
-            {
-                TryCollect();
-                return;
-            }
-
-            // Update visuals based on remaining lifetime
-            UpdateDespawnVisuals();
-
-            Vector3 directionToPlanet = (targetPlanet.transform.position - transform.position);
-            float distanceToCenter = directionToPlanet.magnitude;
-            
-            // Prevent division by zero and NaN
-            if (distanceToCenter < 0.001f)
-            {
-                directionToPlanet = Vector3.up;
-                distanceToCenter = 0.001f;
-            }
-            
-            directionToPlanet = directionToPlanet / distanceToCenter;
-
-            // Only raycast periodically
-            if (Time.time >= nextRaycastTime)
-            {
-                int hitCount = Physics.RaycastNonAlloc(transform.position, directionToPlanet, raycastHits, 100f, planetLayer);
-                if (hitCount > 0)
-                {
-                    float distanceToSurface = raycastHits[0].distance;
-                    isFloating = distanceToSurface <= floatHeight;
-                    lastGravityDir = directionToPlanet;
-                }
-                else
-                {
-                    isFloating = false;
-                    lastGravityDir = directionToPlanet;
-                }
-
-                nextRaycastTime = Time.time + RAYCAST_INTERVAL;
-            }
-
-            // Ensure lastGravityDir is valid
-            if (lastGravityDir == Vector3.zero)
-            {
-                lastGravityDir = directionToPlanet;
-            }
-
-            // Apply forces
-            if (isFloating && raycastHits[0].distance > 0)
-            {
-                float upwardForce = Mathf.Clamp((floatHeight - raycastHits[0].distance) * resourceType.gravitationSpeed, -100f, 100f);
-                Vector3 force = -lastGravityDir * upwardForce;
-                
-                // Prevent NaN forces
-                if (!float.IsNaN(force.x) && !float.IsNaN(force.y) && !float.IsNaN(force.z))
-                {
-                    rb.AddForce(force, ForceMode.Force);
-                }
-                
-                currentRotation += rotationSpeed * Time.fixedDeltaTime;
-                float wobble = Mathf.Sin((Time.time + wobbleOffset) * wobbleSpeed) * wobbleAmount;
-                
-                // Ensure we have a valid up vector for rotation
-                Vector3 upVector = -lastGravityDir;
-                if (upVector.magnitude < 0.001f)
-                {
-                    upVector = Vector3.up;
-                }
-                
-                try
-                {
-                    // Create rotation safely
-                    Quaternion baseRotation = Quaternion.FromToRotation(Vector3.up, upVector);
-                    Quaternion wobbleRotation = Quaternion.Euler(wobble, currentRotation, 0);
-                    transform.rotation = baseRotation * wobbleRotation;
-                }
-                catch
-                {
-                    // Fallback rotation if something goes wrong
-                    transform.rotation = Quaternion.identity;
-                }
-            }
-            else
-            {
-                float gravitationalForce = resourceType.gravitationSpeed * resourceManager.GetGravitationMultiplier();
-                Vector3 force = directionToPlanet * gravitationalForce;
-                
-                // Prevent NaN forces
-                if (!float.IsNaN(force.x) && !float.IsNaN(force.y) && !float.IsNaN(force.z))
-                {
-                    rb.AddForce(force, ForceMode.Force);
-                }
-                
-                // Safe rotation
-                if (directionToPlanet.magnitude >= 0.001f)
-                {
-                    transform.rotation = Quaternion.FromToRotation(Vector3.up, -directionToPlanet);
-                }
-            }
-        }
-
-        private void UpdateDespawnVisuals()
-        {
-            if (!spriteRenderer) return;
-
-            float remainingTime = MAX_LIFETIME - lifeTime;
-            
-            if (remainingTime <= fadeStartTime)
-            {
-                // Final fade out
-                float alpha = Mathf.Clamp01(remainingTime / fadeStartTime);
-                spriteRenderer.color = new Color(spriteRenderer.color.r, spriteRenderer.color.g, spriteRenderer.color.b, alpha);
-            }
-            else if (remainingTime <= warningStartTime)
-            {
-                // Warning blink effect
-                float blinkValue = Mathf.PingPong(Time.time * blinkSpeed, 1f);
-                spriteRenderer.color = Color.Lerp(originalColor, despawnWarningColor, blinkValue);
-            }
-            else
-            {
-                // Normal color
-                spriteRenderer.color = originalColor;
-            }
-        }
-
-        public bool TryCollect()
-        {
-            if (isCollected || !isInitialized) return false;
+            if (isCollected) return;
             isCollected = true;
 
-            // Play collection effect if assigned
-            if (collectEffect != null)
-            {
-                var effect = Instantiate(collectEffect, transform.position, Quaternion.identity);
-                effect.Play();
-                Destroy(effect.gameObject, effect.main.duration);
-            }
-
-            // Add to inventory if available
-            if (resourceInventory != null)
-            {
-                resourceInventory.AddResource(resourceType, amount);
-            }
-
-            // Notify resource manager
-            resourceManager.CollectResource(resourceType, amount);
-            resourceManager.ReleaseResource(this);
-
-            return true;
+            resourceInventory?.AddResource(resourceType, amount);
+            Destroy(gameObject);
         }
     }
 }
