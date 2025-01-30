@@ -41,10 +41,19 @@ MonoBehaviour:
         enabled: 1
         Altitude: 15
         targetUpdateInterval: 0.5
+        arrivalDistance: 2
+        smoothTime: 0.5
+        maxSpeed: 20
         avoidanceRadius: 5
         avoidanceForce: 10
         maxAvoidanceAngle: 45
-        arrivalDistance: 2
+        useFlocking: 0
+        cohesionWeight: 1
+        separationWeight: 2
+        alignmentWeight: 1
+        targetWeight: 1.5
+        neighborRadius: 5
+        separationRadius: 3
     - rid: 997942678108241920
       type: {class: FSMC_State, ns: FSMC.Runtime, asm: FSMC.Runtime}
       data:
@@ -85,7 +94,14 @@ MonoBehaviour:
         enabled: 1
         Altitude: 0
         targetUpdateInterval: 0.5
-        avoidanceRadius: 5
-        avoidanceForce: 10
-        maxAvoidanceAngle: 45
-        arrivalDistance: 2
+        attackRange: 40
+        optimalAttackRange: 12
+        smoothTime: 0.5
+        maxSpeed: 15
+        useFlocking: 0
+        cohesionWeight: 0.8
+        separationWeight: 2.5
+        alignmentWeight: 0.8
+        targetWeight: 2
+        neighborRadius: 5
+        separationRadius: 3

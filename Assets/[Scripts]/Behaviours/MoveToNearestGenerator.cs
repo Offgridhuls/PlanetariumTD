@@ -137,9 +137,7 @@ public class MoveToNearestGenerator : BehaviourBase
             OwningEnemy.rb.linearVelocity = currentVelocity;
         }
 
-        // Update rotation to face movement direction if we're moving
-        if (currentVelocity.magnitude > 0.1f)
-        {
+       
             Quaternion targetRotation = Quaternion.LookRotation(
                 currentVelocity.normalized,
                 -CalculateGravityDirection(currentPosition)
@@ -150,7 +148,7 @@ public class MoveToNearestGenerator : BehaviourBase
                 targetRotation,
                 OwningEnemy.GetStats().RotSpeed * Time.deltaTime
             );
-        }
+        
     }
 
     private Vector3 CalculateAvoidanceDirection(Vector3 currentPosition, Vector3 planetPosition)

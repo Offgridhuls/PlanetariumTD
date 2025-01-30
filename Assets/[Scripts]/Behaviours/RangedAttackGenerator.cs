@@ -96,7 +96,7 @@ public class RangedAttackGenerator : BehaviourBase
         if (currentTarget == null || currentTarget.IsDestroyed)
         {
             // Return to movement state if target is lost
-            stateMachine.SetBool("TargetLost", true);
+           // stateMachine.SetBool("TargetLost", true);
             return;
         }
 
@@ -146,20 +146,15 @@ public class RangedAttackGenerator : BehaviourBase
             OwningEnemy.GetStats().RotSpeed * Time.deltaTime
         );
 
-        // Attack if in range and facing target
-        if (distanceToTarget <= attackRange)
-        {
-            float angleToTarget = Vector3.Angle(executer.transform.forward, directionToTarget);
-            if (angleToTarget < 30f) // Allow some tolerance for attack
-            {
+       
                 attackTimer += Time.deltaTime;
                 if (attackTimer >= OwningEnemy.GetStats().attackSpeed)
                 {
                     FireAtGenerator();
                     attackTimer = 0f;
                 }
-            }
-        }
+            
+        
     }
 
     private Vector3 CalculateGravityDirection(Vector3 position)

@@ -163,7 +163,7 @@ MonoBehaviour:
   possibleResources:
   - {fileID: 11400000, guid: 34a83c52de3b36542b7def04caa99464, type: 2}
   resourceDropRange: {x: 1, y: 3}
-  rb: {fileID: 0}
+  rb: {fileID: 6451041024947094753}
   onHealthChanged:
     m_PersistentCalls:
       m_Calls: []

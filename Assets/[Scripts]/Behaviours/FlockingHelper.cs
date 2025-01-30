@@ -17,7 +17,7 @@ namespace Planetarium
         public float alignmentWeight = 1.0f;
         public float targetWeight = 1.5f;
         public float neighborRadius = 5f;
-        public float separationRadius = 3f;
+        public float separationRadius = 1f;
         public float maxSpeed = 10f;
         public float maxSteerForce = 3f;
 
