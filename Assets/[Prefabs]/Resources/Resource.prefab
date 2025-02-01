@@ -105,6 +105,10 @@ MonoBehaviour:
   playerLayer:
     serializedVersion: 2
     m_Bits: 1024
+  pickupRange: 5
+  raycastLayers:
+    serializedVersion: 2
+    m_Bits: 0
   lifeTime: 30
   warningStartTime: 5
 --- !u!1001 &1820423274195625091
@@ -194,7 +198,7 @@ Animator:
   m_GameObject: {fileID: 1821182239293944995}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 6d22976d6b4237145b52cbafae335c43, type: 2}
+  m_Controller: {fileID: 9100000, guid: 1f1b44c257315534c9111ff772736823, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
