@@ -4727,7 +4727,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 870359424446949570, guid: d8b32022da8cfeb489eb9936d51574c0, type: 3}
       propertyPath: m_Name
-      value: Planet_64
+      value: Planet
       objectReference: {fileID: 0}
     - target: {fileID: 870359424446949570, guid: d8b32022da8cfeb489eb9936d51574c0, type: 3}
       propertyPath: m_Layer
