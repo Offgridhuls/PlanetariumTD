@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 0.35
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 2100000, guid: ceaf0c2e5525b2b45887ab50b154c118, type: 2}
+  m_SkyboxMaterial: {fileID: 2100000, guid: 7f6130ccef6198f4394f67c377133ce6, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -4532,6 +4532,55 @@ MonoBehaviour:
   damageEffect: {fileID: 0}
   shieldHitEffect: {fileID: 0}
   destructionEffect: {fileID: 0}
+--- !u!1 &1051039346
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1051039348}
+  - component: {fileID: 1051039347}
+  m_Layer: 0
+  m_Name: PostProcessVolume
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1051039347
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1051039346}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_IsGlobal: 1
+  priority: 0
+  blendDistance: 0
+  weight: 1
+  sharedProfile: {fileID: 11400000, guid: 7449d4412127cf14bafbfe00fe0efe92, type: 2}
+--- !u!4 &1051039348
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1051039346}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -38.982697, y: -11.956492, z: 29.870073}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1067019287 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7358494939008777016, guid: 01dfddf276123eb4b94a1e10e722eac7, type: 3}
@@ -9375,3 +9424,4 @@ SceneRoots:
   - {fileID: 273371154}
   - {fileID: 1903015883}
   - {fileID: 676291991}
+  - {fileID: 1051039348}

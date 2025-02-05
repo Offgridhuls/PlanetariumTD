@@ -134,8 +134,8 @@ Material:
     - __dirty: 0
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _Color_01: {r: 0.40000015, g: 0.100000024, b: 1, a: 0}
-    - _Color_02: {r: 1, g: 0.100000024, b: 0.47411752, a: 0}
+    - _Color_01: {r: 1, g: 0.86353207, b: 0, a: 0}
+    - _Color_02: {r: 1, g: 0.019583639, b: 0, a: 0}
     - _Color_Scale: {r: 0.1, g: 0.5, b: 0, a: 0}
     - _Color_Speed: {r: -0.2, g: -0.1, b: 0, a: 0}
     - _Distortion_Scale: {r: 0, g: 0, b: 0, a: 0}
