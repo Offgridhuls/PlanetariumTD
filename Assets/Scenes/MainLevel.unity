@@ -4091,6 +4091,7 @@ MonoBehaviour:
   powerupsContainer: {fileID: 874161591}
   powerupPrefabs:
   - {fileID: 834410309353680104, guid: 9aeeb5312662e8947a46b7f657dadbe4, type: 3}
+  - {fileID: 7067709550680691297, guid: 4ae27e071bf6d464d8d7fb6579271f6d, type: 3}
 --- !u!1 &911736542
 GameObject:
   m_ObjectHideFlags: 0
