@@ -12,7 +12,6 @@ public class FlyingEnemyBase : EnemyBase
     private float heightChangeSpeed = 1f;
     private float currentHeight;
     private float targetHeight;
-    private float heightTimer;
 
     protected override void Awake()
     {
@@ -55,27 +54,14 @@ public class FlyingEnemyBase : EnemyBase
         base.Update();
 
         // Update height
-        heightTimer += Time.deltaTime;
-        if (heightTimer >= heightChangeSpeed)
+        if (currentHeight == targetHeight)
         {
-            targetHeight = currentHeight + Random.Range(-heightVariation, heightVariation);
-            heightTimer = 0f;
+            targetHeight = transform.position.y + Random.Range(-heightVariation, heightVariation);
         }
 
-        // Smoothly interpolate to target height
         currentHeight = Mathf.Lerp(currentHeight, targetHeight, Time.deltaTime * heightChangeSpeed);
         //transform.position = position;
     }
 
-    protected override void InitializeStates()
-    {
-        base.InitializeStates();
-        RegisterState<MoveToGeneratorState>();
-        RegisterState<AttackGeneratorState>();
-    }
-
-    protected override void TransitionToInitialState()
-    {
-        TransitionToState<MoveToGeneratorState>();
-    }
+    // Removed manual state registration
 }

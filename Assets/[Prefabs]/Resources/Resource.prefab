@@ -109,7 +109,7 @@ MonoBehaviour:
   raycastLayers:
     serializedVersion: 2
     m_Bits: 0
-  lifeTime: 30
+  lifeTime: 15
   warningStartTime: 5
 --- !u!1001 &1820423274195625091
 PrefabInstance:

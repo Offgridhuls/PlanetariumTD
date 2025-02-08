@@ -219,8 +219,8 @@ MonoBehaviour:
   hitSound: {fileID: 0}
   soundVolume: 0.5
   arcHeight: 7
-  explosionRadius: 20
-  explosionForce: 15
+  explosionRadius: 5
+  explosionForce: 10
   explosionLayers:
     serializedVersion: 2
     m_Bits: 4294967295

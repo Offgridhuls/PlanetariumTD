@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Starting Wave
   m_EditorClassIdentifier: 
   baseEnemyCount: 15
-  enemyCountScaling: 1.5
+  enemyCountScaling: 2
   waveDelayBase: 5
   waveDelayReduction: 0.1
   minWaveDelay: 2
@@ -28,7 +28,7 @@ MonoBehaviour:
     healthMultiplier: 1
     speedMultiplier: 1
     spawnDelayMultiplier: 1
-    spawnPattern: 5
+    spawnPattern: 0
     eliteChanceBonus: 0.174
   bossWaveSettings:
     firstBossWave: 5
@@ -57,7 +57,27 @@ MonoBehaviour:
     eliteDamageMultiplier: 4
     eliteColor: {r: 0.509434, g: 0.3484336, b: 0.3484336, a: 0}
     eliteMaterial: {fileID: 2100000, guid: d0c0c8e5922b6884085ac36efc479758, type: 2}
-    preferredSpawnArc: 31
+    preferredSpawnArc: 92
+    minDistanceFromOthers: 3
+    maintainFormation: 0
+  - enemyData: {fileID: 11400000, guid: 8088cecfdd382cb4bab9d99fd4d6a0b6, type: 2}
+    baseSpawnWeight: 0.293
+    waveProgressionWeight: 0.057
+    healthScaling: 1
+    speedScaling: 1
+    damageScaling: 1
+    minSpawnDelay: 0
+    maxSpawnDelay: 0
+    maxPerWave: 100
+    isBoss: 0
+    canBeElite: 1
+    eliteChance: 0.162
+    eliteHealthMultiplier: 2
+    eliteSpeedMultiplier: 3
+    eliteDamageMultiplier: 4
+    eliteColor: {r: 0.7075472, g: 0.09678713, b: 0.09678713, a: 0}
+    eliteMaterial: {fileID: 2100000, guid: d0c0c8e5922b6884085ac36efc479758, type: 2}
+    preferredSpawnArc: 92
     minDistanceFromOthers: 3
     maintainFormation: 0
   enableDynamicDifficulty: 1

@@ -3121,6 +3121,14 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 11
       objectReference: {fileID: 0}
+    - target: {fileID: 7942980469012514912, guid: 75601e6a218729f41b70b075674c33fe, type: 3}
+      propertyPath: maxHealth
+      value: 10000
+      objectReference: {fileID: 0}
+    - target: {fileID: 7942980469012514912, guid: 75601e6a218729f41b70b075674c33fe, type: 3}
+      propertyPath: repairRate
+      value: 100
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -8936,7 +8944,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b7f5464bc84f2a4a98c36f7d4de04af, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startOpen: 1
+  startOpen: 0
   priority: 0
   useAnimation: 1
   animationDuration: 0.3

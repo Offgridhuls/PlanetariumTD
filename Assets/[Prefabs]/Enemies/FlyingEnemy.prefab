@@ -68,7 +68,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 2108d8603f3bd8a4889e438479b3fd2d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -150,7 +150,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c46b7fefd05845748b8bb532aad3a434, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _controller: {fileID: 11400000, guid: 3002eaf9c716ca147abac9daf4bd3b25, type: 2}
   enemyStats: {fileID: 11400000, guid: 8088cecfdd382cb4bab9d99fd4d6a0b6, type: 2}
   maxHealth: 100
   currentHealth: 0
@@ -163,7 +162,14 @@ MonoBehaviour:
   possibleResources:
   - {fileID: 11400000, guid: 34a83c52de3b36542b7def04caa99464, type: 2}
   resourceDropRange: {x: 1, y: 3}
-  rb: {fileID: 6451041024947094753}
+  stateConfig: {fileID: 11400000, guid: ba1d9026522707d4db6d51eb49a20ec0, type: 2}
+  currentStateName: 
+  projectilePrefab: {fileID: 2526509629052936677, guid: 3f270dfdc506de546b772760313af985, type: 3}
+  projectileSpawnPoint: {fileID: 4568147509268017655}
+  planetLayerMask:
+    serializedVersion: 2
+    m_Bits: 512
+  enableStateLogging: 1
   onHealthChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -177,7 +183,6 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   firePoint: {fileID: 4568147509268017655}
-  projectilePrefab: {fileID: 2526509629052936677, guid: 3f270dfdc506de546b772760313af985, type: 3}
 --- !u!1 &4031500842320831187
 GameObject:
   m_ObjectHideFlags: 0
@@ -203,7 +208,7 @@ Transform:
   m_GameObject: {fileID: 4031500842320831187}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.64, y: 0, z: 0}
+  m_LocalPosition: {x: 0.64, y: 0.49, z: 1.02}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -236,14 +241,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7963398384135626164}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.677, y: 0, z: -0.086}
-  m_LocalScale: {x: 0.43431, y: 0.058770824, z: 0.09062747}
+  m_LocalRotation: {x: -0, y: 0.047089156, z: -0, w: 0.9988907}
+  m_LocalPosition: {x: 0.058, y: -0.04, z: 0.582}
+  m_LocalScale: {x: 0.1259108, y: 0.058770824, z: 0.26080328}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4568147509268017655}
   m_Father: {fileID: 7668134840681975630}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 5.398, z: 0}
 --- !u!33 &7947472753174632284
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -275,7 +280,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: effb278466e36474989bd577f63840b1, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

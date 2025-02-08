@@ -30,11 +30,41 @@ public class EnemyBase : MonoBehaviour, IDamageable
     [SerializeField] protected Vector2 resourceDropRange = new Vector2(1, 3);
 
     [Header("State Machine")]
+    [SerializeField] protected EnemyStateConfig stateConfig;
     [SerializeField, ReadOnly] protected string currentStateName;
 
     [Header("Attack Settings")]
     [SerializeField] protected ProjectileBase projectilePrefab;
     [SerializeField] protected Transform projectileSpawnPoint;
+
+    [Header("Planet Interaction")]
+    [SerializeField] protected LayerMask planetLayerMask;
+
+    /// <summary>
+    /// Raycast towards the planet and get the hit point and normal
+    /// </summary>
+    public bool GetPlanetSurfacePoint(out Vector3 hitPoint, out Vector3 hitNormal)
+    {
+        hitPoint = Vector3.zero;
+        hitNormal = Vector3.up;
+
+        if (currentPlanet == null) return false;
+
+        Vector3 toPlanet = currentPlanet.transform.position - transform.position;
+        RaycastHit hit;
+        
+        if (Physics.Raycast(transform.position, toPlanet.normalized, out hit, float.MaxValue, planetLayerMask))
+        {
+            hitPoint = hit.point;
+            hitNormal = hit.normal;
+            return true;
+        }
+
+        return false;
+    }
+
+    [Header("Debug")]
+    [SerializeField] private bool enableStateLogging = true;
 
     public Rigidbody rb { get; private set; }
     protected Dictionary<Type, EnemyStateBase> states = new Dictionary<Type, EnemyStateBase>();
@@ -102,22 +132,57 @@ public class EnemyBase : MonoBehaviour, IDamageable
 
     protected virtual void InitializeStates()
     {
-        // Override this in derived classes to register states
-        // Example:
-        // RegisterState<MoveState>();
-        // RegisterState<AttackState>();
-    }
+        if (stateConfig == null)
+        {
+            Debug.LogError($"[{gameObject.name}] No state config assigned to enemy!", this);
+            return;
+        }
 
-    protected void RegisterState<T>() where T : EnemyStateBase, new()
-    {
-        var state = new T();
-        state.Initialize(this);
-        states[typeof(T)] = state;
+        foreach (var stateEntry in stateConfig.States)
+        {
+            Type stateType = stateEntry.GetStateType();
+            if (stateType == null || !typeof(EnemyStateBase).IsAssignableFrom(stateType))
+            {
+                Debug.LogError($"[{gameObject.name}] Invalid state type in config: {stateEntry.StateName}", this);
+                continue;
+            }
+
+            var state = (EnemyStateBase)Activator.CreateInstance(stateType);
+            state.Initialize(this);
+            states[stateType] = state;
+            
+            if (enableStateLogging)
+            {
+                Debug.Log($"[{gameObject.name}] Registered state: {stateEntry.StateName}", this);
+            }
+        }
     }
 
     protected virtual void TransitionToInitialState()
     {
-        // Override this in derived classes to set the initial state
+        if (stateConfig == null) return;
+
+        // Find the default state from config
+        var defaultStateEntry = System.Array.Find(stateConfig.States, s => s.IsDefaultState);
+        if (defaultStateEntry != null)
+        {
+            Type defaultStateType = defaultStateEntry.GetStateType();
+            if (defaultStateType != null && states.ContainsKey(defaultStateType))
+            {
+                currentState = states[defaultStateType];
+                currentStateName = defaultStateEntry.StateName;
+                currentState.Enter();
+            }
+        }
+        else if (states.Count > 0)
+        {
+            // Fallback to first state if no default specified
+            var firstState = states.Values.GetEnumerator();
+            firstState.MoveNext();
+            currentState = firstState.Current;
+            currentStateName = currentState.GetType().Name;
+            currentState.Enter();
+        }
     }
 
     public void TransitionToState<T>() where T : EnemyStateBase
@@ -125,14 +190,22 @@ public class EnemyBase : MonoBehaviour, IDamageable
         var type = typeof(T);
         if (!states.ContainsKey(type))
         {
-            Debug.LogError($"State {type.Name} not registered!");
+            Debug.LogError($"[{gameObject.name}] State {type.Name} not registered!", this);
             return;
         }
 
+        string previousState = currentState?.GetType().Name ?? "null";
         currentState?.Exit();
         currentState = states[type];
         currentStateName = type.Name;
+        LogStateTransition(previousState, currentStateName);
         currentState.Enter();
+    }
+
+    private void LogStateTransition(string from, string to)
+    {
+        if (!enableStateLogging) return;
+        Debug.Log($"[{gameObject.name}] State Transition: {from ?? "null"} -> {to}", this);
     }
 
     #endregion
@@ -146,20 +219,30 @@ public class EnemyBase : MonoBehaviour, IDamageable
 
     public GeneratorBase FindNearestGenerator()
     {
-        GeneratorBase[] generators = FindObjectsOfType<GeneratorBase>();
+        GeneratorBase[] generators = FindObjectsByType<GeneratorBase>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+    
+        bool anyGeneratorAlive = false;
         GeneratorBase nearest = null;
         float nearestDistance = float.MaxValue;
 
         foreach (var generator in generators)
         {
-            if (generator.IsDestroyed) continue;
-
-            float distance = Vector3.Distance(transform.position, generator.transform.position);
-            if (distance < nearestDistance)
+            if (!generator.IsDestroyed)
             {
-                nearestDistance = distance;
-                nearest = generator;
+                anyGeneratorAlive = true;
+                float distance = Vector3.Distance(transform.position, generator.transform.position);
+                if (distance < nearestDistance)
+                {
+                    nearestDistance = distance;
+                    nearest = generator;
+                }
             }
+        }
+
+        if (!anyGeneratorAlive)
+        {
+            Die();
+            return null;
         }
 
         currentTarget = nearest;

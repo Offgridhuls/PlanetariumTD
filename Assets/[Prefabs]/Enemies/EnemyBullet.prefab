@@ -207,8 +207,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aa9f5eecbc13f7a489a336c397b85278, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  projectileSpeed: 80
-  maxLifetime: 4
+  projectileSpeed: 30
+  maxLifetime: 5
   targetLayers:
     serializedVersion: 2
     m_Bits: 2048

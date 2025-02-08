@@ -28,12 +28,67 @@ namespace Planetarium
         private float lastDamageTime;
         private GameStateManager gameState;
 
+        // Cache the collider for performance
+        private SphereCollider planetCollider;
+        private Vector3 lastScale;
+        private float cachedRadius;
+
         protected override void OnInitialize()
         {
             gameState = Context.GameState;
             CurrentHealth = maxHealth;
             CurrentShield = maxShield;
             IsDestroyed = false;
+
+            // Cache collider and initial scale
+            planetCollider = GetComponent<SphereCollider>();
+            if (planetCollider != null)
+            {
+                lastScale = transform.lossyScale;
+                UpdateCachedRadius();
+            }
+        }
+
+        private void UpdateCachedRadius()
+        {
+            // Get the largest scale component for safety
+            float maxScale = Mathf.Max(lastScale.x, Mathf.Max(lastScale.y, lastScale.z));
+            cachedRadius = planetCollider.radius * maxScale;
+        }
+
+        /// <summary>
+        /// Efficiently finds the closest point on the planet's surface to a given position.
+        /// This method accounts for non-uniform scaling and updates the cached radius if the planet's scale has changed.
+        /// </summary>
+        /// <param name="position">World position to check against</param>
+        /// <returns>The closest point on the planet's surface in world space</returns>
+        public Vector3 GetClosestSurfacePoint(Vector3 position)
+        {
+            if (planetCollider == null) return transform.position;
+
+            // Check if scale changed
+            if (transform.lossyScale != lastScale)
+            {
+                lastScale = transform.lossyScale;
+                UpdateCachedRadius();
+            }
+
+            Vector3 directionToPosition = (position - transform.position).normalized;
+            return transform.position + directionToPosition * cachedRadius;
+        }
+
+        /// <summary>
+        /// Gets the current distance from a point to the planet's surface.
+        /// Positive values indicate distance above surface, negative values indicate penetration.
+        /// </summary>
+        /// <param name="position">World position to check</param>
+        /// <returns>Distance from the surface (positive if outside, negative if inside)</returns>
+        public float GetDistanceFromSurface(Vector3 position)
+        {
+            if (planetCollider == null) return float.MaxValue;
+            
+            Vector3 closestPoint = GetClosestSurfacePoint(position);
+            return Vector3.Distance(position, closestPoint);
         }
 
         protected override void OnDeinitialize()
