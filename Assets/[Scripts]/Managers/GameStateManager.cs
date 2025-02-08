@@ -3,6 +3,8 @@ using UnityEngine.Events;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Planetarium.UI;
+using Planetarium.UI.Views;
 
 namespace Planetarium
 {
@@ -55,6 +57,7 @@ namespace Planetarium
         public event Action<string> OnItemSelected;
         public event EventHandler<GameStateChangedEventArgs> OnGameStateChanged;
         public event Action<bool> OnWaveProgressChanged;
+        public event Action OnGameOver;
 
         // Public Properties
         public GameState State { get; private set; }
@@ -103,7 +106,8 @@ namespace Planetarium
         private GameStateData previousState;
 
         // Generator tracking
-        private List<GeneratorBase> activeGenerators = new List<GeneratorBase>();
+        private HashSet<GeneratorBase> activeGenerators = new HashSet<GeneratorBase>();
+        private bool isGameEnding = false;
         private float totalGeneratorHealth;
         private float maxTotalGeneratorHealth;
 
@@ -112,9 +116,7 @@ namespace Planetarium
             Debug.Log("GameStateManager: OnInitialize called");
             InitializeGame();
             enemyManager = Context.EnemyManager;
-            activeGenerators = new List<GeneratorBase>();
-            totalGeneratorHealth = 0f;
-            maxTotalGeneratorHealth = 0f;
+            activeGenerators = new HashSet<GeneratorBase>();
             OnCurrencyChanged?.Invoke(currency);
             if (enemyManager != null)
             {
@@ -144,6 +146,7 @@ namespace Planetarium
             OnWaveProgressChanged = null;
             OnGameOverChanged = null;
             OnScoreChanged = null;
+            OnGameOver = null;
         }
 
         protected override void OnTick()
@@ -315,7 +318,7 @@ namespace Planetarium
             if (previousHealth != currentBaseHealth)
             {
                 Debug.Log($"GameStateManager: Base health changed to {currentBaseHealth}");
-                UpdateBaseHealthUI();
+                //UpdateBaseHealthUI();
             }
 
             if (currentBaseHealth <= 0 && !isGameOver)
@@ -326,7 +329,7 @@ namespace Planetarium
 
         private void EndGame(bool isGameOver)
         {
-            
+            TriggerGameOver();
         }
         public void AddCurrency(int amount)
         {
@@ -511,36 +514,43 @@ namespace Planetarium
 
         public void RegisterGenerator(GeneratorBase generator)
         {
-            if (!activeGenerators.Contains(generator))
+            if (generator != null)
             {
                 activeGenerators.Add(generator);
+                generator.OnDestroyed += OnGeneratorDestroyed;
+                generator.OnHealthChanged += OnGeneratorHealthChanged;
+                
                 maxTotalGeneratorHealth += generator.MaxHealth;
                 totalGeneratorHealth += generator.CurrentHealth;
                 
-                // Subscribe to generator health changes
-                generator.OnHealthChanged += (percentage) =>
-                {
-                    UpdateTotalGeneratorHealth();
-                };
-                
-                generator.OnDestroyed += () =>
-                {
-                    activeGenerators.Remove(generator);
-                    UpdateTotalGeneratorHealth();
-                };
-
-                // Update UI
                 UpdateBaseHealthUI();
             }
         }
 
         public void UnregisterGenerator(GeneratorBase generator)
         {
-            if (activeGenerators.Contains(generator))
+            if (generator != null)
             {
                 activeGenerators.Remove(generator);
-                UpdateTotalGeneratorHealth();
+                generator.OnDestroyed -= OnGeneratorDestroyed;
+                generator.OnHealthChanged -= OnGeneratorHealthChanged;
+                
+                maxTotalGeneratorHealth -= generator.MaxHealth;
+                totalGeneratorHealth -= generator.CurrentHealth;
+                
+                UpdateBaseHealthUI();
+                
+                // Check if this was the last generator
+                if (activeGenerators.Count == 0 && !isGameEnding)
+                {
+                    TriggerGameOver();
+                }
             }
+        }
+
+        private void OnGeneratorHealthChanged(float healthPercentage)
+        {
+            UpdateTotalGeneratorHealth();
         }
 
         private void UpdateTotalGeneratorHealth()
@@ -563,11 +573,79 @@ namespace Planetarium
             float totalHealth = currentBaseHealth + totalGeneratorHealth;
             float maxTotalHealth = baseHealth + maxTotalGeneratorHealth;
             
-            // Convert to percentage out of 100
+            // Convert to percentage
             float healthPercentage = (totalHealth / maxTotalHealth) * 100f;
             
-            // Notify UI of health change
+            // Notify UI
             OnBaseHealthChanged?.Invoke(healthPercentage);
+        }
+
+        private void OnGeneratorDestroyed()
+        {
+            // Check remaining generators after one is destroyed
+            if (activeGenerators.Count == 0 && !isGameEnding)
+            {
+                // Clear all generator health immediately
+                totalGeneratorHealth = 0f;
+                maxTotalGeneratorHealth = 0f;
+                UpdateBaseHealthUI();
+                
+                TriggerGameOver();
+            }
+        }
+
+        private void TriggerGameOver()
+        {
+            if (State == GameState.GameOver || isGameEnding) return;
+            
+            isGameEnding = true;
+
+            // Stop game systems
+            Time.timeScale = 0f;
+            
+            // Reset health to 0 and notify UI
+            currentBaseHealth = 0f;
+            totalGeneratorHealth = 0f;
+            maxTotalGeneratorHealth = 0f;
+            UpdateBaseHealthUI();
+            
+            // Stop wave timer and spawning
+            if (enemyManager != null)
+            {
+                enemyManager.ClearWave();
+                enemyManager.enabled = false;
+                OnWaveProgressChanged?.Invoke(false); // Hide wave progress
+                OnWaveTimerChanged?.Invoke(0f); // Reset wave timer
+            }
+
+            // Update state
+            SetGameState(GameState.GameOver);
+
+            // Close all views and show game over
+            var uiManager = Scene.GetService<UIManager>();
+            if (uiManager != null)
+            {
+                // Get all active views and close them
+                var views = uiManager.GetComponentsInChildren<UIView>(true);
+                foreach (var view in views)
+                {
+                    view.Close();
+                }
+                
+                // Show game over view
+                uiManager.OpenView<GameOverView>();
+            }
+
+            OnGameOver?.Invoke();
+            isGameEnding = false;
+        }
+
+        private void SetGameState(GameState newState)
+        {
+            if (State == newState) return;
+            
+            State = newState;
+            OnGameStateChanged?.Invoke(this, new GameStateChangedEventArgs(previousState, new GameStateData()));
         }
     }
 }

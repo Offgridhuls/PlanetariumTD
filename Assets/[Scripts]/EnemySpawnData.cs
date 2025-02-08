@@ -25,6 +25,7 @@ public class EnemySpawnData : ScriptableObject
     public int attackDamage = 20;
     public int attackRange = 50;
     public int ProjectileSpeed = 80;
+    public float attackAngle = 45;
     
     [Header("Effects")]
     public GameObject spawnEffect;

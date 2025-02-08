@@ -1,20 +1,25 @@
 using UnityEngine;
 using UnityEngine.Events;
 using System.Collections.Generic;
+using System.Linq;
 using Planetarium;
+using Planetarium.Spawning;
 
 public class EnemyManager : SceneService
 {
     [Header("Wave Configuration")]
     public WaveConfiguration waveConfig;
+    [Header("Spawn Configuration")]
     [SerializeField] private Transform spawnParent;
     [SerializeField] private float spawnHeight = 10f;
+    [SerializeField] private PortalManager portalManager;
 
     private Queue<(EnemySpawnData data, float delay)> currentWaveQueue = new Queue<(EnemySpawnData data, float delay)>();
     private List<EnemyBase> activeEnemies = new List<EnemyBase>();
     private float nextSpawnTime;
     private float playerPerformance = 1f;
     private GameStateManager gameState;
+    private PlanetBase currentPlanet;
 
     // Events with proper parameters
     public event System.Action<EnemyBase> OnEnemySpawned;
@@ -23,6 +28,7 @@ public class EnemyManager : SceneService
     protected override void OnInitialize()
     {
         gameState = Context.GameState;
+        currentPlanet = FindObjectOfType<PlanetBase>();
         
         if (spawnParent == null)
         {
@@ -60,6 +66,19 @@ public class EnemyManager : SceneService
             return;
         }
 
+        // Activate portals for the wave
+        if (portalManager != null)
+        {
+            // Get all portal IDs needed for this wave's enemies
+            var neededPortals = waveConfig.GetActiveEnemyConfigs()
+                .Where(c => c.spawnMethod != WaveConfiguration.SpawnMethod.Random)
+                .SelectMany(c => c.allowedPortalIds)
+                .Distinct()
+                .ToList();
+
+            portalManager.ActivatePortals(neededPortals);
+        }
+
         // Calculate wave parameters
         int totalEnemies = waveConfig.CalculateWaveEnemyCount(waveNumber, playerPerformance);
         float healthMultiplier = waveConfig.GetHealthMultiplier(waveNumber);
@@ -92,34 +111,51 @@ public class EnemyManager : SceneService
     {
         if (currentWaveQueue.Count == 0) return;
 
-        var (enemyData, spawnDelay) = currentWaveQueue.Dequeue();
-        if (enemyData == null) return;
+        var (enemyData, delay) = currentWaveQueue.Dequeue();
+        nextSpawnTime = Time.time + delay;
 
-        // Get current wave modifier for spawn pattern
-        var modifier = waveConfig.GetWaveModifier(gameState.GetCurrentWave());
-        var spawnPattern = modifier != null ? modifier.spawnPattern : WaveConfiguration.SpawnPattern.Random;
+        Vector3 spawnPosition;
+        Quaternion spawnRotation;
 
-        // Calculate spawn position using pattern
-        Vector3 spawnPosition = waveConfig.GetSpawnPosition(
-            spawnPattern,
-            GetTotalEnemiesInWave() - currentWaveQueue.Count,
-            GetTotalEnemiesInWave(),
-            Context.CurrentPlanet.transform.position,
-            spawnHeight,
-            Context.CurrentPlanet.GetPlanetRadius()
-        );
+        // Determine spawn method
+        var enemyConfig = waveConfig.GetEnemyConfig(enemyData);
+        bool usePortal = enemyConfig.spawnMethod == WaveConfiguration.SpawnMethod.Portal ||
+                        (enemyConfig.spawnMethod == WaveConfiguration.SpawnMethod.Mixed && 
+                         Random.value < enemyConfig.portalSpawnChance);
 
-        GameObject enemyObject = Instantiate(enemyData.enemyPrefab, spawnPosition, Quaternion.identity, spawnParent);
-        EnemyBase enemy = enemyObject.GetComponent<EnemyBase>();
+        if (usePortal && portalManager != null)
+        {
+            // Try to spawn from portal
+            var portal = portalManager.GetPortalForEnemy(enemyData);
+            if (portal != null)
+            {
+                spawnPosition = portal.GetSpawnPosition();
+                spawnRotation = portal.GetSpawnRotation();
+            }
+            else
+            {
+                // Fallback to random spawn if no portal available
+                spawnPosition = waveConfig.GetSpawnPosition(currentPlanet.transform.position, spawnHeight);
+                spawnRotation = Quaternion.identity;
+            }
+        }
+        else
+        {
+            // Use random spawn position
+            spawnPosition = waveConfig.GetSpawnPosition(currentPlanet.transform.position, spawnHeight);
+            spawnRotation = Quaternion.identity;
+        }
 
+        // Create the enemy
+        GameObject enemyObj = Instantiate(enemyData.enemyPrefab, spawnPosition, spawnRotation, spawnParent);
+        EnemyBase enemy = enemyObj.GetComponent<EnemyBase>();
+        
         if (enemy != null)
         {
             ConfigureEnemy(enemy, enemyData);
             activeEnemies.Add(enemy);
             OnEnemySpawned?.Invoke(enemy);
         }
-
-        nextSpawnTime = Time.time + spawnDelay;
     }
 
     private void ConfigureEnemy(EnemyBase enemy, EnemySpawnData spawnData)
@@ -181,14 +217,22 @@ public class EnemyManager : SceneService
     public void ClearWave()
     {
         currentWaveQueue.Clear();
-        foreach (var enemy in activeEnemies.ToArray())
+        
+        foreach (var enemy in activeEnemies)
         {
             if (enemy != null)
             {
                 Destroy(enemy.gameObject);
             }
         }
+        
         activeEnemies.Clear();
+
+        // Deactivate all portals
+        if (portalManager != null)
+        {
+            portalManager.DeactivatePortals();
+        }
     }
 
     public int GetActiveEnemyCount()

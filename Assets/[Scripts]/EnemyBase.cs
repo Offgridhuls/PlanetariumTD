@@ -6,7 +6,7 @@ using Planetarium;
 using Unity.Collections;
 using Planetarium.AI;
 
-public class EnemyBase : MonoBehaviour, IDamageable
+public class EnemyBase : CoreBehaviour, IDamageable
 {
     [Header("Components")]
     protected PlanetBase currentPlanet;
@@ -302,6 +302,31 @@ public class EnemyBase : MonoBehaviour, IDamageable
         ProjectileBase projectile = Instantiate(projectilePrefab, spawnPosition, rotation);
         return projectile;
     }
+    
+    public virtual void Attack(Vector3 targetPosition)
+    {
+        if (projectilePrefab == null)
+        {
+            Debug.LogWarning("Attack : No projectile prefab assigned to enemy!");
+            return;
+        }
+        
+        Vector3 spawnPosition = projectileSpawnPoint != null 
+            ? projectileSpawnPoint.position 
+            : transform.position;
+
+        Vector3 direction = (targetPosition - spawnPosition).normalized;
+        Quaternion rotation = Quaternion.LookRotation(direction, transform.up);
+        
+        ProjectileBase projectile = Instantiate(projectilePrefab, spawnPosition, rotation);
+        projectile.Initialize(
+            GetStats().attackDamage,
+            CurrentTarget.transform.position,
+            GetStats().ProjectileSpeed
+        );
+        projectile.ShootProjectile(CurrentTarget.transform.position, CurrentTarget.gameObject);
+    }
+
 
     protected virtual void Die()
     {

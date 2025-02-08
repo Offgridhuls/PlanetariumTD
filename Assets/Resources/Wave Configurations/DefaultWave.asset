@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4d4ef84d46043db40bab26a324a0b8d5, type: 3}
-  m_Name: Starting Wave
+  m_Name: DefaultWave
   m_EditorClassIdentifier: 
   baseEnemyCount: 15
   enemyCountScaling: 2
@@ -21,11 +21,11 @@ MonoBehaviour:
   globalSpeedScaling: 1.05
   difficultyRampUpSpeed: 0.1
   waveModifiers:
-  - name: Test
+  - name: WM1
     waveType: 0
-    minWaveNumber: 0
-    enemyCountMultiplier: 1
-    healthMultiplier: 1
+    minWaveNumber: 10
+    enemyCountMultiplier: 4
+    healthMultiplier: 2
     speedMultiplier: 1
     spawnDelayMultiplier: 1
     spawnPattern: 0
@@ -38,17 +38,20 @@ MonoBehaviour:
     minionSpawnCount: 10
     minionSpawnInterval: 15
     minionHealthPercent: 0.5
-  patternRandomization: 0.2
+  patternRandomization: 0.495
   enemyTypes:
   - enemyData: {fileID: 11400000, guid: 8088cecfdd382cb4bab9d99fd4d6a0b6, type: 2}
-    baseSpawnWeight: 0.293
+    baseSpawnWeight: 0.2
     waveProgressionWeight: 0.057
+    spawnMethod: 0
+    allowedPortalIds: []
+    portalSpawnChance: 0
     healthScaling: 1
     speedScaling: 1
     damageScaling: 1
     minSpawnDelay: 0
     maxSpawnDelay: 0
-    maxPerWave: 100
+    maxPerWave: 10
     isBoss: 0
     canBeElite: 1
     eliteChance: 0.162
@@ -60,10 +63,14 @@ MonoBehaviour:
     preferredSpawnArc: 92
     minDistanceFromOthers: 3
     maintainFormation: 0
-  - enemyData: {fileID: 11400000, guid: 8088cecfdd382cb4bab9d99fd4d6a0b6, type: 2}
-    baseSpawnWeight: 0.293
-    waveProgressionWeight: 0.057
-    healthScaling: 1
+  - enemyData: {fileID: 11400000, guid: ffc1d0f74e2b0da44b4ab926df21b91b, type: 2}
+    baseSpawnWeight: 0.706
+    waveProgressionWeight: 0.019
+    spawnMethod: 1
+    allowedPortalIds:
+    - Ground
+    portalSpawnChance: 1
+    healthScaling: 2
     speedScaling: 1
     damageScaling: 1
     minSpawnDelay: 0

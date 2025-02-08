@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 
 [CreateAssetMenu(fileName = "WaveConfiguration", menuName = "PlanetariumTD/Wave Configuration")]
 public class WaveConfiguration : ScriptableObject
@@ -24,6 +25,13 @@ public class WaveConfiguration : ScriptableObject
         Boss           // Boss with minions
     }
 
+    public enum SpawnMethod
+    {
+        Random,     // Spawn at random points around planet
+        Portal,     // Spawn from specific portals
+        Mixed      // Mix of random and portal spawns
+    }
+
     [System.Serializable]
     public class EnemyTypeConfig
     {
@@ -33,6 +41,12 @@ public class WaveConfiguration : ScriptableObject
         public float baseSpawnWeight = 1f;
         [Range(0f, 1f)]
         public float waveProgressionWeight = 0.1f;
+
+        [Header("Spawn Settings")]
+        public SpawnMethod spawnMethod = SpawnMethod.Random;
+        public List<string> allowedPortalIds = new List<string>();
+        [Range(0f, 1f)]
+        public float portalSpawnChance = 1f; // Only used if SpawnMethod is Mixed
 
         [Header("Scaling")]
         public float healthScaling = 1.2f;
@@ -112,6 +126,24 @@ public class WaveConfiguration : ScriptableObject
     
     [Header("Enemy Types")]
     public List<EnemyTypeConfig> enemyTypes = new List<EnemyTypeConfig>();
+
+    public IEnumerable<EnemyTypeConfig> GetActiveEnemyConfigs()
+    {
+        return enemyTypes.Where(config => config != null && config.enemyData != null);
+    }
+
+    public EnemyTypeConfig GetEnemyConfig(EnemySpawnData enemyData)
+    {
+        return enemyTypes.FirstOrDefault(config => config.enemyData == enemyData);
+    }
+
+    public Vector3 GetSpawnPosition(Vector3 planetPosition, float spawnHeight)
+    {
+        // Random position around planet
+        Vector2 randomCircle = Random.insideUnitCircle.normalized;
+        Vector3 randomDirection = new Vector3(randomCircle.x, 0, randomCircle.y);
+        return planetPosition + randomDirection * spawnHeight;
+    }
 
     [Header("Special Wave Features")]
     public bool enableDynamicDifficulty = true;

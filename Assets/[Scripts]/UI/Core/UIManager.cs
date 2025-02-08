@@ -9,6 +9,7 @@ namespace Planetarium.UI
         public Canvas Canvas { get; private set; }
         public Camera UICamera { get; private set; }
 
+        
         // PRIVATE MEMBERS
         [SerializeField] private UIView[] defaultViews;
         
