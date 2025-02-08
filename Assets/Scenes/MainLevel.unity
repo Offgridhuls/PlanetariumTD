@@ -4638,7 +4638,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   waveConfig: {fileID: 11400000, guid: 06018356f3ce56749a02627ea16dbaae, type: 2}
-  timeBetweenWaves: 10
+  timeBetweenWaves: 3
   baseHealth: 100
   startingCurrency: 500
   currentWave: 0
@@ -5753,7 +5753,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 145.93994, y: 11.699951}
+  m_AnchoredPosition: {x: 144, y: 11.699951}
   m_SizeDelta: {x: 150, y: 150}
   m_Pivot: {x: 0, y: 0}
 --- !u!225 &1426578264
@@ -5784,7 +5784,7 @@ MonoBehaviour:
   priority: 0
   useAnimation: 1
   animationDuration: 1
-  layoutContainer: {fileID: 0}
+  layoutContainer: {fileID: 1540019509}
   onOpen:
     m_PersistentCalls:
       m_Calls: []
@@ -8921,7 +8921,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 101, y: -147}
+  m_AnchoredPosition: {x: 1182, y: -147}
   m_SizeDelta: {x: 200, y: 300}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2023386739
@@ -8936,7 +8936,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b7f5464bc84f2a4a98c36f7d4de04af, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startOpen: 0
+  startOpen: 1
   priority: 0
   useAnimation: 1
   animationDuration: 0.3

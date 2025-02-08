@@ -1,12 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Planetarium.AI;
 
 public class FlyingEnemyBase : EnemyBase
 {
     [Header("Flying Enemy Components")]
     [SerializeField] protected Transform firePoint;
-    [SerializeField] protected ProjectileBase projectilePrefab;
 
     private float heightVariation = 2f;
     private float heightChangeSpeed = 1f;
@@ -18,7 +18,6 @@ public class FlyingEnemyBase : EnemyBase
     {
         base.Awake();
         
-        rb = GetComponent<Rigidbody>();
     }
 
     protected override void Start()
@@ -26,7 +25,7 @@ public class FlyingEnemyBase : EnemyBase
         base.Start();
         currentHeight = transform.position.y;
         targetHeight = currentHeight + Random.Range(-heightVariation, heightVariation);
-
+        
        
         // Ensure we have a fire point
         if (!firePoint)
@@ -66,5 +65,17 @@ public class FlyingEnemyBase : EnemyBase
         // Smoothly interpolate to target height
         currentHeight = Mathf.Lerp(currentHeight, targetHeight, Time.deltaTime * heightChangeSpeed);
         //transform.position = position;
+    }
+
+    protected override void InitializeStates()
+    {
+        base.InitializeStates();
+        RegisterState<MoveToGeneratorState>();
+        RegisterState<AttackGeneratorState>();
+    }
+
+    protected override void TransitionToInitialState()
+    {
+        TransitionToState<MoveToGeneratorState>();
     }
 }

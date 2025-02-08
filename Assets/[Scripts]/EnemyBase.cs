@@ -1,11 +1,12 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using FSMC.Runtime;
-using Planetarium;
 using UnityEngine.Events;
+using System;
+using System.Collections.Generic;
+using Planetarium;
+using Unity.Collections;
+using Planetarium.AI;
 
-public class EnemyBase : FSMC_Executer, IDamageable
+public class EnemyBase : MonoBehaviour, IDamageable
 {
     [Header("Components")]
     protected PlanetBase currentPlanet;
@@ -28,13 +29,146 @@ public class EnemyBase : FSMC_Executer, IDamageable
     [SerializeField] protected ResourceType[] possibleResources;
     [SerializeField] protected Vector2 resourceDropRange = new Vector2(1, 3);
 
-    
-    public Rigidbody rb;
+    [Header("State Machine")]
+    [SerializeField, ReadOnly] protected string currentStateName;
+
+    [Header("Attack Settings")]
+    [SerializeField] protected ProjectileBase projectilePrefab;
+    [SerializeField] protected Transform projectileSpawnPoint;
+
+    public Rigidbody rb { get; private set; }
+    protected Dictionary<Type, EnemyStateBase> states = new Dictionary<Type, EnemyStateBase>();
+    protected EnemyStateBase currentState;
+    protected GeneratorBase currentTarget;
     
     public UnityEvent<float> onHealthChanged = new UnityEvent<float>();
     public UnityEvent onDeath = new UnityEvent();
     public UnityEvent<int> onScoreGained;
     public UnityEvent<int> onResourceGained;
+
+    public GeneratorBase CurrentTarget => currentTarget;
+    public string CurrentStateName => currentStateName;
+    public bool IsAlive => currentHealth > 0;
+    public float CurrentHealth => currentHealth;
+    public float MaxHealth => maxHealth;
+    public PlanetBase CurrentPlanet => currentPlanet;
+
+    #region Unity Lifecycle
+
+    protected virtual void Awake()
+    {
+        rb = GetComponent<Rigidbody>();
+        InitializeStates();
+    }
+
+    protected virtual void Start()
+    {
+        currentHealth = maxHealth;
+        currentPlanet = FindFirstObjectByType<PlanetBase>();
+        
+        if (currentPlanet == null)
+        {
+            Debug.LogError("No planet found in scene!");
+            return;
+        }
+        
+        if (healthBarPrefab != null)
+        {
+            healthBarInstance = Instantiate(healthBarPrefab, transform);
+        }
+
+        // Start with initial state if one is registered
+        if (states.Count > 0 && currentState == null)
+        {
+            TransitionToInitialState();
+        }
+    }
+
+    protected virtual void Update()
+    {
+        if (!IsAlive) return;
+        currentState?.Update();
+    }
+
+    protected virtual void FixedUpdate()
+    {
+        if (!IsAlive) return;
+        currentState?.FixedUpdate();
+    }
+
+    #endregion
+
+    #region State Machine
+
+    protected virtual void InitializeStates()
+    {
+        // Override this in derived classes to register states
+        // Example:
+        // RegisterState<MoveState>();
+        // RegisterState<AttackState>();
+    }
+
+    protected void RegisterState<T>() where T : EnemyStateBase, new()
+    {
+        var state = new T();
+        state.Initialize(this);
+        states[typeof(T)] = state;
+    }
+
+    protected virtual void TransitionToInitialState()
+    {
+        // Override this in derived classes to set the initial state
+    }
+
+    public void TransitionToState<T>() where T : EnemyStateBase
+    {
+        var type = typeof(T);
+        if (!states.ContainsKey(type))
+        {
+            Debug.LogError($"State {type.Name} not registered!");
+            return;
+        }
+
+        currentState?.Exit();
+        currentState = states[type];
+        currentStateName = type.Name;
+        currentState.Enter();
+    }
+
+    #endregion
+
+    #region Target Management
+
+    public void SetCurrentTarget(GeneratorBase target)
+    {
+        currentTarget = target;
+    }
+
+    public GeneratorBase FindNearestGenerator()
+    {
+        GeneratorBase[] generators = FindObjectsOfType<GeneratorBase>();
+        GeneratorBase nearest = null;
+        float nearestDistance = float.MaxValue;
+
+        foreach (var generator in generators)
+        {
+            if (generator.IsDestroyed) continue;
+
+            float distance = Vector3.Distance(transform.position, generator.transform.position);
+            if (distance < nearestDistance)
+            {
+                nearestDistance = distance;
+                nearest = generator;
+            }
+        }
+
+        currentTarget = nearest;
+        return nearest;
+    }
+
+    #endregion
+
+    #region Combat
 
     public virtual DamageableType GetDamageableType()
     {
@@ -67,35 +201,68 @@ public class EnemyBase : FSMC_Executer, IDamageable
         }
     }
 
-    public bool IsAlive => currentHealth > 0;
-    public float CurrentHealth => currentHealth;
-    public float MaxHealth => maxHealth;
-    public PlanetBase CurrentPlanet => currentPlanet;
-
-    protected override void Start()
+    public virtual ProjectileBase ShootProjectile(Vector3 targetPosition)
     {
-        currentHealth = maxHealth;
-        currentPlanet = FindFirstObjectByType<PlanetBase>();
-        rb = GetComponent<Rigidbody>();
-        if (currentPlanet == null)
+        if (projectilePrefab == null)
         {
-            Debug.LogError("No planet found in scene!");
-            return;
+            Debug.LogWarning("No projectile prefab assigned to enemy!");
+            return null;
         }
+
+        Vector3 spawnPosition = projectileSpawnPoint != null 
+            ? projectileSpawnPoint.position 
+            : transform.position;
+
+        Vector3 direction = (targetPosition - spawnPosition).normalized;
+        Quaternion rotation = Quaternion.LookRotation(direction, transform.up);
         
-       
-        if (healthBarPrefab != null)
+        ProjectileBase projectile = Instantiate(projectilePrefab, spawnPosition, rotation);
+        return projectile;
+    }
+
+    protected virtual void Die()
+    {
+        if (isDead) return;
+        isDead = true;
+
+        if (deathEffect != null)
         {
-            healthBarInstance = Instantiate(healthBarPrefab, transform);
+            Instantiate(deathEffect, transform.position, Quaternion.identity);
         }
 
-        base.Start();
+        if (possibleResources != null && possibleResources.Length > 0)
+        {
+            int resourceCount = UnityEngine.Random.Range((int)resourceDropRange.x, (int)resourceDropRange.y + 1);
+            ResourceManager resourceManager = FindFirstObjectByType<ResourceManager>();
+
+            if (resourceManager != null)
+            {
+                for (int i = 0; i < resourceCount; i++)
+                {
+                    ResourceType selectedResource = possibleResources[UnityEngine.Random.Range(0, possibleResources.Length)];
+                    Vector3 randomOffset = UnityEngine.Random.insideUnitSphere * 1f;
+                    resourceManager.SpawnResource(selectedResource, transform.position + randomOffset);
+                }
+            }
+        }
+
+        onDeath.Invoke();
+        onScoreGained?.Invoke(scoreValue);
+        Destroy(gameObject);
     }
 
-    protected override void Awake()
+    #endregion
+
+    public float GetHealthPercentage()
     {
-        base.Awake();
+        return currentHealth / maxHealth;
     }
+
+    public EnemySpawnData GetStats()
+    {
+        return enemyStats;
+    }
+
     public void ProcessSpawnData(EnemySpawnData spawnData, float speedMult, bool elite)
     {
         enemyStats = spawnData;
@@ -129,61 +296,11 @@ public class EnemyBase : FSMC_Executer, IDamageable
         //resourceValue = resources;
     }
 
-    protected virtual void Die()
-    {
-        if (isDead) return;
-        isDead = true;
-
-        // Spawn death effect if assigned
-        if (deathEffect != null)
-        {
-            Instantiate(deathEffect, transform.position, Quaternion.identity);
-        }
-
-        // Drop resources
-        if (possibleResources != null && possibleResources.Length > 0)
-        {
-            int resourceCount = Random.Range((int)resourceDropRange.x, (int)resourceDropRange.y + 1);
-            ResourceManager resourceManager = FindFirstObjectByType<ResourceManager>();
-
-            if (resourceManager != null)
-            {
-                for (int i = 0; i < resourceCount; i++)
-                {
-                    ResourceType selectedResource = possibleResources[Random.Range(0, possibleResources.Length)];
-                    Vector3 randomOffset = Random.insideUnitSphere * 1f;
-                    resourceManager.SpawnResource(selectedResource, transform.position + randomOffset);
-                }
-            }
-        }
-
-        onDeath.Invoke();
-        onScoreGained?.Invoke(scoreValue);
-
-        // Destroy the enemy object
-        Destroy(gameObject);
-    }
-
-    public float GetHealthPercentage()
-    {
-        return currentHealth / maxHealth;
-    }
-
-    protected override void Update()
-    {
-        if (!IsAlive) return;
-        base.Update();
-    }
-
-    public EnemySpawnData GetStats()
-    {
-        return enemyStats;
-    }
     protected void OnTriggerEnter(Collider other)
     {
         if (isDead) return;
 
-        var damageable = other.GetComponent<IDamageable>();
+        /*var damageable = other.GetComponent<IDamageable>();
         if (damageable != null)
         {
             DamageableType targetType = damageable.GetDamageableType();
@@ -192,6 +309,6 @@ public class EnemyBase : FSMC_Executer, IDamageable
                 damageable.TakeDamage(enemyStats.damage);
                 Die();
             }
-        }
+        }*/
     }
 }
