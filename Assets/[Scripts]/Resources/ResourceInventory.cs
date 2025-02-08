@@ -9,14 +9,33 @@ namespace Planetarium
         public event Action<Dictionary<ResourceType, int>> OnInventoryChanged;
         public event Action<ResourceType> OnItemSelected;
 
+        [Header("Initial Resources")]
+        [SerializeField] private ResourceType[] initialResources;
+        [SerializeField] private int[] initialAmounts;
+
         private Dictionary<ResourceType, int> resources = new Dictionary<ResourceType, int>();
         private ResourceType selectedResource;
 
         protected override void OnInitialize()
         {
+            base.OnInitialize();
+            
             // Initialize with empty inventory
             resources.Clear();
             selectedResource = null;
+
+            // Add initial resources if configured
+            if (initialResources != null && initialAmounts != null)
+            {
+                int count = Mathf.Min(initialResources.Length, initialAmounts.Length);
+                for (int i = 0; i < count; i++)
+                {
+                    if (initialResources[i] != null && initialAmounts[i] > 0)
+                    {
+                        AddResource(initialResources[i], initialAmounts[i]);
+                    }
+                }
+            }
         }
 
         protected override void OnDeinitialize()

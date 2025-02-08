@@ -9,6 +9,7 @@ namespace Planetarium
     {
         [SerializeField] private Image iconImage;
         [SerializeField] private TextMeshProUGUI countText;
+        [SerializeField] private TextMeshProUGUI nameText;
         [SerializeField] private Image selectedOverlay;
 
         public event System.Action<int> OnSlotClicked;
@@ -44,8 +45,13 @@ namespace Planetarium
 
             if (countText != null)
             {
-                countText.text = count > 1 ? count.ToString() : string.Empty;
-                countText.enabled = count > 1;
+                countText.text = count > 0 ? count.ToString() : string.Empty;
+                countText.enabled = count > 0;
+            }
+            if(nameText != null)
+            {
+                nameText.text = Resource.resourceName;
+                nameText.enabled = true;
             }
         }
 
@@ -62,6 +68,12 @@ namespace Planetarium
             {
                 countText.text = string.Empty;
                 countText.enabled = false;
+            }
+
+            if (nameText != null)
+            {
+                nameText.text = string.Empty;
+                nameText.enabled = false;
             }
 
             SetSelected(false);
