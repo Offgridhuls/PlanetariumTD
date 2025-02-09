@@ -27,7 +27,8 @@ public class EnemyBase : CoreBehaviour, IDamageable
     [Header("Rewards")]
     [SerializeField] protected int scoreValue = 10;
     [SerializeField] protected ResourceType[] possibleResources;
-    [SerializeField] protected Vector2 resourceDropRange = new Vector2(1, 3);
+    [SerializeField] protected Vector2 CoinResourceRange = new Vector2(5, 10);
+    [SerializeField] protected Vector2 GemResourceRange = new Vector2(5, 10);
 
     [Header("State Machine")]
     [SerializeField] protected EnemyStateConfig stateConfig;
@@ -338,15 +339,25 @@ public class EnemyBase : CoreBehaviour, IDamageable
             Instantiate(deathEffect, transform.position, Quaternion.identity);
         }
 
-        // 50% chance to drop a resource with value between 5-10
-        if (UnityEngine.Random.value <= 0.5f && possibleResources != null && possibleResources.Length > 0)
+        ResourceManager resourceManager = FindFirstObjectByType<ResourceManager>();
+        if (resourceManager != null && possibleResources != null)
         {
-            ResourceManager resourceManager = FindFirstObjectByType<ResourceManager>();
-            if (resourceManager != null)
+            // First resource: 50% chance
+            if (possibleResources.Length > 0 && UnityEngine.Random.value <= 0.5f)
             {
                 ResourceType selectedResource = possibleResources[0];
-                int amount = UnityEngine.Random.Range(5, 11); // Range is min inclusive, max exclusive
+                int amount = UnityEngine.Random.Range((int)CoinResourceRange.x, (int)CoinResourceRange.y + 1);
                 resourceManager.SpawnResource(selectedResource, transform.position, amount);
+            }
+
+            // Second resource: 25% chance (independent of first resource)
+            float secondResourceChance = 0.25f;
+            if (possibleResources.Length > 1 && UnityEngine.Random.value <= secondResourceChance)
+            {
+                ResourceType selectedResource = possibleResources[1];
+                int amount = UnityEngine.Random.Range((int)GemResourceRange.x, (int)GemResourceRange.y + 1);
+                Vector3 offsetPosition = transform.position + UnityEngine.Random.insideUnitSphere * 0.5f;
+                resourceManager.SpawnResource(selectedResource, offsetPosition, amount);
             }
         }
 

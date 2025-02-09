@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 96c25f780db2c2d49a972f362d9de430, type: 3}
   m_Name: GemData
   m_EditorClassIdentifier: 
-  resourceName: Scrap
+  resourceName: Gems
   description: It's for other things.
-  icon: {fileID: 21300000, guid: 4cea03741705b2f4db0905972cc02a21, type: 3}
-  pickupPrefab: {fileID: 213933253639110196, guid: 9acd3f99076f8a640affa9c8061946e1, type: 3}
-  resourceColor: {r: 0.6509804, g: 0.4843036, b: 0.18039216, a: 1}
+  icon: {fileID: 21300000, guid: f59401c5c79564fd1ae3bfb0876455a7, type: 3}
+  pickupPrefab: {fileID: 213933253639110196, guid: 7d1a8372bddf9f94ab7264c273a6d2d0, type: 3}
+  resourceColor: {r: 1, g: 1, b: 1, a: 1}
   gravitationSpeed: 5
   pickupRadius: 8

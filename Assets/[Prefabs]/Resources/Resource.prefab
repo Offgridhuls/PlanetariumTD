@@ -98,7 +98,7 @@ MonoBehaviour:
   resourceType: {fileID: 11400000, guid: 34a83c52de3b36542b7def04caa99464, type: 2}
   amount: 1
   dropSpeed: 10
-  pickupRadius: 1
+  pickupRadius: 3
   planetLayer:
     serializedVersion: 2
     m_Bits: 512

@@ -161,7 +161,9 @@ MonoBehaviour:
   scoreValue: 10
   possibleResources:
   - {fileID: 11400000, guid: 34a83c52de3b36542b7def04caa99464, type: 2}
-  resourceDropRange: {x: 1, y: 3}
+  - {fileID: 11400000, guid: 9673b180cb0ceda41897087662f90a06, type: 2}
+  CoinResourceRange: {x: 5, y: 10}
+  GemResourceRange: {x: 5, y: 10}
   stateConfig: {fileID: 11400000, guid: e70717778787607499126af05b056ecd, type: 2}
   currentStateName: 
   projectilePrefab: {fileID: 2526509629052936677, guid: 3f270dfdc506de546b772760313af985, type: 3}
