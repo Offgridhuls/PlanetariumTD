@@ -13,6 +13,9 @@ namespace Planetarium
         [SerializeField] private ResourceType[] initialResources;
         [SerializeField] private int[] initialAmounts;
 
+        [Header("UI References")]
+        [SerializeField] private ResourcePopupManager popupManager;
+
         private Dictionary<ResourceType, int> resources = new Dictionary<ResourceType, int>();
         private ResourceType selectedResource;
 
@@ -44,15 +47,25 @@ namespace Planetarium
             OnItemSelected = null;
         }
 
-        public void AddResource(ResourceType resource, int amount)
+        public void AddResource(ResourceType resource, int amount, Vector2? screenPosition = null)
         {
             if (resource == null || amount <= 0) return;
 
             if (!resources.ContainsKey(resource))
             {
-                resources[resource] = 0;
+                resources[resource] = amount;
             }
-            resources[resource] += amount;
+            else
+            {
+                resources[resource] += amount;
+            }
+
+            // Show popup if screen position is provided
+            if (screenPosition.HasValue && popupManager != null)
+            {
+                popupManager.ShowResourcePopup(resource, amount, screenPosition.Value);
+            }
+
             OnInventoryChanged?.Invoke(GetInventory());
         }
 

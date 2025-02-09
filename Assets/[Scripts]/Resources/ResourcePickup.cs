@@ -45,6 +45,16 @@ namespace Planetarium
             mainCamera = Camera.main;
         }
 
+        private void Start()
+        {
+            // Find the Scene component in the hierarchy
+            var scene = FindObjectOfType<Scene>();
+            if (scene != null && !isInitialized)
+            {
+                Initialize(scene.Context, scene.Context.ResourceManager);
+            }
+        }
+
         public void Initialize(SceneContext context, ResourceManager manager)
         {
             if (isInitialized) return;
@@ -126,7 +136,10 @@ namespace Planetarium
             if (isCollected) return;
             isCollected = true;
 
-            resourceInventory?.AddResource(resourceType, amount);
+            // Convert world position to screen position for the popup
+            Vector2 screenPos = mainCamera.WorldToScreenPoint(transform.position);
+            resourceInventory?.AddResource(resourceType, amount, screenPos);
+            
             Destroy(gameObject);
         }
     }
