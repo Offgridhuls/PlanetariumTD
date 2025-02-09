@@ -162,7 +162,8 @@ MonoBehaviour:
   possibleResources:
   - {fileID: 11400000, guid: 34a83c52de3b36542b7def04caa99464, type: 2}
   - {fileID: 11400000, guid: 9673b180cb0ceda41897087662f90a06, type: 2}
-  resourceDropRange: {x: 1, y: 3}
+  CoinResourceRange: {x: 5, y: 10}
+  GemResourceRange: {x: 5, y: 10}
   stateConfig: {fileID: 11400000, guid: ba1d9026522707d4db6d51eb49a20ec0, type: 2}
   currentStateName: 
   projectilePrefab: {fileID: 2526509629052936677, guid: 3f270dfdc506de546b772760313af985, type: 3}
@@ -170,7 +171,7 @@ MonoBehaviour:
   planetLayerMask:
     serializedVersion: 2
     m_Bits: 512
-  enableStateLogging: 1
+  enableStateLogging: 0
   onHealthChanged:
     m_PersistentCalls:
       m_Calls: []

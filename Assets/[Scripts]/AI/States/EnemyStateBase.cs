@@ -15,7 +15,7 @@ namespace Planetarium.AI
 
         public virtual void Enter()
         {
-            LogState("Enter");
+            //LogState("Enter");
         }
 
         public virtual void Update()
@@ -30,18 +30,18 @@ namespace Planetarium.AI
 
         public virtual void Exit()
         {
-            LogState("Exit");
+            //LogState("Exit");
         }
 
         protected void TransitionTo<T>() where T : EnemyStateBase
         {
-            LogState($"Requesting transition to {typeof(T).Name}");
+            //LogState($"Requesting transition to {typeof(T).Name}");
             Owner.TransitionToState<T>();
         }
 
         protected void LogState(string action)
         {
-            Debug.Log($"[{Owner?.gameObject.name ?? "Unknown"}] {StateName}: {action}", Owner);
+           // Debug.Log($"[{Owner?.gameObject.name ?? "Unknown"}] {StateName}: {action}", Owner);
         }
 
         protected void LogStateVerbose(string action)

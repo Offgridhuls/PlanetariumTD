@@ -1,0 +1,102 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01d284de3bbdf654b8a590418f423363, type: 3}
+  m_Name: DefaultGameStateTransitionConfig
+  m_EditorClassIdentifier: 
+  stateTransitions:
+  - state: 1
+    timeScale: 1
+    pauseEnemySpawning: 0
+    clearActiveEnemies: 0
+    saveHighScore: 0
+    resetWaveTimer: 0
+    resetGenerators: 0
+    clearResources: 0
+    viewsToClose: []
+    viewsToOpen: []
+    triggerInitialize: 0
+    triggerCleanup: 0
+    resetGameState: 0
+    pauseAudio: 0
+    musicTrack: 
+    enableDebugLogging: 1
+  - state: 2
+    timeScale: 1
+    pauseEnemySpawning: 0
+    clearActiveEnemies: 0
+    saveHighScore: 0
+    resetWaveTimer: 0
+    resetGenerators: 0
+    clearResources: 1
+    viewsToClose: []
+    viewsToOpen:
+    - CurrencyView
+    - TurretShopView
+    - ViewControlsView
+    - PlayerInfoView
+    - InventoryView
+    triggerInitialize: 1
+    triggerCleanup: 0
+    resetGameState: 0
+    pauseAudio: 0
+    musicTrack: 
+    enableDebugLogging: 1
+  - state: 3
+    timeScale: 0
+    pauseEnemySpawning: 1
+    clearActiveEnemies: 0
+    saveHighScore: 1
+    resetWaveTimer: 0
+    resetGenerators: 0
+    clearResources: 0
+    viewsToClose: []
+    viewsToOpen: []
+    triggerInitialize: 0
+    triggerCleanup: 0
+    resetGameState: 0
+    pauseAudio: 0
+    musicTrack: 
+    enableDebugLogging: 1
+  - state: 4
+    timeScale: 1
+    pauseEnemySpawning: 1
+    clearActiveEnemies: 1
+    saveHighScore: 1
+    resetWaveTimer: 1
+    resetGenerators: 0
+    clearResources: 0
+    viewsToClose: []
+    viewsToOpen:
+    - GameOverView
+    triggerInitialize: 0
+    triggerCleanup: 1
+    resetGameState: 0
+    pauseAudio: 0
+    musicTrack: 
+    enableDebugLogging: 1
+  - state: 5
+    timeScale: 1
+    pauseEnemySpawning: 1
+    clearActiveEnemies: 1
+    saveHighScore: 1
+    resetWaveTimer: 1
+    resetGenerators: 0
+    clearResources: 0
+    viewsToClose: []
+    viewsToOpen:
+    - GameOverView
+    triggerInitialize: 0
+    triggerCleanup: 1
+    resetGameState: 0
+    pauseAudio: 0
+    musicTrack: 
+    enableDebugLogging: 1

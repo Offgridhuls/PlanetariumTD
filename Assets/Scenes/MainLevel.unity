@@ -386,7 +386,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7942980469012514912, guid: 75601e6a218729f41b70b075674c33fe, type: 3}
       propertyPath: maxHealth
-      value: 10000
+      value: 500
       objectReference: {fileID: 0}
     - target: {fileID: 7942980469012514912, guid: 75601e6a218729f41b70b075674c33fe, type: 3}
       propertyPath: repairRate
@@ -1098,6 +1098,10 @@ PrefabInstance:
       propertyPath: 'availableResources.Array.data[1]'
       value: 
       objectReference: {fileID: 11400000, guid: 9673b180cb0ceda41897087662f90a06, type: 2}
+    - target: {fileID: 1816383092226630661, guid: b430c28e978abfe4f849da5f72293656, type: 3}
+      propertyPath: stateConfig
+      value: 
+      objectReference: {fileID: 11400000, guid: 793f535bdf0e22548bf860e39b524aa6, type: 2}
     - target: {fileID: 2214933141868869936, guid: b430c28e978abfe4f849da5f72293656, type: 3}
       propertyPath: popupManager
       value: 
@@ -1234,6 +1238,18 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: -25
       objectReference: {fileID: 0}
+    - target: {fileID: 1029490728685127306, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
+      propertyPath: gameSceneName
+      value: MainLevel
+      objectReference: {fileID: 0}
+    - target: {fileID: 1029490728685127306, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
+      propertyPath: animationDuration
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1029490728685127306, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
+      propertyPath: mainMenuSceneName
+      value: Start Screen
+      objectReference: {fileID: 0}
     - target: {fileID: 1218896413069988328, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -1326,6 +1342,18 @@ PrefabInstance:
       propertyPath: soundSource
       value: 
       objectReference: {fileID: 480908052}
+    - target: {fileID: 2593144930694663042, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
+      propertyPath: latestTabIndex
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2593144930694663042, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
+      propertyPath: fadingMultiplier
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 2593144930694663042, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
+      propertyPath: animationSolution
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2750017334720405672, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
       propertyPath: m_AnchorMax.x
       value: 1
@@ -1422,6 +1450,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3832903274327986025, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3903854170401701458, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -1486,6 +1518,18 @@ PrefabInstance:
       propertyPath: soundSource
       value: 
       objectReference: {fileID: 480908052}
+    - target: {fileID: 5238844057958688303, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
+      propertyPath: latestTabIndex
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5238844057958688303, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
+      propertyPath: fadingMultiplier
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 5538494968877450232, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
+      propertyPath: m_text
+      value: Menu
+      objectReference: {fileID: 0}
     - target: {fileID: 5589449511634955267, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
       propertyPath: m_AnchorMax.y
       value: 1
@@ -1529,6 +1573,10 @@ PrefabInstance:
     - target: {fileID: 5990561086756888730, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6021672818522661271, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
+      propertyPath: m_text
+      value: Restart
       objectReference: {fileID: 0}
     - target: {fileID: 6515130424386896832, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
       propertyPath: m_AnchoredPosition.x

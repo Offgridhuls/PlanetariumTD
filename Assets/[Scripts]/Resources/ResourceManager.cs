@@ -57,32 +57,61 @@ namespace Planetarium
 
             Transform parentTransform = resourceParents[type];
             
+            // Pre-instantiate the pool with inactive objects
+            List<ResourcePickup> preWarmList = new List<ResourcePickup>();
+            for (int i = 0; i < 20; i++) // Pre-warm with default capacity
+            {
+                GameObject obj = Instantiate(type.pickupPrefab, Vector3.zero, Quaternion.identity, parentTransform);
+                ResourcePickup pickup = obj.GetComponent<ResourcePickup>();
+                pickup.resourceType = type;
+                pickup.gameObject.SetActive(false);
+                preWarmList.Add(pickup);
+            }
+            
             resourcePools[type] = new ObjectPool<ResourcePickup>(
                 createFunc: () => 
                 {
                     GameObject obj = Instantiate(type.pickupPrefab, Vector3.zero, Quaternion.identity, parentTransform);
                     ResourcePickup pickup = obj.GetComponent<ResourcePickup>();
                     pickup.resourceType = type;
+                    obj.SetActive(false); // Ensure object starts inactive
                     return pickup;
                 },
                 actionOnGet: (pickup) => 
                 {
-                    pickup.gameObject.SetActive(true);
-                    pickup.Initialize(Context, this);
+                    if (pickup != null)
+                    {
+                        pickup.gameObject.SetActive(true);
+                        pickup.Initialize(Context, this);
+                        pickup.ResetState();
+                    }
                 },
                 actionOnRelease: (pickup) => 
                 {
-                    pickup.transform.SetParent(parentTransform); // Ensure it's under the correct parent
-                    pickup.gameObject.SetActive(false);
+                    if (pickup != null && pickup.gameObject != null)
+                    {
+                        pickup.gameObject.SetActive(false); // Ensure object is deactivated
+                        pickup.transform.SetParent(parentTransform);
+                        pickup.StopAllCoroutines();
+                    }
                 },
                 actionOnDestroy: (pickup) => 
                 {
-                    if (pickup != null)
+                    if (pickup != null && pickup.gameObject != null)
+                    {
                         Destroy(pickup.gameObject);
+                    }
                 },
+                collectionCheck: true,
                 defaultCapacity: 20,
                 maxSize: maxResourcesPerType
             );
+
+            // Add pre-warmed objects to the pool
+            foreach (var pickup in preWarmList)
+            {
+                resourcePools[type].Release(pickup);
+            }
         }
 
         protected override void OnDeinitialize()
@@ -110,19 +139,28 @@ namespace Planetarium
         {
             if (type == null) return null;
 
-            ObjectPool<ResourcePickup> pool;
-            if (!resourcePools.TryGetValue(type, out pool))
+            // Get or create pool
+            if (!resourcePools.TryGetValue(type, out ObjectPool<ResourcePickup> pool))
             {
                 CreateResourceParent(type);
                 InitializePoolForType(type);
                 pool = resourcePools[type];
             }
 
-            ResourcePickup pickup = pool.Get();
-            if (pickup != null)
+            // Get resource from pool
+            ResourcePickup pickup = null;
+            try
             {
-                pickup.transform.position = position;
-                pickup.amount = amount;
+                pickup = pool.Get();
+                if (pickup != null)
+                {
+                    pickup.transform.position = position;
+                    pickup.amount = amount;
+                }
+            }
+            catch (System.InvalidOperationException)
+            {
+                Debug.LogWarning($"Pool for resource type {type.resourceName} is at capacity. Consider increasing maxResourcesPerType.");
             }
 
             return pickup;
@@ -132,10 +170,21 @@ namespace Planetarium
         {
             if (pickup == null || pickup.resourceType == null) return;
 
-            ObjectPool<ResourcePickup> pool;
-            if (resourcePools.TryGetValue(pickup.resourceType, out pool))
+            if (resourcePools.TryGetValue(pickup.resourceType, out ObjectPool<ResourcePickup> pool))
             {
-                pool.Release(pickup);
+                try
+                {
+                    pool.Release(pickup);
+                }
+                catch (System.InvalidOperationException e)
+                {
+                    Debug.LogError($"Failed to release resource to pool: {e.Message}");
+                    Destroy(pickup.gameObject); // Fallback: destroy the object if we can't pool it
+                }
+            }
+            else
+            {
+                Destroy(pickup.gameObject); // Fallback: destroy the object if no pool exists
             }
         }
 
@@ -169,6 +218,38 @@ namespace Planetarium
         public float GetGravitationMultiplier()
         {
             return globalGravitationMultiplier;
+        }
+
+        /// <summary>
+        /// Clears all active resources from the game world and resets resource state
+        /// </summary>
+        public void ClearAllResources()
+        {
+            try
+            {
+                // Clear active resource pickups
+                if (resourcePools != null)
+                {
+                    foreach (var pool in resourcePools.Values)
+                    {
+                        if (pool != null)
+                        {
+                            pool.Clear();
+                        }
+                    }
+                }
+
+                // Reset resource counts
+                globalResourceCounts.Clear();
+                foreach (var resourceType in System.Enum.GetValues(typeof(ResourceType)))
+                {
+                    globalResourceCounts[(ResourceType)resourceType] = 0;
+                }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Error clearing resources: {e.Message}");
+            }
         }
     }
 }

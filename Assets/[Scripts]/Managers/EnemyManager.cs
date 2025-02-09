@@ -216,8 +216,10 @@ public class EnemyManager : SceneService
 
     public void ClearWave()
     {
+        // Clear spawn queue first to prevent new spawns
         currentWaveQueue.Clear();
         
+        // Destroy all active enemies
         foreach (var enemy in activeEnemies)
         {
             if (enemy != null)
@@ -226,8 +228,12 @@ public class EnemyManager : SceneService
             }
         }
         
+        // Clear the list after destroying
         activeEnemies.Clear();
-
+        
+        // Reset spawn timer
+        nextSpawnTime = 0f;
+        
         // Deactivate all portals
         if (portalManager != null)
         {

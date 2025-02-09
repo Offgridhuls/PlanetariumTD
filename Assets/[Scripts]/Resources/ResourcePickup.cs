@@ -68,6 +68,56 @@ namespace Planetarium
             isInitialized = true;
         }
 
+        public void ResetState()
+        {
+            // Reset all state variables
+            currentLifeTime = 0f;
+            isCollected = false;
+            isLocked = false;
+            surfaceNormal = Vector3.up;
+            
+            // Reset transform
+            transform.localPosition = Vector3.zero;
+            transform.localRotation = Quaternion.identity;
+            
+            // Ensure collider is enabled
+            if (sphereCollider != null)
+            {
+                sphereCollider.enabled = true;
+            }
+        }
+
+        private void OnDisable()
+        {
+            // Clean up when object is disabled (returned to pool)
+            StopAllCoroutines();
+            isCollected = true; // Prevent any pending collections
+            
+            // Ensure we're not processing any physics
+            if (sphereCollider != null)
+            {
+                sphereCollider.enabled = false;
+            }
+
+            // Ensure the object is truly inactive
+            if (gameObject != null && gameObject.activeSelf)
+            {
+                gameObject.SetActive(false);
+            }
+        }
+
+        private void OnEnable()
+        {
+            // Initialize physics when enabled (taken from pool)
+            if (sphereCollider != null)
+            {
+                sphereCollider.enabled = true;
+            }
+            
+            // Reset state when enabled
+            ResetState();
+        }
+
         private void Update()
         {
             if (!isInitialized || isCollected) return;
@@ -140,7 +190,15 @@ namespace Planetarium
             Vector2 screenPos = mainCamera.WorldToScreenPoint(transform.position);
             resourceInventory?.AddResource(resourceType, amount, screenPos);
             
-            Destroy(gameObject);
+            // Return to pool instead of destroying
+            if (resourceManager != null)
+            {
+                resourceManager.ReleaseResource(this);
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
         }
     }
 }

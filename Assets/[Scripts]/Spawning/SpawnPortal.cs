@@ -147,7 +147,7 @@ namespace Planetarium.Spawning
             // Update color and hide indicators
             currentColor = baseColor;
             UpdatePortalColor();
-            UpdateUsageVisualization(0);
+            //UpdateUsageVisualization(0);
         }
 
         public Vector3 GetSpawnPosition(float normalizedIndex = 0f)

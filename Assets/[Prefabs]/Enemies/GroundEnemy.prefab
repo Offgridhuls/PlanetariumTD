@@ -171,7 +171,7 @@ MonoBehaviour:
   planetLayerMask:
     serializedVersion: 2
     m_Bits: 512
-  enableStateLogging: 1
+  enableStateLogging: 0
   onHealthChanged:
     m_PersistentCalls:
       m_Calls: []

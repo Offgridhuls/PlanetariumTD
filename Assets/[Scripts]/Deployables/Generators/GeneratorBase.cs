@@ -151,5 +151,57 @@ namespace Planetarium
         {
             return CurrentHealth / maxHealth;
         }
+
+        /// <summary>
+        /// Resets all generator flags and states to their initial values.
+        /// Called when restarting the game or reinitializing the generator.
+        /// </summary>
+        public virtual void ResetFlags()
+        {
+            try
+            {
+                // Reset health
+                CurrentHealth = maxHealth;
+
+                // Reset operational state
+                IsDestroyed = false;
+
+                // Reset visual states
+                if (damageEffect != null)
+                {
+                    damageEffect.Stop();
+                }
+                if (repairEffect != null)
+                {
+                    repairEffect.Stop();
+                }
+                if (destructionEffect != null)
+                {
+                    destructionEffect.Stop();
+                }
+
+                // Reset any active effects or modifiers
+                ClearAllModifiers();
+
+               
+                /*if (showDebug)
+                {
+                    Debug.Log($"Generator {gameObject.name}: Flags reset");
+                }*/
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Error resetting generator flags: {e.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Clears all active modifiers and effects on the generator.
+        /// </summary>
+        protected virtual void ClearAllModifiers()
+        {
+            // Override in derived classes to clear specific modifiers
+            // Example: damage multipliers, speed buffs, etc.
+        }
     }
 }

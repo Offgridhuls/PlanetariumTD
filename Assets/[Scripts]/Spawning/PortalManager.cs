@@ -52,7 +52,7 @@ namespace Planetarium.Spawning
                     1f - Mathf.Pow(usageDecayRate, Time.deltaTime)
                 );
 
-                portal.UpdateUsageVisualization(portalUsageRatios[portal]);
+               // portal.UpdateUsageVisualization(portalUsageRatios[portal]);
             }
         }
 

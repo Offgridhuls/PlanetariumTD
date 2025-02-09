@@ -93,6 +93,10 @@ namespace Planetarium
         [SerializeField] private bool isGameOver;
         [SerializeField] private int enemiesRemainingInWave;
 
+        [Header("State Configuration")]
+        [SerializeField] private GameStateTransitionConfig stateConfig;
+        [SerializeField] private bool showDebugStateTransitions = true;
+
         [Header("Debug Options")]
         [SerializeField] private bool showDebugInfo = true;
         [SerializeField] private bool autoSaveEnabled = true;
@@ -114,20 +118,238 @@ namespace Planetarium
         protected override void OnInitialize()
         {
             Debug.Log("GameStateManager: OnInitialize called");
-            InitializeGame();
+            base.OnInitialize();
+            
+            if (stateConfig == null)
+            {
+                Debug.LogError("GameStateManager: No state transition config assigned!");
+                return;
+            }
+            
+            stateConfig.Initialize();
             enemyManager = Context.EnemyManager;
             activeGenerators = new HashSet<GeneratorBase>();
             OnCurrencyChanged?.Invoke(currency);
-            if (enemyManager != null)
+            
+            if (shouldLoad)
             {
-                enemyManager.OnEnemySpawned += OnEnemySpawned;
-                enemyManager.OnEnemyDied += OnEnemyKilled;
-                
+                LoadGameState();
             }
-            else
+        }
+
+        /// <summary>
+        /// Handles the transition between game states, applying all necessary changes to game systems.
+        /// </summary>
+        /// <param name="previousState">The state transitioning from</param>
+        /// <param name="newState">The state transitioning to</param>
+        private void HandleStateTransition(GameState previousState, GameState newState)
+        {
+            try
             {
-                Debug.LogError("EnemyManager not found in scene!");
+                if (stateConfig == null)
+                {
+                    Debug.LogError("No state transition config assigned!");
+                    return;
+                }
+
+                GameStateTransitionConfig.GameStateTransitionData transitionData;
+                if (!stateConfig.TryGetTransitionData(newState, out transitionData))
+                {
+                    Debug.LogWarning($"No transition data found for state: {newState}, using default");
+                    transitionData = stateConfig.GetDefaultTransition();
+                }
+
+                if (transitionData.enableDebugLogging && showDebugStateTransitions)
+                {
+                    Debug.Log($"Transitioning from {previousState} to {newState}");
+                }
+
+                // Handle time scale
+                Time.timeScale = transitionData.timeScale;
+
+                // Handle game systems
+                HandleGameSystems(transitionData);
+
+                // Handle UI
+                HandleUITransition(transitionData);
+
+                // Handle game state
+                HandleGameStateTransition(transitionData);
+
+                // Handle audio
+                HandleAudioTransition(transitionData);
+
+                // Create state snapshots for the event
+                var previousStateData = CreateStateSnapshot();
+                var newStateData = CreateStateSnapshot();
+
+                // Notify listeners of state change
+                OnGameStateChanged?.Invoke(this, new GameStateChangedEventArgs(previousStateData, newStateData));
+
+                if (transitionData.enableDebugLogging && showDebugStateTransitions)
+                {
+                    Debug.Log($"State transition complete: {previousState} -> {newState}");
+                }
             }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Error during state transition: {e.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Handles game system changes during state transition.
+        /// </summary>
+        private void HandleGameSystems(GameStateTransitionConfig.GameStateTransitionData transitionData)
+        {
+            try
+            {
+                // Handle enemy system
+                if (enemyManager != null)
+                {
+                    enemyManager.enabled = !transitionData.pauseEnemySpawning;
+                    if (transitionData.clearActiveEnemies)
+                    {
+                        enemyManager.ClearWave();
+                    }
+                }
+
+                // Handle wave timer
+                if (transitionData.resetWaveTimer)
+                {
+                    waveTimer = 0f;
+                    OnWaveTimerChanged?.Invoke(waveTimer);
+                }
+
+                // Handle generators
+                if (transitionData.resetGenerators && activeGenerators != null)
+                {
+                    foreach (var generator in activeGenerators)
+                    {
+                        if (generator != null)
+                        {
+                            generator.ResetFlags();
+                        }
+                    }
+                }
+
+                // Handle resources
+                if (transitionData.clearResources)
+                {
+                    var resourceManager = Scene?.GetService<ResourceManager>();
+                    if (resourceManager != null)
+                    {
+                        resourceManager.ClearAllResources();
+                    }
+                }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Error handling game systems during state transition: {e.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Handles UI changes during state transition.
+        /// </summary>
+        private void HandleUITransition(GameStateTransitionConfig.GameStateTransitionData transitionData)
+        {
+            var uiManager = Scene?.GetService<UIManager>();
+            if (uiManager != null)
+            {
+                // Close specified views
+                foreach (var viewName in transitionData.viewsToClose)
+                {
+                    var view = uiManager.GetView(viewName);
+                    if (view != null)
+                    {
+                        view.Close(true);  // Use instant close during state transitions
+                    }
+                }
+
+                // Open specified views
+                foreach (var viewName in transitionData.viewsToOpen)
+                {
+                    var view = uiManager.GetView(viewName);
+                    if (view != null)
+                    {
+                        view.Open(true);  // Use instant open during state transitions
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handles game state changes during transition.
+        /// </summary>
+        private void HandleGameStateTransition(GameStateTransitionConfig.GameStateTransitionData transitionData)
+        {
+            if (transitionData.resetGameState)
+            {
+                ResetGameState();
+            }
+
+            if (transitionData.triggerInitialize)
+            {
+                InitializeGame();
+            }
+
+            if (transitionData.triggerCleanup)
+            {
+                // Add any cleanup logic here
+            }
+
+            if (transitionData.saveHighScore)
+            {
+                SaveHighScore();
+            }
+        }
+
+        /// <summary>
+        /// Handles audio changes during state transition.
+        /// </summary>
+        private void HandleAudioTransition(GameStateTransitionConfig.GameStateTransitionData transitionData)
+        {
+            // Add audio system integration here
+            // Example:
+            // if (audioManager != null)
+            // {
+            //     if (transitionData.pauseAudio)
+            //     {
+            //         audioManager.PauseAll();
+            //     }
+            //     
+            //     if (!string.IsNullOrEmpty(transitionData.musicTrack))
+            //     {
+            //         audioManager.PlayMusic(transitionData.musicTrack);
+            //     }
+            // }
+        }
+
+        /// <summary>
+        /// Creates a snapshot of the current game state.
+        /// </summary>
+        private GameStateData CreateStateSnapshot()
+        {
+            return new GameStateData
+            {
+                currentWave = currentWave,
+                score = currentScore,
+                baseHealth = currentBaseHealth,
+                currency = currency,
+                gameTime = gameTime,
+                isWaveInProgress = isWaveInProgress
+            };
+        }
+
+        public void ChangeState(GameState newState)
+        {
+            if (State == newState) return;
+
+            var previousState = State;
+            State = newState;
+
+            HandleStateTransition(previousState, newState);
         }
 
         protected override void OnDeinitialize()
@@ -205,7 +427,10 @@ namespace Planetarium
             enemiesRemainingInWave--;
         }
 
-        private void InitializeGame()
+        /// <summary>
+        /// Initializes the game state by loading saved data or setting default values.
+        /// </summary>
+        public void InitializeGame()
         {
             Debug.Log("GameStateManager: Initializing game state");
             // Try to load saved game state
@@ -232,6 +457,9 @@ namespace Planetarium
             NotifyStateChanged();
         }
 
+        /// <summary>
+        /// Notifies all listeners of the current game state.
+        /// </summary>
         private void NotifyStateChanged()
         {
             var currentState = new GameStateData
@@ -248,30 +476,176 @@ namespace Planetarium
             previousState = currentState;
         }
 
-        public void ChangeState(GameState newState)
+        /// <summary>
+        /// Loads the main menu scene. This should only be called when returning to the main menu.
+        /// Ensures high scores are saved before scene transition.
+        /// </summary>
+        /// <param name="sceneName">Name of the main menu scene to load</param>
+        public void LoadScene(string sceneName)
         {
-            if (State == newState) return;
-
-            State = newState;
-            
-            switch (newState)
+            try
             {
-                case GameState.Playing:
-                    Time.timeScale = 1f;
-                    break;
-                case GameState.Paused:
-                    Time.timeScale = 0f;
-                    break;
-                case GameState.GameOver:
-                case GameState.Victory:
-                    Time.timeScale = 0f;
-                    SaveHighScore();
-                    break;
-            }
+                if (string.IsNullOrEmpty(sceneName))
+                {
+                    Debug.LogError("GameStateManager: Cannot load scene - scene name is empty");
+                    return;
+                }
 
-            NotifyStateChanged();
+                Debug.Log($"GameStateManager: Loading main menu scene: {sceneName}");
+                
+                // Save high score before returning to menu
+                SaveHighScore();
+                
+                // Load the menu scene
+                UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Error loading scene: {e.Message}");
+            }
         }
 
+        /// <summary>
+        /// Restarts the game by resetting all game systems to their initial state.
+        /// This includes game state, UI, generators, enemies, and resources.
+        /// </summary>
+        public void RestartGame()
+        {
+            try
+            {
+                Debug.Log("GameStateManager: Restarting game");
+
+                ResetGameState();
+                ResetGameSystems();
+                ResetUI();
+                NotifyStateChanges();
+                
+                // Change to Playing state which will trigger other necessary state changes
+                ChangeState(GameState.Playing);
+                
+                Debug.Log("GameStateManager: Game restart complete");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Error restarting game: {e.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Resets core game state variables to their initial values.
+        /// </summary>
+        private void ResetGameState()
+        {
+            // Reset game progress
+            currentWave = 0;
+            currentScore = 0;
+            gameTime = 0f;
+            waveTimer = 0f;
+            
+            // Reset game flags
+            isWaveInProgress = false;
+            isGameEnding = false;
+            isGameOver = false;
+            enemiesRemainingInWave = 0;
+            
+            // Reset resources
+            currency = startingCurrency;
+            
+            // Reset health system
+            currentBaseHealth = 100;
+            totalGeneratorHealth = 0f;
+            maxTotalGeneratorHealth = 0f;
+        }
+
+        /// <summary>
+        /// Resets all game systems including enemies, generators, and resources.
+        /// </summary>
+        private void ResetGameSystems()
+        {
+            // Reset enemy system
+            if (enemyManager != null)
+            {
+                enemyManager.ClearWave();
+                enemyManager.enabled = true;
+            }
+
+            // Reset generators
+            if (activeGenerators != null)
+            {
+                foreach (var generator in activeGenerators)
+                {
+                    if (generator != null)
+                    {
+                        generator.ResetFlags();
+                    }
+                }
+            }
+
+            // Reset resources
+            var resourceManager = Scene?.GetService<ResourceManager>();
+            if (resourceManager != null)
+            {
+                //resourceManager.ClearAllResources();
+            }
+        }
+
+        /// <summary>
+        /// Resets all UI elements to their default states
+        /// </summary>
+        private void ResetUI()
+        {
+            var uiManager = Scene?.GetService<UIManager>();
+            if (uiManager != null)
+            {
+                // Reset all views
+                uiManager.ResetAllViews();
+
+                // Specifically reset PlayerInfoView
+                var playerInfoView = uiManager.GetView("PlayerInfoView") as PlayerInfoView;
+                if (playerInfoView != null)
+                {
+                    playerInfoView.ResetUI();
+                }
+
+                // Specifically reset ViewControlsView
+                var viewControlsView = uiManager.GetView("ViewControlsView") as ViewControlsView;
+                if (viewControlsView != null)
+                {
+                    viewControlsView.ResetControls();
+                }
+            }
+
+            // Notify UI listeners of state changes
+            OnCurrencyChanged?.Invoke(currency);
+            OnWaveTimerChanged?.Invoke(waveTimer);
+            OnScoreChanged?.Invoke(currentScore);
+            OnBaseHealthChanged?.Invoke(currentBaseHealth);
+            
+            if (showDebugInfo)
+            {
+                Debug.Log("GameStateManager: UI reset complete");
+            }
+        }
+
+        /// <summary>
+        /// Notifies all listeners of state changes after a reset.
+        /// </summary>
+        private void NotifyStateChanges()
+        {
+            OnCurrencyChanged?.Invoke(currency);
+            OnWaveTimerChanged?.Invoke(waveTimer);
+            OnScoreChanged?.Invoke(currentScore);
+            OnBaseHealthChanged?.Invoke(currentBaseHealth);
+            
+            if (showDebugInfo)
+            {
+                Debug.Log($"GameStateManager: State changes notified - Currency: {currency}, Wave: {currentWave}, Score: {currentScore}");
+            }
+        }
+
+        /// <summary>
+        /// Starts a new wave by resetting the wave timer and spawning enemies.
+        /// </summary>
         public void StartWave()
         {
             if (isWaveInProgress || isGameOver) return;
@@ -291,6 +665,9 @@ namespace Planetarium
             if (autoSaveEnabled) SaveGameState();
         }
 
+        /// <summary>
+        /// Ends the current wave by resetting the wave timer and updating game state.
+        /// </summary>
         public void EndWave()
         {
             if (!isWaveInProgress) return;
@@ -308,6 +685,10 @@ namespace Planetarium
             if (autoSaveEnabled) SaveGameState();
         }
 
+        /// <summary>
+        /// Applies damage to the base health and checks for game over conditions.
+        /// </summary>
+        /// <param name="damage">Amount of damage to apply</param>
         public void TakeDamage(float damage)
         {
             if (isGameOver) return;
@@ -327,10 +708,19 @@ namespace Planetarium
             }
         }
 
+        /// <summary>
+        /// Ends the game by setting the game over flag and notifying listeners.
+        /// </summary>
+        /// <param name="isGameOver">Whether the game is over</param>
         private void EndGame(bool isGameOver)
         {
             TriggerGameOver();
         }
+
+        /// <summary>
+        /// Adds currency to the player's resources.
+        /// </summary>
+        /// <param name="amount">Amount of currency to add</param>
         public void AddCurrency(int amount)
         {
             currency += amount;
@@ -338,6 +728,11 @@ namespace Planetarium
             NotifyStateChanged();
         }
 
+        /// <summary>
+        /// Attempts to spend currency from the player's resources.
+        /// </summary>
+        /// <param name="amount">Amount of currency to spend</param>
+        /// <returns>Whether the currency was spent successfully</returns>
         public bool TrySpendCurrency(int amount)
         {
             if (currency >= amount)
@@ -350,11 +745,18 @@ namespace Planetarium
             return false;
         }
 
+        /// <summary>
+        /// Checks if the current wave is the last wave.
+        /// </summary>
+        /// <returns>Whether the current wave is the last wave</returns>
         private bool IsLastWave()
         {
             return currentWave >= 50;
         }
 
+        /// <summary>
+        /// Saves the high score to the player's preferences.
+        /// </summary>
         private void SaveHighScore()
         {
             int currentHighScore = PlayerPrefs.GetInt("HighScore", 0);
@@ -369,6 +771,9 @@ namespace Planetarium
         
         private string SavePath => Path.Combine(Application.persistentDataPath, "gamesave.json");
 
+        /// <summary>
+        /// Saves the current game state to a file.
+        /// </summary>
         public void SaveGameState()
         {
             try
@@ -397,6 +802,10 @@ namespace Planetarium
             }
         }
 
+        /// <summary>
+        /// Loads the saved game state from a file.
+        /// </summary>
+        /// <returns>Whether the game state was loaded successfully</returns>
         private bool LoadGameState()
         {
             try
@@ -430,6 +839,9 @@ namespace Planetarium
             return false;
         }
 
+        /// <summary>
+        /// Deletes the saved game state file.
+        /// </summary>
         public void DeleteSaveGame()
         {
             try
@@ -461,6 +873,10 @@ namespace Planetarium
         public int GetEnemiesRemaining() => enemiesRemainingInWave;
         
 
+        /// <summary>
+        /// Sets the game over flag and notifies listeners.
+        /// </summary>
+        /// <param name="value">Whether the game is over</param>
         private void SetGameOver(bool value)
         {
             if (isGameOver != value)
@@ -472,6 +888,10 @@ namespace Planetarium
             }
         }
 
+        /// <summary>
+        /// Sets the wave in progress flag and notifies listeners.
+        /// </summary>
+        /// <param name="value">Whether the wave is in progress</param>
         private void SetWaveInProgress(bool value)
         {
             if (isWaveInProgress != value)
@@ -483,6 +903,10 @@ namespace Planetarium
             }
         }
 
+        /// <summary>
+        /// Sets the current wave number and notifies listeners.
+        /// </summary>
+        /// <param name="wave">New wave number</param>
         private void SetCurrentWave(int wave)
         {
             if (currentWave != wave)
@@ -494,6 +918,10 @@ namespace Planetarium
             }
         }
 
+        /// <summary>
+        /// Adds score to the player's resources and notifies listeners.
+        /// </summary>
+        /// <param name="amount">Amount of score to add</param>
         private void AddScore(int amount)
         {
             if (amount != 0)
@@ -512,6 +940,10 @@ namespace Planetarium
             timeBetweenWaves = Mathf.Max(1f, timeBetweenWaves);
         }
 
+        /// <summary>
+        /// Registers a generator with the game state manager.
+        /// </summary>
+        /// <param name="generator">Generator to register</param>
         public void RegisterGenerator(GeneratorBase generator)
         {
             if (generator != null)
@@ -527,32 +959,51 @@ namespace Planetarium
             }
         }
 
-        public void UnregisterGenerator(GeneratorBase generator)
-        {
-            if (generator != null)
-            {
-                activeGenerators.Remove(generator);
-                generator.OnDestroyed -= OnGeneratorDestroyed;
-                generator.OnHealthChanged -= OnGeneratorHealthChanged;
-                
-                maxTotalGeneratorHealth -= generator.MaxHealth;
-                totalGeneratorHealth -= generator.CurrentHealth;
-                
-                UpdateBaseHealthUI();
-                
-                // Check if this was the last generator
-                if (activeGenerators.Count == 0 && !isGameEnding)
-                {
-                    TriggerGameOver();
-                }
-            }
-        }
-
         private void OnGeneratorHealthChanged(float healthPercentage)
         {
             UpdateTotalGeneratorHealth();
         }
+        
+        /// <summary>
+        /// Unregisters a generator from the game state manager.
+        /// </summary>
+        /// <param name="generator">Generator to unregister</param>
+        public void UnregisterGenerator(GeneratorBase generator)
+        {
+            if (generator == null) return;
 
+            activeGenerators.Remove(generator);
+            generator.OnDestroyed -= OnGeneratorDestroyed;
+            generator.OnHealthChanged -= OnGeneratorHealthChanged;
+            
+            if (generator.gameObject != null)
+            {
+                maxTotalGeneratorHealth -= generator.MaxHealth;
+                totalGeneratorHealth -= generator.CurrentHealth;
+            }
+            
+            UpdateBaseHealthUI();
+            
+            // Check if this was the last generator
+            bool anyActiveGenerators = false;
+            foreach (var gen in activeGenerators)
+            {
+                if (gen != null && !gen.IsDestroyed)
+                {
+                    anyActiveGenerators = true;
+                    break;
+                }
+            }
+            
+            if (!anyActiveGenerators && !isGameEnding)
+            {
+                TriggerGameOver();
+            }
+        }
+
+        /// <summary>
+        /// Updates the total generator health and notifies listeners.
+        /// </summary>
         private void UpdateTotalGeneratorHealth()
         {
             totalGeneratorHealth = 0f;
@@ -560,92 +1011,166 @@ namespace Planetarium
 
             foreach (var generator in activeGenerators)
             {
-                totalGeneratorHealth += generator.CurrentHealth;
-                maxTotalGeneratorHealth += generator.MaxHealth;
+                if (generator != null && !generator.IsDestroyed)
+                {
+                    totalGeneratorHealth += generator.CurrentHealth;
+                    maxTotalGeneratorHealth += generator.MaxHealth;
+                }
             }
 
             UpdateBaseHealthUI();
-        }
 
-        private void UpdateBaseHealthUI()
-        {
-            // Calculate total health including generators
-            float totalHealth = currentBaseHealth + totalGeneratorHealth;
-            float maxTotalHealth = baseHealth + maxTotalGeneratorHealth;
-            
-            // Convert to percentage
-            float healthPercentage = (totalHealth / maxTotalHealth) * 100f;
-            
-            // Notify UI
-            OnBaseHealthChanged?.Invoke(healthPercentage);
-        }
-
-        private void OnGeneratorDestroyed()
-        {
-            // Check remaining generators after one is destroyed
-            if (activeGenerators.Count == 0 && !isGameEnding)
+            // Check if all generators are destroyed
+            bool allGeneratorsDestroyed = true;
+            foreach (var generator in activeGenerators)
             {
-                // Clear all generator health immediately
-                totalGeneratorHealth = 0f;
-                maxTotalGeneratorHealth = 0f;
-                UpdateBaseHealthUI();
-                
+                if (generator != null && !generator.IsDestroyed)
+                {
+                    allGeneratorsDestroyed = false;
+                    break;
+                }
+            }
+
+            if (allGeneratorsDestroyed && !isGameEnding)
+            {
                 TriggerGameOver();
             }
         }
 
+        /// <summary>
+        /// Updates the base health UI and notifies listeners.
+        /// </summary>
+        private void UpdateBaseHealthUI()
+        {
+            try
+            {
+                // Calculate total health including generators
+                float totalHealth = currentBaseHealth + totalGeneratorHealth;
+                float maxTotalHealth = baseHealth + maxTotalGeneratorHealth;
+                
+                // Convert to percentage and ensure it's not negative
+                float healthPercentage = Mathf.Max(0f, (totalHealth / maxTotalHealth) * 100f);
+                
+                // If health is 0, trigger game over
+                if (healthPercentage <= 0f && !isGameEnding)
+                {
+                    TriggerGameOver();
+                    return;
+                }
+                
+                // Notify UI only if we have valid listeners
+                if (OnBaseHealthChanged != null)
+                {
+                    OnBaseHealthChanged.Invoke(healthPercentage);
+                }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Error in UpdateBaseHealthUI: {e.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Called when a generator is destroyed.
+        /// </summary>
+        private void OnGeneratorDestroyed()
+        {
+            // Update health calculations immediately
+            UpdateTotalGeneratorHealth();
+        }
+
+        /// <summary>
+        /// Triggers the game over sequence.
+        /// </summary>
         private void TriggerGameOver()
         {
             if (State == GameState.GameOver || isGameEnding) return;
             
             isGameEnding = true;
 
-            // Stop game systems
-            Time.timeScale = 0f;
-            
-            // Reset health to 0 and notify UI
-            currentBaseHealth = 0f;
-            totalGeneratorHealth = 0f;
-            maxTotalGeneratorHealth = 0f;
-            UpdateBaseHealthUI();
-            
-            // Stop wave timer and spawning
-            if (enemyManager != null)
+            try
             {
-                enemyManager.ClearWave();
-                enemyManager.enabled = false;
-                OnWaveProgressChanged?.Invoke(false); // Hide wave progress
-                OnWaveTimerChanged?.Invoke(0f); // Reset wave timer
-            }
-
-            // Update state
-            SetGameState(GameState.GameOver);
-
-            // Close all views and show game over
-            var uiManager = Scene.GetService<UIManager>();
-            if (uiManager != null)
-            {
-                // Get all active views and close them
-                var views = uiManager.GetComponentsInChildren<UIView>(true);
-                foreach (var view in views)
+                // Update state first to prevent any race conditions
+                SetGameState(GameState.GameOver);
+                SetGameOver(true);
+                
+                // Reset game state
+                currentBaseHealth = 0f;
+                totalGeneratorHealth = 0f;
+                
+                // Stop game systems
+                if (enemyManager != null)
                 {
-                    view.Close();
+                    enemyManager.enabled = false;
+                    enemyManager.ClearWave();
                 }
                 
-                // Show game over view
-                uiManager.OpenView<GameOverView>();
+                // Update UI
+                var uiManager = Scene?.GetService<UIManager>();
+                if (uiManager != null)
+                {
+                    try
+                    {
+                        Debug.Log("Opening GameOverView");
+                        uiManager.CloseAllViews();
+                        uiManager.OpenView<GameOverView>();
+                    }
+                    catch (System.Exception e)
+                    {
+                        Debug.LogError($"Failed to open GameOverView: {e.Message}");
+                    }
+                }
+                
+                // Notify all listeners
+                OnGameOver?.Invoke();
+                
+                // Save the final score
+                SaveHighScore();
+                
+                // Stop game time
+                Time.timeScale = 0f;
             }
-
-            OnGameOver?.Invoke();
-            isGameEnding = false;
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Error in TriggerGameOver: {e.Message}");
+            }
+            finally
+            {
+                isGameEnding = false;
+            }
         }
 
+        /// <summary>
+        /// Sets the game state and notifies listeners.
+        /// </summary>
+        /// <param name="newState">New game state</param>
         private void SetGameState(GameState newState)
         {
             if (State == newState) return;
             
+            var previousData = new GameStateData
+            {
+                currentWave = currentWave,
+                score = currentScore,
+                baseHealth = currentBaseHealth,
+                currency = currency,
+                gameTime = gameTime,
+                isWaveInProgress = isWaveInProgress
+            };
+            
             State = newState;
-            OnGameStateChanged?.Invoke(this, new GameStateChangedEventArgs(previousState, new GameStateData()));
+            
+            var currentData = new GameStateData
+            {
+                currentWave = currentWave,
+                score = currentScore,
+                baseHealth = currentBaseHealth,
+                currency = currency,
+                gameTime = gameTime,
+                isWaveInProgress = isWaveInProgress
+            };
+            
+            OnGameStateChanged?.Invoke(this, new GameStateChangedEventArgs(previousData, currentData));
         }
     }
 }

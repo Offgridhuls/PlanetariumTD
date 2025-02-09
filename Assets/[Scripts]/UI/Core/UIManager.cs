@@ -95,20 +95,15 @@ namespace Planetarium.UI
 
         protected override void OnDeactivate()
         {
+            if (this == null) return;  // Check if this object is destroyed
+            
             Debug.Log("UIManager: OnDeactivate called");
             base.OnDeactivate();
 
-            // Close all views
-            if (allViews != null)
+            // Close all views if we're still valid
+            if (this != null && gameObject != null)
             {
-                foreach (var view in allViews)
-                {
-                    if (view != null)
-                    {
-                        Debug.Log($"UIManager: Closing view {view.GetType().Name}");
-                        view.Close(true);
-                    }
-                }
+                CloseAllViews();
             }
 
             // Disable Canvas
@@ -163,6 +158,76 @@ namespace Planetarium.UI
                 Debug.Log($"UIManager: Closing view {typeof(T).Name}");
                 view.Close(instant);
                 activeViews.Remove(view);
+            }
+        }
+
+        public void CloseAllViews()
+        {
+            if (this == null || gameObject == null) return;  // Early out if destroyed
+            
+            var views = GetComponentsInChildren<UIView>(true);
+            if (views != null)
+            {
+                foreach (var view in views)
+                {
+                    if (view != null && view.gameObject != null)
+                    {
+                        view.Close(true);
+                    }
+                }
+            }
+            
+            // Also clear active views list
+            activeViews.Clear();
+        }
+
+        public void ResetAllViews()
+        {
+            try
+            {
+                Debug.Log("UIManager: Resetting all views");
+                
+                // Close all views first
+                foreach (var view in viewCache.Values)
+                {
+                    if (view != null && view.gameObject != null)
+                    {
+                        view.Close(true);
+                    }
+                }
+
+                // Re-initialize all views
+                foreach (var view in viewCache.Values)
+                {
+                    if (view != null && view.gameObject != null)
+                    {
+                        view.Initialize(this, null);
+                    }
+                }
+
+                // Open default views based on current game state
+                // var gameState = Context?.GameState;
+                // if (gameState != null && gameState.State == GameState.Playing)
+                // {
+                //     // Open gameplay HUD views
+                //     var hudView = GetView("HUDView");
+                //     if (hudView != null)
+                //     {
+                //         hudView.Open(true);
+                //     }
+
+                //     var waveView = GetView("WaveView");
+                //     if (waveView != null)
+                //     {
+                //         waveView.Open(true);
+                //     }
+                // }
+                
+                Debug.Log("UIManager: All views reset complete");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Error resetting views: {e.Message}");
             }
         }
 

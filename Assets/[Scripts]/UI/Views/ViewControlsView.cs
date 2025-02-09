@@ -24,6 +24,7 @@ namespace Planetarium.UI
         [SerializeField] private ViewButtonControl[] viewControls;
         
         private bool hasInitializedControls;
+        private bool showDebug;
 
         protected override void OnInitialize()
         {
@@ -38,13 +39,88 @@ namespace Planetarium.UI
             }
 
             // Start initialization coroutine
-            StartCoroutine(InitializeViewControlsWhenReady());
+            ResetControls();
         }
 
         protected override void OnDeinitialize()
         {
             base.OnDeinitialize();
             CleanupViewControls();
+        }
+
+        public override void Close(bool instant = false)
+        {
+            base.Close(instant);
+            CleanupViewControls();
+        }
+
+        public override void Open(bool instant = false)
+        {
+            base.Open(instant);
+        }
+
+        /// <summary>
+        /// Resets and reinitializes all view controls
+        /// </summary>
+        public void ResetControls()
+        {
+            try
+            {
+                // First cleanup existing controls
+                CleanupViewControls();
+                
+                // Reset initialization flags
+                hasInitializedControls = false;
+                if (viewControls != null)
+                {
+                    foreach (var control in viewControls)
+                    {
+                        if (control != null)
+                        {
+                            control.isInitialized = false;
+                        }
+                    }
+                }
+
+                // Restart initialization process
+                StartCoroutine(InitializeViewControlsWhenReady());
+                
+                if (showDebug)
+                {
+                    Debug.Log($"ViewControlsView: Controls reset on {gameObject.name}");
+                }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Error resetting ViewControlsView controls: {e.Message}");
+            }
+        }
+
+        private void CleanupViewControls()
+        {
+            if (viewControls == null) return;
+
+            foreach (var control in viewControls)
+            {
+                if (control == null || !control.isInitialized) continue;
+
+                if (control.button != null)
+                {
+                    // Remove click handler
+                    control.button.onClick.RemoveAllListeners();
+                }
+
+                if (control.view != null)
+                {
+                    // Remove view event handlers
+                    control.view.onOpen.RemoveAllListeners();
+                    control.view.onClose.RemoveAllListeners();
+                }
+
+                control.isInitialized = false;
+            }
+
+            hasInitializedControls = false;
         }
 
         private IEnumerator InitializeViewControlsWhenReady()
@@ -56,54 +132,57 @@ namespace Planetarium.UI
 
             foreach (var control in viewControls)
             {
-                if (control.button == null || control.view == null) continue;
+                if (control.button == null || control.view == null) 
+                {
+                    Debug.LogWarning($"ViewControlsView: Null button or view reference found in {gameObject.name}");
+                    continue;
+                }
 
                 // Wait for ButtonManager to initialize
+                float timeout = 5f; // 5 second timeout
+                float elapsed = 0f;
                 while (!control.button.gameObject.activeInHierarchy)
+                {
+                    elapsed += Time.deltaTime;
+                    if (elapsed > timeout)
+                    {
+                        Debug.LogWarning($"ViewControlsView: Timeout waiting for button {control.button.name} to initialize");
+                        break;
+                    }
                     yield return null;
+                }
 
                 // Setup initial button state if not already initialized
                 if (!control.isInitialized)
                 {
                     Debug.Log($"ViewControlsView: Initializing button for {control.view.name}");
                     
-                    // Setup initial text
-                    UpdateButtonText(control, control.view.IsOpen);
-                    
-                    // Setup button click handler
-                    control.button.onClick.AddListener(() => OnViewButtonClicked(control));
-                    
-                    // Subscribe to view events
-                    control.view.onOpen.AddListener(() => UpdateButtonText(control, true));
-                    control.view.onClose.AddListener(() => UpdateButtonText(control, false));
-                    
-                    control.isInitialized = true;
+                    try
+                    {
+                        // Setup initial text
+                        UpdateButtonText(control, control.view.IsOpen);
+                        
+                        // Setup button click handler
+                        control.button.onClick.RemoveAllListeners(); // Clear any existing listeners
+                        control.button.onClick.AddListener(() => OnViewButtonClicked(control));
+                        
+                        // Subscribe to view events
+                        control.view.onOpen.RemoveListener(() => UpdateButtonText(control, true));
+                        control.view.onClose.RemoveListener(() => UpdateButtonText(control, false));
+                        control.view.onOpen.AddListener(() => UpdateButtonText(control, true));
+                        control.view.onClose.AddListener(() => UpdateButtonText(control, false));
+                        
+                        control.isInitialized = true;
+                    }
+                    catch (System.Exception e)
+                    {
+                        Debug.LogError($"Error initializing control for {control.view.name}: {e.Message}");
+                    }
                 }
             }
 
             hasInitializedControls = true;
             Debug.Log("ViewControlsView: All controls initialized");
-        }
-
-        private void CleanupViewControls()
-        {
-            if (viewControls == null) return;
-
-            foreach (var control in viewControls)
-            {
-                if (!control.isInitialized || control.button == null || control.view == null) continue;
-
-                // Remove button click listener
-                control.button.onClick.RemoveAllListeners();
-
-                // Remove view event listeners
-                control.view.onOpen.RemoveAllListeners();
-                control.view.onClose.RemoveAllListeners();
-
-                control.isInitialized = false;
-            }
-
-            hasInitializedControls = false;
         }
 
         private void OnViewButtonClicked(ViewButtonControl control)

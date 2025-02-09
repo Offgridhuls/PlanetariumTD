@@ -56,6 +56,11 @@ namespace Planetarium.UI
             if (gameState != null)
             {
                 Debug.Log($"PlayerInfoView: Found GameState, subscribing to events on {gameObject.name}");
+                
+                // Reset UI first
+                ResetUI();
+                
+                // Then update with current game state
                 UpdatePlanetHealth(gameState.GetBaseHealth());
                 UpdateWave(gameState.GetCurrentWave());
                 UpdateWaveTimer(gameState.GetWaveTimer());
@@ -116,6 +121,69 @@ namespace Planetarium.UI
             }
         }
 
+        /// <summary>
+        /// Resets all UI elements to their default state
+        /// </summary>
+        public void ResetUI()
+        {
+            try
+            {
+                // Reset health display
+                if (planetHealthBarFill != null)
+                {
+                    planetHealthBarFill.fillAmount = 1f;
+                    planetHealthBarFill.color = healthBarGradient.Evaluate(1f);
+                }
+                
+                if (planetHealthText != null)
+                {
+                    planetHealthText.text = "100%";
+                }
+
+                // Reset wave display
+                if (waveNumberText != null)
+                {
+                    waveNumberText.text = "Wave 1";
+                }
+
+                // Reset timer
+                if (nextWaveTimerText != null)
+                {
+                    nextWaveTimerText.text = "00:00";
+                }
+
+                // Reset score
+                if (scoreText != null)
+                {
+                    scoreText.text = "Score: 0";
+                }
+
+                // Reset player level
+                if (playerLevelText != null)
+                {
+                    playerLevelText.text = "Level 1";
+                }
+
+                // Reset wave timer container
+                if (waveTimerContainer != null)
+                {
+                    waveTimerContainer.SetActive(true);
+                }
+
+                // Reset start wave button
+                if (startWaveEarlyButton != null)
+                {
+                    startWaveEarlyButton.gameObject.SetActive(true);
+                }
+
+                displayedHealthPercent = 1f;
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Error resetting PlayerInfoView UI: {e.Message}");
+            }
+        }
+
         private void UpdatePlanetHealth(float currentHealth)
         {
            // Debug.Log($"PlayerInfoView: UpdatePlanetHealth called with health: {currentHealth} on {gameObject.name}");
@@ -133,7 +201,7 @@ namespace Planetarium.UI
                 {
                     planetHealthBarFill.color = healthBarGradient.Evaluate(healthPercent);
                 }
-                Debug.Log($"PlayerInfoView: Health bar updated - Fill: {healthPercent}, Color: {planetHealthBarFill.color} on {gameObject.name}");
+               // Debug.Log($"PlayerInfoView: Health bar updated - Fill: {healthPercent}, Color: {planetHealthBarFill.color} on {gameObject.name}");
             }
             else
             {
