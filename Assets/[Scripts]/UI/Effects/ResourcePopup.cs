@@ -85,7 +85,7 @@ namespace Planetarium
             // Move to target position with InQuint easing (starts very slow, ends fast)
             rectTransform.DOAnchorPos(targetPos, moveDuration)
                 .SetEase(Ease.InQuint)
-                    .OnComplete(() => Destroy(gameObject));
+                .OnComplete(() => Destroy(gameObject));
         }
 
         public void DestroyPopup()

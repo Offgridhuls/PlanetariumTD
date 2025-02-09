@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 96c25f780db2c2d49a972f362d9de430, type: 3}
-  m_Name: BasicResource
+  m_Name: GoldCoinData
   m_EditorClassIdentifier: 
   resourceName: Gold
   description: Currency for Turret Purchases and Upgrades
-  icon: {fileID: 21300000, guid: c14eb55672acec049818f2e18a44bec6, type: 3}
+  icon: {fileID: 21300000, guid: 5ed5157cf45e6ee409511594fb89377b, type: 3}
   pickupPrefab: {fileID: 213933253639110196, guid: 9acd3f99076f8a640affa9c8061946e1, type: 3}
-  resourceColor: {r: 0.6792453, g: 0.43253827, b: 0.43253827, a: 1}
+  resourceColor: {r: 1, g: 1, b: 1, a: 1}
   gravitationSpeed: 3
   pickupRadius: 5

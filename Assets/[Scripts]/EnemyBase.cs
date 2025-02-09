@@ -338,19 +338,15 @@ public class EnemyBase : CoreBehaviour, IDamageable
             Instantiate(deathEffect, transform.position, Quaternion.identity);
         }
 
-        if (possibleResources != null && possibleResources.Length > 0)
+        // 50% chance to drop a resource with value between 5-10
+        if (UnityEngine.Random.value <= 0.5f && possibleResources != null && possibleResources.Length > 0)
         {
-            int resourceCount = UnityEngine.Random.Range((int)resourceDropRange.x, (int)resourceDropRange.y + 1);
             ResourceManager resourceManager = FindFirstObjectByType<ResourceManager>();
-
             if (resourceManager != null)
             {
-                for (int i = 0; i < resourceCount; i++)
-                {
-                    ResourceType selectedResource = possibleResources[UnityEngine.Random.Range(0, possibleResources.Length)];
-                    Vector3 randomOffset = UnityEngine.Random.insideUnitSphere * 1f;
-                    resourceManager.SpawnResource(selectedResource, transform.position + randomOffset);
-                }
+                ResourceType selectedResource = possibleResources[0];
+                int amount = UnityEngine.Random.Range(5, 11); // Range is min inclusive, max exclusive
+                resourceManager.SpawnResource(selectedResource, transform.position, amount);
             }
         }
 
