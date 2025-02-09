@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 96c25f780db2c2d49a972f362d9de430, type: 3}
-  m_Name: OtherResource
+  m_Name: ScrapData
   m_EditorClassIdentifier: 
-  resourceName: Other Resource
+  resourceName: Scrap
   description: It's for other things.
   icon: {fileID: 21300000, guid: 4cea03741705b2f4db0905972cc02a21, type: 3}
   pickupPrefab: {fileID: 213933253639110196, guid: 9acd3f99076f8a640affa9c8061946e1, type: 3}
