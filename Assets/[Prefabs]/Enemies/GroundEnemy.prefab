@@ -14,6 +14,8 @@ GameObject:
   - component: {fileID: 8588679846482464613}
   - component: {fileID: 6451041024947094753}
   - component: {fileID: 8048594128652718908}
+  - component: {fileID: 7388876952218093659}
+  - component: {fileID: 7516297048338034674}
   m_Layer: 6
   m_Name: GroundEnemy
   m_TagString: Enemy
@@ -159,9 +161,11 @@ MonoBehaviour:
   damageEffect: {fileID: 0}
   healthBarPrefab: {fileID: 0}
   scoreValue: 10
-  possibleResources: 0000000001000000
   CoinResourceRange: {x: 5, y: 10}
   GemResourceRange: {x: 5, y: 10}
+  coinDropRate: 0.5
+  gemDropRate: 0.25
+  resourceSpawnRadius: 0.5
   stateConfig: {fileID: 11400000, guid: e70717778787607499126af05b056ecd, type: 2}
   currentStateName: 
   projectilePrefab: {fileID: 2526509629052936677, guid: 3f270dfdc506de546b772760313af985, type: 3}
@@ -189,6 +193,44 @@ MonoBehaviour:
   chargeTime: 3
   burstCount: 2
   burstDelay: 0.2
+--- !u!114 &7388876952218093659
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3507184854093064820}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e94277131bd340a4a9625016fa992efb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tags:
+    tags: []
+--- !u!114 &7516297048338034674
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3507184854093064820}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a3d8bb283a7d434bbf70a80528f2135, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  showInGame: 1
+  showInEditor: 1
+  backgroundColor: {r: 0, g: 0, b: 0, a: 0.8}
+  textColor: {r: 1, g: 1, b: 1, a: 1}
+  offset: {x: 0, y: 1, z: 0}
+  width: 200
+  padding: 5
+  tagSpacing: 2
+  showTagValues: 1
+  groupByCategory: 1
+  showComments: 1
+  tagFilter: 
 --- !u!1 &4031500842320831187
 GameObject:
   m_ObjectHideFlags: 0

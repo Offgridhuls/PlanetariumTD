@@ -214,12 +214,7 @@ namespace Planetarium.Deployables
                 RotateTowardsTarget(targetPosition);
             }
             
-            FireTimer -= Time.deltaTime;
-            if (FireTimer <= 0)
-            {
-                FireTurret();
-                FireTimer = M_TurretStats.GetFireInterval();
-            }
+         
         }
         
         void CheckClosestTarget()

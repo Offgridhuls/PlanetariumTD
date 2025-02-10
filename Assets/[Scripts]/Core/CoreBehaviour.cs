@@ -1,8 +1,9 @@
+using Planetarium.Stats;
 using UnityEngine;
 
 namespace Planetarium
 {
-	public abstract class CoreBehaviour : MonoBehaviour
+	public abstract class CoreBehaviour : MonoBehaviour, ITaggable
 	{
 		// PUBLIC MEMBERS
 
@@ -77,5 +78,12 @@ namespace Planetarium
 		private bool _gameObjectCached;
 		private Transform _cachedTransform;
 		private bool _transformCached;
+		public void OnTagAdded(GameplayTag tag)
+		{
+		}
+
+		public void OnTagRemoved(GameplayTag tag)
+		{
+		}
 	}
 }
