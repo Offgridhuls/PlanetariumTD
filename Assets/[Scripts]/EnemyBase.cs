@@ -8,6 +8,10 @@ using Unity.Collections;
 using Planetarium.AI;
 using Planetarium.Stats;
 
+/// <summary>
+/// Base class for all enemies in the game
+/// </summary>
+[RequireComponent(typeof(Rigidbody), typeof(TaggedComponent))]
 public class EnemyBase : CoreBehaviour, IDamageable
 {
     [Header("Components")]
@@ -108,9 +112,16 @@ public class EnemyBase : CoreBehaviour, IDamageable
     {
         rb = GetComponent<Rigidbody>();
         InitializeStates();
+        
+        // Ensure we have a TaggedComponent
         taggedComponent = GetComponent<TaggedComponent>();
+        if (taggedComponent == null)
+        {
+            taggedComponent = gameObject.AddComponent<TaggedComponent>();
+        }
+        
         taggedComponent.AddTag(CachedTags.EnemyBase);
-        //taggedComponent.AddTag(enemyStats.IsFlying ? CachedTags.EnemyFlying : CachedTags.EnemyGround);
+        
     }
 
     protected virtual void Start()

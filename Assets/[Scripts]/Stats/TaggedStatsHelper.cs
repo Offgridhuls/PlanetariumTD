@@ -1,5 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 
 namespace Planetarium.Stats
 {
@@ -57,13 +59,39 @@ namespace Planetarium.Stats
         {
             EnsureStatsComponent();
             var valueTag = new GameplayTag($"{tag.TagName}.Value");
-            return float.Parse(valueTag.DevComment ?? "0");
+            
+            // Try to get the existing tag from the component
+            var existingTag = statsComponent.Tags.FirstOrDefault(t => t.TagName == valueTag.TagName);
+            if (existingTag == null || string.IsNullOrEmpty(existingTag.DevComment))
+            {
+                return 0f;
+            }
+
+            // Try to parse the value with invariant culture
+            if (float.TryParse(existingTag.DevComment, NumberStyles.Float, CultureInfo.InvariantCulture, out float result))
+            {
+                return result;
+            }
+
+            UnityEngine.Debug.LogWarning($"Failed to parse stat value for tag {tag.TagName}. Value was: {existingTag.DevComment}");
+            return 0f;
         }
 
         private static void SetStatValue(GameplayTag tag, float value)
         {
             EnsureStatsComponent();
-            var valueTag = new GameplayTag($"{tag.TagName}.Value", value.ToString());
+            
+            // Format the value using invariant culture to ensure consistent decimal separators
+            var formattedValue = value.ToString(CultureInfo.InvariantCulture);
+            var valueTag = new GameplayTag($"{tag.TagName}.Value", formattedValue);
+            
+            // Remove existing tag if present
+            var existingTag = statsComponent.Tags.FirstOrDefault(t => t.TagName == valueTag.TagName);
+            if (existingTag != null)
+            {
+                statsComponent.RemoveTag(existingTag);
+            }
+            
             statsComponent.AddTag(valueTag);
         }
 
