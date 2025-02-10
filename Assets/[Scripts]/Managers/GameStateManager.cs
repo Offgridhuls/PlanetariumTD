@@ -648,12 +648,7 @@ namespace Planetarium
                     playerInfoView.ResetUI();
                 }
 
-                // Specifically reset ViewControlsView
-                var viewControlsView = uiManager.GetView("ViewControlsView") as ViewControlsView;
-                if (viewControlsView != null)
-                {
-                    viewControlsView.ResetControls();
-                }
+               
             }
 
             // Notify UI listeners of state changes
