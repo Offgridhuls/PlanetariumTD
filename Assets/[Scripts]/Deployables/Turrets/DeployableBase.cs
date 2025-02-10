@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using System;
+using Planetarium.Stats;
 using UnityEditor.iOS;
 
 public class DeployableBase : MonoBehaviour, IDamageable
@@ -68,6 +69,9 @@ public class DeployableBase : MonoBehaviour, IDamageable
         {
             healthBarInstance = Instantiate(healthBarPrefab, transform);
         }
+
+        // Register turret construction in stats
+        GameStatsHelper.OnTurretBuilt(M_TurretStats);
     }
 
     public virtual DamageableType GetDamageableType()
@@ -79,14 +83,20 @@ public class DeployableBase : MonoBehaviour, IDamageable
     {
         if (isDead) return;
         float damage = data.Damage * (1f / integrity);
-        TakeDamage(damage);
+        TakeDamage(damage, data.Source);
     }
 
-    public virtual void TakeDamage(float damage)
+    public virtual void TakeDamage(float damage, GameObject source = null)
     {
         if (isDead) return;
+        
         currentHealth = Mathf.Max(0f, currentHealth - damage);
         onHealthChanged?.Invoke(GetHealthPercentage());
+
+        if (damageEffect != null)
+        {
+            Instantiate(damageEffect, transform.position, Quaternion.identity);
+        }
 
         if (currentHealth <= 0)
         {
@@ -96,16 +106,34 @@ public class DeployableBase : MonoBehaviour, IDamageable
 
     protected virtual void Die()
     {
-        if (!isDead)
+        if (isDead) return;
+        isDead = true;
+
+        // Play death sound if we have one
+        if (audioSource != null && deathSound != null)
         {
-            isDead = true;
-            PlayDeathSound();
-            
-            // Notify any listeners about the death
-            OnDeployableDeath?.Invoke(this);
-            
-            // Destroy the deployable
-            Destroy(gameObject);
+            audioSource.PlayOneShot(deathSound);
+        }
+
+        if (deathEffect != null)
+        {
+            Instantiate(deathEffect, transform.position, Quaternion.identity);
+        }
+
+        onDeath?.Invoke();
+        OnDeployableDeath?.Invoke(this);
+
+        // Track turret destruction in stats
+        GameStatsHelper.OnTurretDestroyed(M_TurretStats.GetName());
+
+        Destroy(gameObject);
+    }
+
+    protected virtual void OnDestroy()
+    {
+        if (isDead)
+        {
+            GameStatsHelper.OnTurretDestroyed(M_TurretStats.GetName());
         }
     }
 
@@ -279,5 +307,34 @@ public class DeployableBase : MonoBehaviour, IDamageable
             targetRotation,
             M_TurretStats.GetRotationSpeed() * Time.deltaTime
         );
+    }
+
+    protected virtual void FireProjectile(Vector3 targetPos, EnemyBase target)
+    {
+        if (M_Projectile != null && TurretMuzzle != null)
+        {
+            var projectile = Instantiate(M_Projectile, TurretMuzzle.position, TurretMuzzle.rotation);
+            projectile.Initialize(M_TurretStats.GetDamage(), ClosestTarget.transform.position, M_TurretStats.GetProjectileSpeed());
+            
+            // Play fire sound if we have one
+            if (audioSource != null && fireSound != null)
+            {
+                audioSource.PlayOneShot(fireSound);
+            }
+
+            // Track shot fired in stats
+            GameStatsHelper.OnTurretDamageDealt(M_TurretStats.GetName(), M_TurretStats.GetDamage(), true);
+        }
+    }
+
+    protected virtual void OnProjectileHit(EnemyBase target, float damageDealt)
+    {
+        if (target != null)
+        {
+            if (target.CurrentHealth <= 0)
+            {
+                GameStatsHelper.OnTurretKill(M_TurretStats.GetName());
+            }
+        }
     }
 }

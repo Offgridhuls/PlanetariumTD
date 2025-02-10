@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Planetarium;
 using Unity.Collections;
 using Planetarium.AI;
+using Planetarium.Stats;
 
 public class EnemyBase : CoreBehaviour, IDamageable
 {
@@ -26,7 +27,7 @@ public class EnemyBase : CoreBehaviour, IDamageable
 
     [Header("Rewards")]
     [SerializeField] protected int scoreValue = 10;
-    [SerializeField] protected ResourceType[] possibleResources;
+    [SerializeField] protected Planetarium.Stats.ResourceType[] possibleResources;
     [SerializeField] protected Vector2 CoinResourceRange = new Vector2(5, 10);
     [SerializeField] protected Vector2 GemResourceRange = new Vector2(5, 10);
 
@@ -84,6 +85,9 @@ public class EnemyBase : CoreBehaviour, IDamageable
     public float MaxHealth => maxHealth;
     public PlanetBase CurrentPlanet => currentPlanet;
 
+    private float spawnTime;
+    private float pathProgress;
+
     #region Unity Lifecycle
 
     protected virtual void Awake()
@@ -103,10 +107,17 @@ public class EnemyBase : CoreBehaviour, IDamageable
             return;
         }
         
+        spawnTime = Time.time;
+        
+        // Register enemy spawn in stats
+        GameStatsHelper.OnEnemySpawned(enemyStats);
+
         if (healthBarPrefab != null)
         {
             healthBarInstance = Instantiate(healthBarPrefab, transform);
         }
+
+        pathProgress = 0f;
 
         // Start with initial state if one is registered
         if (states.Count > 0 && currentState == null)
@@ -263,25 +274,35 @@ public class EnemyBase : CoreBehaviour, IDamageable
     {
         if (isDead) return;
         float damage = data.Damage * (1f / integrity);
-        TakeDamage(damage);
+        TakeDamage(damage, data.Source);
     }
 
-    public virtual void TakeDamage(float damage)
+    public virtual void TakeDamage(float damage, GameObject source = null)
     {
         if (isDead) return;
-        damage *= (1f - integrity);
+
         currentHealth = Mathf.Max(0f, currentHealth - damage);
+        GameStatsHelper.OnEnemyDamageTaken(enemyStats.name, damage);
+        
+        onHealthChanged?.Invoke(GetHealthPercentage());
 
         if (damageEffect != null)
         {
             Instantiate(damageEffect, transform.position, Quaternion.identity);
         }
 
-        onHealthChanged?.Invoke(GetHealthPercentage());
-
         if (currentHealth <= 0)
         {
-            Die();
+            Die(source);
+        }
+    }
+
+    public virtual void DealDamage(float damage, IDamageable target)
+    {
+        if (target != null)
+        {
+            GameStatsHelper.OnEnemyDamageDealt(enemyStats.name, damage);
+            target.ProcessDamage(new DamageData(damage, gameObject));
         }
     }
 
@@ -321,52 +342,37 @@ public class EnemyBase : CoreBehaviour, IDamageable
         
         ProjectileBase projectile = Instantiate(projectilePrefab, spawnPosition, rotation);
         projectile.Initialize(
-            GetStats().attackDamage,
+            enemyStats.attackDamage,
             CurrentTarget.transform.position,
-            GetStats().ProjectileSpeed
+            enemyStats.ProjectileSpeed
         );
         projectile.ShootProjectile(CurrentTarget.transform.position, CurrentTarget.gameObject);
     }
 
+    #endregion
 
-    protected virtual void Die()
+    protected virtual void Die(GameObject source = null)
     {
         if (isDead) return;
         isDead = true;
 
+        float lifetime = Time.time - spawnTime;
+        GameStatsHelper.OnEnemyKilled(enemyStats.name, maxHealth, lifetime, pathProgress);
+        
+        // Handle resource drops
+        DropResources();
+
+        // Handle score
+        if (onScoreGained != null)
+            onScoreGained.Invoke(scoreValue);
+
+        // Handle effects
         if (deathEffect != null)
-        {
             Instantiate(deathEffect, transform.position, Quaternion.identity);
-        }
 
-        ResourceManager resourceManager = FindFirstObjectByType<ResourceManager>();
-        if (resourceManager != null && possibleResources != null)
-        {
-            // First resource: 50% chance
-            if (possibleResources.Length > 0 && UnityEngine.Random.value <= 0.5f)
-            {
-                ResourceType selectedResource = possibleResources[0];
-                int amount = UnityEngine.Random.Range((int)CoinResourceRange.x, (int)CoinResourceRange.y + 1);
-                resourceManager.SpawnResource(selectedResource, transform.position, amount);
-            }
-
-            // Second resource: 25% chance (independent of first resource)
-            float secondResourceChance = 0.25f;
-            if (possibleResources.Length > 1 && UnityEngine.Random.value <= secondResourceChance)
-            {
-                ResourceType selectedResource = possibleResources[1];
-                int amount = UnityEngine.Random.Range((int)GemResourceRange.x, (int)GemResourceRange.y + 1);
-                Vector3 offsetPosition = transform.position + UnityEngine.Random.insideUnitSphere * 0.5f;
-                resourceManager.SpawnResource(selectedResource, offsetPosition, amount);
-            }
-        }
-
-        onDeath.Invoke();
-        onScoreGained?.Invoke(scoreValue);
+        onDeath?.Invoke();
         Destroy(gameObject);
     }
-
-    #endregion
 
     public float GetHealthPercentage()
     {
@@ -409,6 +415,31 @@ public class EnemyBase : CoreBehaviour, IDamageable
     {
         scoreValue = score;
         //resourceValue = resources;
+    }
+
+    protected void DropResources()
+    {
+        if (possibleResources == null || possibleResources.Length == 0) return;
+
+        foreach (var resourceType in possibleResources)
+        {
+            int amount = 0;
+            switch (resourceType)
+            {
+                case Planetarium.Stats.ResourceType.Coins:
+                    amount = Mathf.RoundToInt(UnityEngine.Random.Range(CoinResourceRange.x, CoinResourceRange.y));
+                    break;
+                case Planetarium.Stats.ResourceType.Gems:
+                    amount = Mathf.RoundToInt(UnityEngine.Random.Range(GemResourceRange.x, GemResourceRange.y));
+                    break;
+            }
+
+            if (amount > 0)
+            {
+                GameStatsHelper.OnEnemyDroppedResources(enemyStats.name, amount);
+                onResourceGained?.Invoke(amount);
+            }
+        }
     }
 
     protected void OnTriggerEnter(Collider other)

@@ -68,7 +68,7 @@ namespace Planetarium
             TakeDamage(data.Damage);
         }
 
-        public void TakeDamage(float damage)
+        public void TakeDamage(float damage, GameObject source = null)
         {
             if (IsDestroyed) return;
 

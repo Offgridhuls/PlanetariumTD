@@ -3,6 +3,8 @@ using UnityEngine.UI;
 using TMPro;
 using System;
 using Planetarium.UI;
+using Planetarium.Stats;
+using DG.Tweening;
 
 namespace Planetarium.UI.Views
 {
@@ -12,26 +14,33 @@ namespace Planetarium.UI.Views
         [SerializeField] private TextMeshProUGUI wavesSurvivedText;
         [SerializeField] private TextMeshProUGUI scoreText;
         [SerializeField] private TextMeshProUGUI highScoreText;
+        [SerializeField] private Transform statsContainer;
+        [SerializeField] private StatDisplay statDisplayPrefab;
         [SerializeField] private Button restartButton;
         [SerializeField] private Button mainMenuButton;
         
         [Header("Animation")]
         [SerializeField] private float elementDelay = 0.2f;
+        [SerializeField] private float fadeInDuration = 0.3f;
         [SerializeField] private Animator viewAnimator;
         
         [Header("Scene Loading")]
         [SerializeField] private string mainMenuSceneName = "MainMenu";
         [SerializeField] private string gameSceneName = "Game";
         
+        [Header("Settings")]
+        [SerializeField] private bool showDetailedStats = true;
+        [SerializeField] private float statDisplayDelay = 0.1f;
+        [SerializeField] private float statDisplayDuration = 0.5f;
+
         private GameStateManager gameState;
+        private StatManager statManager;
         
         public event Action OnRestartRequested;
         public event Action OnMainMenuRequested;
 
         protected void Awake()
         {
-      
-           
         }
 
         protected override void OnInitialize()
@@ -52,6 +61,14 @@ namespace Planetarium.UI.Views
                 if (gameObject != null)
                 {
                     gameObject.SetActive(true);
+                }
+
+                // Ensure StatManager is initialized
+                statManager = StatManager.Instance;
+                if (statManager == null)
+                {
+                    Debug.LogError("GameOverView: Failed to get StatManager instance");
+                    return;
                 }
                 
                 // Update UI state
@@ -112,6 +129,17 @@ namespace Planetarium.UI.Views
                     highScoreText.text = $"High Score: {highScore:N0}";
                 }
 
+                // Show detailed stats if enabled
+                if (showDetailedStats)
+                {
+                    Debug.Log("Starting to show detailed stats...");
+                    ShowDetailedStats();
+                }
+                else if (statsContainer != null)
+                {
+                    statsContainer.gameObject.SetActive(false);
+                }
+
                 // Ensure view is visible
                 if (gameObject != null && !gameObject.activeSelf)
                 {
@@ -130,6 +158,84 @@ namespace Planetarium.UI.Views
             {
                 Debug.LogError($"Error showing GameOverView: {e.Message}");
             }
+        }
+
+        private void ShowDetailedStats()
+        {
+            if (statsContainer == null)
+            {
+                Debug.LogError("GameOverView: Stats container is null!");
+                return;
+            }
+            
+            if (statDisplayPrefab == null)
+            {
+                Debug.LogError("GameOverView: Stat display prefab is null!");
+                return;
+            }
+
+            Debug.Log("Starting to show detailed stats...");
+
+            // Clear existing stats
+            foreach (Transform child in statsContainer)
+            {
+                Destroy(child.gameObject);
+            }
+
+            if (statManager == null)
+            {
+                Debug.LogError("GameOverView: StatManager is null!");
+                return;
+            }
+
+            // Create arrays for each stat type
+            StatBase[] stats = new StatBase[]
+            {
+                statManager.GetOrCreateStat<WaveStat>("WaveStat"),
+                statManager.GetOrCreateStat<ResourceStat>("ResourceStats"),
+                statManager.GetOrCreateStat<TurretTypeStats>("TurretTypeStats"),
+                statManager.GetOrCreateStat<EnemyTypeStats>("EnemyTypeStats")
+            };
+
+            Debug.Log($"Found {stats.Length} stats to display");
+            
+            float currentDelay = 0f;
+
+            foreach (var stat in stats)
+            {
+                if (stat == null)
+                {
+                    Debug.LogWarning("Found null stat in array");
+                    continue;
+                }
+
+                Debug.Log($"Creating display for stat: {stat.name}");
+                var display = Instantiate(statDisplayPrefab, statsContainer);
+                if (display == null)
+                {
+                    Debug.LogError("Failed to instantiate stat display prefab!");
+                    continue;
+                }
+
+                var canvasGroup = display.GetComponent<CanvasGroup>();
+                if (canvasGroup == null)
+                {
+                    Debug.Log("Adding CanvasGroup component");
+                    canvasGroup = display.gameObject.AddComponent<CanvasGroup>();
+                }
+                
+                canvasGroup.alpha = 0f;
+                display.Initialize(stat);
+                
+                // Animate using DOTween
+                canvasGroup.DOFade(1f, fadeInDuration)
+                    .SetDelay(currentDelay)
+                    .SetEase(Ease.OutQuad);
+                
+                currentDelay += elementDelay;
+            }
+            
+            Debug.Log("Finished showing detailed stats");
         }
 
         private void HandleRestart()

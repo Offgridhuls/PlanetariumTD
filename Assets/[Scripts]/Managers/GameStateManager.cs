@@ -3,8 +3,10 @@ using UnityEngine.Events;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Planetarium.Stats;
 using Planetarium.UI;
 using Planetarium.UI.Views;
+using GameOverView = Planetarium.UI.Views.GameOverView;
 
 namespace Planetarium
 {
@@ -135,6 +137,11 @@ namespace Planetarium
             {
                 LoadGameState();
             }
+            
+            // Initialize stats
+            GameStatsHelper.UpdateWaveStats(currentWave, enemiesRemainingInWave, waveTimer, false);
+            GameStatsHelper.SetPlayerHealth(currentBaseHealth);
+            GameStatsHelper.UpdateGameTime(gameTime);
         }
 
         /// <summary>
@@ -702,6 +709,10 @@ namespace Planetarium
                 //UpdateBaseHealthUI();
             }
 
+            GameStatsHelper.TakeDamageFromEnemy(damage);
+            GameStatsHelper.SetPlayerHealth(currentBaseHealth);
+            OnBaseHealthChanged?.Invoke(currentBaseHealth);
+
             if (currentBaseHealth <= 0 && !isGameOver)
             {
                 EndGame(false);
@@ -724,6 +735,7 @@ namespace Planetarium
         public void AddCurrency(int amount)
         {
             currency += amount;
+            GameStatsHelper.AddResources(amount);
             OnCurrencyChanged?.Invoke(currency);
             NotifyStateChanged();
         }
@@ -738,6 +750,7 @@ namespace Planetarium
             if (currency >= amount)
             {
                 currency -= amount;
+                GameStatsHelper.SpendResources(amount);
                 OnCurrencyChanged?.Invoke(currency);
                 NotifyStateChanged();
                 return true;
@@ -1171,6 +1184,105 @@ namespace Planetarium
             };
             
             OnGameStateChanged?.Invoke(this, new GameStateChangedEventArgs(previousData, currentData));
+        }
+
+        private void Update()
+        {
+            if (State != GameState.Playing) return;
+
+            gameTime += Time.deltaTime;
+            GameStatsHelper.UpdateGameTime(gameTime);
+
+            if (isWaveInProgress)
+            {
+                // Update wave stats
+                GameStatsHelper.UpdateWaveStats(
+                    currentWave: currentWave,
+                    enemiesRemaining: enemiesRemainingInWave,
+                    timeUntilNext: 0,
+                    isFinal: IsLastWave()
+                );
+            }
+            else
+            {
+                waveTimer -= Time.deltaTime;
+                GameStatsHelper.UpdateWaveStats(
+                    currentWave: currentWave,
+                    enemiesRemaining: enemiesRemainingInWave,
+                    timeUntilNext: waveTimer,
+                    isFinal: IsLastWave()
+                );
+                OnWaveTimerChanged?.Invoke(waveTimer);
+            }
+        }
+
+        /*public void TakeDamage(float damage)
+        {
+            if (isGameOver) return;
+
+            currentBaseHealth = Mathf.Max(0f, currentBaseHealth - damage);
+            OnBaseHealthChanged?.Invoke(currentBaseHealth / baseHealth);
+
+            GameStatsHelper.SetPlayerHealth(currentBaseHealth);
+
+            if (currentBaseHealth <= 0)
+            {
+                GameOver(false);
+            }
+        }*/
+
+        private void GameOver(bool victory)
+        {
+            if (isGameOver) return;
+
+            isGameOver = true;
+            State = victory ? GameState.Victory : GameState.GameOver;
+            
+            // Update final stats before game over
+            GameStatsHelper.UpdateWaveStats(
+                currentWave: currentWave,
+                enemiesRemaining: enemiesRemainingInWave,
+                timeUntilNext: 0,
+                isFinal: true
+            );
+
+            OnGameOverChanged?.Invoke(victory);
+            OnGameOver?.Invoke();
+        }
+
+        private void StartNewGame()
+        {
+            // Reset all stats for new game
+            var statsDb = GetComponent<StatManager>()?.database;
+            if (statsDb != null)
+            {
+                foreach (var stat in statsDb.stats)
+                {
+                    StatManager.Instance.SetValue(stat.name, stat.GetDefaultValue());
+                }
+            }
+
+            currentWave = 0;
+            currentScore = 0;
+            currentBaseHealth = baseHealth;
+            currency = startingCurrency;
+            waveTimer = timeBetweenWaves;
+            isWaveInProgress = false;
+            gameTime = 0;
+            isGameOver = false;
+            
+            // Initialize starting stats
+            GameStatsHelper.SetPlayerHealth(currentBaseHealth);
+            GameStatsHelper.UpdateGameTime(gameTime);
+            GameStatsHelper.UpdateWaveStats(
+                currentWave: currentWave,
+                enemiesRemaining: 0,
+                timeUntilNext: waveTimer,
+                isFinal: false
+            );
+
+            State = GameState.Playing;
+            NotifyStateChanged();
         }
     }
 }
