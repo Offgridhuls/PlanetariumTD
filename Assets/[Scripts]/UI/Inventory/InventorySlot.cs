@@ -1,3 +1,4 @@
+using Planetarium.Resources.Types;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;

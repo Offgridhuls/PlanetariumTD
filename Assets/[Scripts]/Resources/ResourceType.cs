@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Planetarium
+namespace Planetarium.Resources.Types
 {
     [CreateAssetMenu(fileName = "New Resource", menuName = "PlanetariumTD/Resource Type")]
     public class ResourceType : ScriptableObject

@@ -1,5 +1,6 @@
 using UnityEngine;
 using Planetarium;
+using Planetarium.Resources.Types;
 
 namespace Planetarium
 {

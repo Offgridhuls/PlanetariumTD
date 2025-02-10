@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Planetarium.Stats
 {
-    public enum ResourceType
+    public enum ResourceKind
     {
         Coins,
         Gems

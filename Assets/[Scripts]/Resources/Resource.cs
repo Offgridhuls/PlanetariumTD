@@ -1,3 +1,4 @@
+using Planetarium.Resources.Types;
 using UnityEngine;
 
 namespace Planetarium

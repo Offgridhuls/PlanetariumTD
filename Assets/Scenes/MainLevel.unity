@@ -138,6 +138,51 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_HorizontalFit: 0
   m_VerticalFit: 0
+--- !u!1 &229114440
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 229114441}
+  - component: {fileID: 229114442}
+  m_Layer: 0
+  m_Name: StatManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &229114441
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 229114440}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2105087588}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &229114442
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 229114440}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49df2bdeae5215c4487c916a72c87350, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  database: {fileID: 11400000, guid: c0e95e310323cb7489bab2e741268731, type: 2}
 --- !u!1 &273371153
 GameObject:
   m_ObjectHideFlags: 0
@@ -1410,7 +1455,7 @@ PrefabInstance:
       addedObject: {fileID: 446182408}
     - targetCorrespondingSourceObject: {fileID: 6684386757104114985, guid: b430c28e978abfe4f849da5f72293656, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1469438848}
+      addedObject: {fileID: 229114441}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b430c28e978abfe4f849da5f72293656, type: 3}
 --- !u!1001 &7530875643797636452
@@ -1464,7 +1509,7 @@ PrefabInstance:
     - target: {fileID: 1029490728685127306, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
       propertyPath: wavesSurvivedText
       value: 
-      objectReference: {fileID: 1547147462}
+      objectReference: {fileID: 0}
     - target: {fileID: 1029490728685127306, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
       propertyPath: statCategories.Array.size
       value: 1

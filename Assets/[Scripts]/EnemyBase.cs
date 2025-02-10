@@ -27,7 +27,7 @@ public class EnemyBase : CoreBehaviour, IDamageable
 
     [Header("Rewards")]
     [SerializeField] protected int scoreValue = 10;
-    [SerializeField] protected Planetarium.Stats.ResourceType[] possibleResources;
+    [SerializeField] protected ResourceKind[] possibleResources;
     [SerializeField] protected Vector2 CoinResourceRange = new Vector2(5, 10);
     [SerializeField] protected Vector2 GemResourceRange = new Vector2(5, 10);
 
@@ -371,6 +371,30 @@ public class EnemyBase : CoreBehaviour, IDamageable
             Instantiate(deathEffect, transform.position, Quaternion.identity);
 
         onDeath?.Invoke();
+
+        
+        /*ResourceManager resourceManager = FindFirstObjectByType<ResourceManager>();
+        if (resourceManager != null && possibleResources != null)
+        {
+            // First resource: 50% chance
+            if (possibleResources.Length > 0 && UnityEngine.Random.value <= 0.5f)
+            {
+                ResourceKind selectedResource = possibleResources[0];
+                int amount = UnityEngine.Random.Range((int)CoinResourceRange.x, (int)CoinResourceRange.y + 1);
+                resourceManager.SpawnResource(selectedResource, transform.position, amount);
+            }
+
+            // Second resource: 25% chance (independent of first resource)
+            float secondResourceChance = 0.25f;
+            if (possibleResources.Length > 1 && UnityEngine.Random.value <= secondResourceChance)
+            {
+                ResourceKind selectedResource = possibleResources[1];
+                int amount = UnityEngine.Random.Range((int)GemResourceRange.x, (int)GemResourceRange.y + 1);
+                Vector3 offsetPosition = transform.position + UnityEngine.Random.insideUnitSphere * 0.5f;
+                resourceManager.SpawnResource(selectedResource, offsetPosition, amount);
+            }
+        }*/
+
         Destroy(gameObject);
     }
 
@@ -426,10 +450,10 @@ public class EnemyBase : CoreBehaviour, IDamageable
             int amount = 0;
             switch (resourceType)
             {
-                case Planetarium.Stats.ResourceType.Coins:
+                case Planetarium.Stats.ResourceKind.Coins:
                     amount = Mathf.RoundToInt(UnityEngine.Random.Range(CoinResourceRange.x, CoinResourceRange.y));
                     break;
-                case Planetarium.Stats.ResourceType.Gems:
+                case Planetarium.Stats.ResourceKind.Gems:
                     amount = Mathf.RoundToInt(UnityEngine.Random.Range(GemResourceRange.x, GemResourceRange.y));
                     break;
             }

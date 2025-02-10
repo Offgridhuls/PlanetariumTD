@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.Events;
 using UnityEngine.Pool;
-
+using Planetarium.Resources.Types;
 namespace Planetarium
 {
     public class ResourceManager : SceneService
