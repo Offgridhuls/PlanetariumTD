@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using Planetarium.Stats;
 using Planetarium.Stats.Debug;
+using UnityEngine.SceneManagement;
 
 namespace Planetarium.UI
 {
@@ -15,10 +16,15 @@ namespace Planetarium.UI
         [Header("Settings")]
         [SerializeField]
         private KeyCode _toggleKey = KeyCode.F4;
+        [SerializeField]
+        private bool _debugMode = true;
 
         private List<TaggedComponent> _trackedComponents = new List<TaggedComponent>();
         private bool _visualizersEnabled = true;
         private Camera _mainCamera;
+        private bool _initialized = false;
+        private float _debugUpdateTimer = 0f;
+        private const float DEBUG_LOG_INTERVAL = 1f; // Log debug info every second
 
         private static UITagView _instance;
         public static UITagView Instance => _instance;
@@ -27,10 +33,12 @@ namespace Planetarium.UI
         protected override void OnInitialize()
         {
             base.OnInitialize();
+            LogDebug("Initializing UITagView");
             
             if (_instance == null)
             {
                 _instance = this;
+                LogDebug("Set as singleton instance");
             }
             else if (_instance != this)
             {
@@ -39,27 +47,80 @@ namespace Planetarium.UI
                 return;
             }
 
+            if (!_initialized)
+            {
+                InitializeView();
+            }
+        }
+
+        private void InitializeView()
+        {
+            LogDebug("Initializing view state");
+            _initialized = true;
             _mainCamera = Camera.main;
-            _tagInteractions.SetActive(_visualizersEnabled);
+            _tagInteractions.SetActive(true);
+            _visualizersEnabled = true;
+
+            // Force this view to stay open
+            startOpen = true;
+            Open(true);
+            LogDebug("View initialization complete");
         }
 
         protected override void OnDeinitialize()
         {
             base.OnDeinitialize();
-
-            foreach (var component in _trackedComponents.ToArray())
-            {
-                if (component != null)
-                {
-                    RemoveTrackedComponent(component);
-                }
-            }
-            _trackedComponents.Clear();
+            LogDebug("Deinitializing UITagView");
 
             if (_instance == this)
             {
                 _instance = null;
             }
+
+            CleanupVisualizers();
+            _initialized = false;
+        }
+
+        public override void Open(bool instant = false)
+        {
+            base.Open(instant);
+            LogDebug("Opening UITagView");
+            
+            // Ensure we're properly initialized when opened
+            if (!_initialized)
+            {
+                InitializeView();
+            }
+            
+            // Re-create visualizers for all tracked components
+            if (_tagInteractions != null)
+            {
+                LogDebug($"Recreating visualizers for {_trackedComponents.Count} tracked components");
+                foreach (var component in _trackedComponents)
+                {
+                    if (component != null)
+                    {
+                        _tagInteractions.CreateVisualizerFor(component);
+                    }
+                }
+            }
+        }
+
+        public override void Close(bool instant = false)
+        {
+            LogDebug("Close requested - cleaning up visualizers but staying active");
+            CleanupVisualizers();
+        }
+
+        private void CleanupVisualizers()
+        {
+            LogDebug($"Cleaning up visualizers. Current tracked components: {_trackedComponents.Count}");
+            if (_tagInteractions != null)
+            {
+                _tagInteractions.RemoveAllVisualizers();
+            }
+            _trackedComponents.Clear();
+            LogDebug("Visualizer cleanup complete");
         }
 
         protected override void OnTick()
@@ -72,21 +133,51 @@ namespace Planetarium.UI
                 ToggleVisualizers();
             }
 
-            if (_visualizersEnabled && _tagInteractions != null)
+            // Always update visualizers if we have interactions
+            if (_tagInteractions != null)
             {
                 UpdateVisualizers();
+            }
+
+            // Debug logging
+            if (_debugMode)
+            {
+                _debugUpdateTimer += Time.deltaTime;
+                if (_debugUpdateTimer >= DEBUG_LOG_INTERVAL)
+                {
+                    LogDebug($"Active tracked components: {_trackedComponents.Count}, Visualizers enabled: {_visualizersEnabled}");
+                    _debugUpdateTimer = 0f;
+                }
             }
         }
 
         // PUBLIC MEMBERS
+        public bool IsInitialized => _initialized;
+
         public void AddTrackedComponent(TaggedComponent component)
         {
-            if (component == null || _trackedComponents.Contains(component))
+            if (component == null)
+            {
+                LogDebug("Attempted to add null component");
                 return;
+            }
+
+            if (!_initialized)
+            {
+                LogDebug("Cannot add component - view not initialized");
+                return;
+            }
+
+            if (_trackedComponents.Contains(component))
+            {
+                LogDebug($"Component {component.gameObject.name} already tracked");
+                return;
+            }
 
             _trackedComponents.Add(component);
+            LogDebug($"Added tracked component: {component.gameObject.name}, Total: {_trackedComponents.Count}");
             
-            if (_visualizersEnabled && _tagInteractions != null)
+            if (_tagInteractions != null && _visualizersEnabled)
             {
                 _tagInteractions.CreateVisualizerFor(component);
             }
@@ -95,13 +186,25 @@ namespace Planetarium.UI
         public void RemoveTrackedComponent(TaggedComponent component)
         {
             if (component == null)
-                return;
-
-            _trackedComponents.Remove(component);
-            
-            if (_tagInteractions != null)
             {
-                _tagInteractions.RemoveVisualizerFor(component);
+                LogDebug("Attempted to remove null component");
+                return;
+            }
+
+            if (!_initialized)
+            {
+                LogDebug("Cannot remove component - view not initialized");
+                return;
+            }
+
+            if (_trackedComponents.Remove(component))
+            {
+                LogDebug($"Removed tracked component: {component.gameObject.name}, Total: {_trackedComponents.Count}");
+                
+                if (_tagInteractions != null)
+                {
+                    _tagInteractions.RemoveVisualizerFor(component);
+                }
             }
         }
 
@@ -109,31 +212,59 @@ namespace Planetarium.UI
         private void ToggleVisualizers()
         {
             _visualizersEnabled = !_visualizersEnabled;
-            _tagInteractions.SetActive(_visualizersEnabled);
+            LogDebug($"Toggling visualizers: {_visualizersEnabled}");
             
-            if (_visualizersEnabled)
+            if (_tagInteractions != null)
             {
-                // Recreate visualizers for all tracked components
-                foreach (var component in _trackedComponents)
+                if (_visualizersEnabled)
                 {
-                    _tagInteractions.CreateVisualizerFor(component);
+                    // Recreate all visualizers
+                    foreach (var component in _trackedComponents)
+                    {
+                        if (component != null)
+                        {
+                            _tagInteractions.CreateVisualizerFor(component);
+                        }
+                    }
                 }
-            }
-            else
-            {
-                _tagInteractions.RemoveAllVisualizers();
+                else
+                {
+                    // Remove all visualizers
+                    _tagInteractions.RemoveAllVisualizers();
+                }
             }
         }
 
         private void UpdateVisualizers()
         {
-            if (_mainCamera == null)
-            {
-                _mainCamera = Camera.main;
-                if (_mainCamera == null) return;
-            }
+            if (!_initialized || _mainCamera == null) return;
 
             _tagInteractions.UpdateVisualizerPositions(_mainCamera);
+           
+        }
+
+        private void OnSceneLoaded()
+        {
+            // Reset camera reference since it might have changed
+            _mainCamera = Camera.main;
+            
+            // Clean up old visualizers
+            CleanupVisualizers();
+            
+            // Make sure interactions are in correct state and enabled
+            if (_tagInteractions != null)
+            {
+                _tagInteractions.SetActive(true);
+                _visualizersEnabled = true;
+            }
+        }
+
+        private void LogDebug(string message)
+        {
+            if (_debugMode)
+            {
+                Debug.Log($"[UITagView] {message}");
+            }
         }
     }
 }

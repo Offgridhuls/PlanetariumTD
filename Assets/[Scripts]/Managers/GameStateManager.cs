@@ -3,6 +3,7 @@ using UnityEngine.Events;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Planetarium.Stats;
 using Planetarium.UI;
 using Planetarium.UI.Views;
@@ -186,6 +187,8 @@ namespace Planetarium
                 // Handle audio
                 HandleAudioTransition(transitionData);
 
+               
+
                 // Create state snapshots for the event
                 var previousStateData = CreateStateSnapshot();
                 var newStateData = CreateStateSnapshot();
@@ -200,65 +203,54 @@ namespace Planetarium
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"Error during state transition: {e.Message}");
+                Debug.LogError($"Error during state transition: {e.Message}\n{e.StackTrace}");
             }
         }
 
-        /// <summary>
-        /// Handles game system changes during state transition.
-        /// </summary>
         private void HandleGameSystems(GameStateTransitionConfig.GameStateTransitionData transitionData)
         {
             try
             {
-                // Handle enemy system
+                // Handle enemy manager
                 if (enemyManager != null)
                 {
-                    enemyManager.enabled = !transitionData.pauseEnemySpawning;
+                    enemyManager.enabled = transitionData.pauseEnemySpawning;
                     if (transitionData.clearActiveEnemies)
                     {
                         enemyManager.ClearWave();
                     }
                 }
 
-                // Handle wave timer
-                if (transitionData.resetWaveTimer)
+                
+                if (transitionData.resetGameState)
                 {
-                    waveTimer = 0f;
-                    OnWaveTimerChanged?.Invoke(waveTimer);
+                    RestartGame();
                 }
-
-                // Handle generators
-                if (transitionData.resetGenerators && activeGenerators != null)
+                
+                // Handle other game systems based on transition data
+                if (transitionData.resetGameState)
                 {
-                    foreach (var generator in activeGenerators)
+                    currentBaseHealth = 100f;
+                    totalGeneratorHealth = maxTotalGeneratorHealth;
+                    
+                    if (transitionData.resetGenerators && activeGenerators != null)
                     {
-                        if (generator != null)
+                        foreach (var generator in activeGenerators)
                         {
-                            generator.ResetFlags();
+                            if (generator != null)
+                            {
+                                generator.ResetFlags();
+                            }
                         }
-                    }
-                }
-
-                // Handle resources
-                if (transitionData.clearResources)
-                {
-                    var resourceManager = Scene?.GetService<ResourceManager>();
-                    if (resourceManager != null)
-                    {
-                        resourceManager.ClearAllResources();
                     }
                 }
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"Error handling game systems during state transition: {e.Message}");
+                Debug.LogError($"Error handling game systems: {e.Message}\n{e.StackTrace}");
             }
         }
 
-        /// <summary>
-        /// Handles UI changes during state transition.
-        /// </summary>
         private void HandleUITransition(GameStateTransitionConfig.GameStateTransitionData transitionData)
         {
             var uiManager = Scene?.GetService<UIManager>();
@@ -270,7 +262,7 @@ namespace Planetarium
                     var view = uiManager.GetView(viewName);
                     if (view != null)
                     {
-                        view.Close(true);  // Use instant close during state transitions
+                        view.Close(true); // Use instant close during state transitions
                     }
                 }
 
@@ -280,62 +272,42 @@ namespace Planetarium
                     var view = uiManager.GetView(viewName);
                     if (view != null)
                     {
-                        view.Open(true);  // Use instant open during state transitions
+                        view.Open(true); // Use instant open during state transitions
                     }
                 }
             }
         }
 
-        /// <summary>
-        /// Handles game state changes during transition.
-        /// </summary>
         private void HandleGameStateTransition(GameStateTransitionConfig.GameStateTransitionData transitionData)
         {
-            if (transitionData.resetGameState)
+            try
             {
-                ResetGameState();
+                // Handle game over state
+                if (transitionData.isGameOver && !isGameOver)
+                {
+                    SetGameOver(true);
+                    OnGameOver?.Invoke();
+                }
             }
-
-            if (transitionData.triggerInitialize)
+            catch (System.Exception e)
             {
-                InitializeGame();
-            }
-
-            if (transitionData.triggerCleanup)
-            {
-                // Add any cleanup logic here
-            }
-
-            if (transitionData.saveHighScore)
-            {
-                SaveHighScore();
+                Debug.LogError($"Error handling game state transition: {e.Message}\n{e.StackTrace}");
             }
         }
 
-        /// <summary>
-        /// Handles audio changes during state transition.
-        /// </summary>
         private void HandleAudioTransition(GameStateTransitionConfig.GameStateTransitionData transitionData)
         {
-            // Add audio system integration here
-            // Example:
-            // if (audioManager != null)
-            // {
-            //     if (transitionData.pauseAudio)
-            //     {
-            //         audioManager.PauseAll();
-            //     }
-            //     
-            //     if (!string.IsNullOrEmpty(transitionData.musicTrack))
-            //     {
-            //         audioManager.PlayMusic(transitionData.musicTrack);
-            //     }
-            // }
+            try
+            {
+                // Handle audio state changes based on transition data
+                // TODO: Implement audio transition handling
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Error handling audio transition: {e.Message}\n{e.StackTrace}");
+            }
         }
 
-        /// <summary>
-        /// Creates a snapshot of the current game state.
-        /// </summary>
         private GameStateData CreateStateSnapshot()
         {
             return new GameStateData
@@ -358,24 +330,47 @@ namespace Planetarium
 
             HandleStateTransition(previousState, newState);
         }
-
+        
+        
         protected override void OnDeinitialize()
         {
-            if (enemyManager != null)
+            try
             {
-                enemyManager.OnEnemySpawned -= OnEnemySpawned;
-                enemyManager.OnEnemyDied -= OnEnemyKilled;
-            }
+                // Clean up enemy manager
+                if (enemyManager != null)
+                {
+                    enemyManager.OnEnemySpawned -= OnEnemySpawned;
+                    //enemyManager.OnEnemyKilled -= OnEnemyKilled;
+                }
 
-            // Clear all event subscribers
-            OnGameStateChanged = null;
-            OnWaveChanged = null;
-            OnBaseHealthChanged = null;
-            OnCurrencyChanged = null;
-            OnWaveProgressChanged = null;
-            OnGameOverChanged = null;
-            OnScoreChanged = null;
-            OnGameOver = null;
+                // Clean up generators
+                if (activeGenerators != null)
+                {
+                    foreach (var generator in activeGenerators.ToArray())
+                    {
+                        if (generator != null)
+                        {
+                            generator.OnHealthChanged -= OnGeneratorHealthChanged;
+                            generator.OnDestroyed -= OnGeneratorDestroyed;
+                        }
+                    }
+                    activeGenerators.Clear();
+                }
+
+                // Clear event listeners
+                OnGameStateChanged = null;
+                OnBaseHealthChanged = null;
+                OnGameOver = null;
+                OnWaveTimerChanged = null;
+                OnScoreChanged = null;
+                OnCurrencyChanged = null;
+                OnWaveChanged = null;
+                OnWaveStateChanged = null;
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Error in OnDeinitialize: {e.Message}\n{e.StackTrace}");
+            }
         }
 
         protected override void OnTick()
@@ -526,23 +521,54 @@ namespace Planetarium
         /// </summary>
         public void RestartGame()
         {
+            Debug.Log("GameStateManager: Starting game restart process");
             try
             {
-                Debug.Log("GameStateManager: Restarting game");
-
-                ResetGameState();
-                ResetGameSystems();
-                ResetUI();
-                NotifyStateChanges();
                 
-                // Change to Playing state which will trigger other necessary state changes
-                ChangeState(GameState.Playing);
+                // Reset all managers and systems
+                ResetAllSystems();
+                
+                ResetGameState();
+                // Notify state changes
+                NotifyStateChanges();
                 
                 Debug.Log("GameStateManager: Game restart complete");
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"Error restarting game: {e.Message}");
+                Debug.LogError($"GameStateManager: Error during game restart: {e.Message}\n{e.StackTrace}");
+            }
+        }
+
+        private void ResetAllSystems()
+        {
+            Debug.Log("GameStateManager: Resetting all game systems");
+            
+            try
+            {
+               
+
+                // Reset other managers
+                if (enemyManager != null)
+                {
+                    Debug.Log("GameStateManager: Resetting enemy manager");
+                    enemyManager.enabled = true;
+                    enemyManager.ClearWave();
+                }
+                else
+                {
+                    Debug.LogError("GameStateManager: EnemyManager not found during reset");
+                }
+
+                // Reset game state values
+                currentBaseHealth = 100f;
+                totalGeneratorHealth = maxTotalGeneratorHealth;
+                
+                Debug.Log("GameStateManager: All systems reset complete");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"GameStateManager: Error resetting systems: {e.Message}\n{e.StackTrace}");
             }
         }
 
@@ -736,7 +762,33 @@ namespace Planetarium
         /// <param name="isGameOver">Whether the game is over</param>
         private void EndGame(bool isGameOver)
         {
-            TriggerGameOver();
+            if (State == GameState.GameOver || isGameEnding) return;
+            
+            isGameEnding = true;
+
+            try
+            {
+                // Update state first to prevent any race conditions
+                SetGameState(GameState.GameOver);
+                SetGameOver(true);
+                
+                // Notify all listeners
+                OnGameOver?.Invoke();
+                
+                // Save the final score
+                SaveHighScore();
+                
+                // Stop game time
+                Time.timeScale = 0f;
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Error in TriggerGameOver: {e.Message}");
+            }
+            finally
+            {
+                isGameEnding = false;
+            }
         }
 
         /// <summary>
@@ -822,7 +874,7 @@ namespace Planetarium
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to save game state: {e.Message}");
+                Debug.LogError($"Failed to save game state: {e.Message}\n{e.StackTrace}");
             }
         }
 
@@ -858,7 +910,7 @@ namespace Planetarium
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to load game state: {e.Message}");
+                Debug.LogError($"Failed to load game state: {e.Message}\n{e.StackTrace}");
             }
             return false;
         }
@@ -881,7 +933,7 @@ namespace Planetarium
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to delete save game: {e.Message}");
+                Debug.LogError($"Failed to delete save game: {e.Message}\n{e.StackTrace}");
             }
         }
 
@@ -908,7 +960,7 @@ namespace Planetarium
                 Debug.Log($"GameStateManager: Game over state changed to {value}");
                 isGameOver = value;
                 OnGameOverChanged?.Invoke(isGameOver);
-                NotifyStateChanged();
+                //NotifyStateChanged();
             }
         }
 
@@ -956,13 +1008,11 @@ namespace Planetarium
             }
         }
 
-        private void OnValidate()
-        {
-            // Ensure starting values are valid
-            baseHealth = Mathf.Max(1f, baseHealth);
-            startingCurrency = Mathf.Max(0, startingCurrency);
-            timeBetweenWaves = Mathf.Max(1f, timeBetweenWaves);
-        }
+ 
+
+       
+
+      
 
         /// <summary>
         /// Registers a generator with the game state manager.
@@ -994,34 +1044,43 @@ namespace Planetarium
         /// <param name="generator">Generator to unregister</param>
         public void UnregisterGenerator(GeneratorBase generator)
         {
-            if (generator == null) return;
-
-            activeGenerators.Remove(generator);
-            generator.OnDestroyed -= OnGeneratorDestroyed;
-            generator.OnHealthChanged -= OnGeneratorHealthChanged;
-            
-            if (generator.gameObject != null)
+            // Early exit if any object is being destroyed
+            if (!this || !gameObject || !isActiveAndEnabled || generator == null || !generator.gameObject)
             {
-                maxTotalGeneratorHealth -= generator.MaxHealth;
-                totalGeneratorHealth -= generator.CurrentHealth;
+                return;
             }
-            
-            UpdateBaseHealthUI();
-            
-            // Check if this was the last generator
-            bool anyActiveGenerators = false;
-            foreach (var gen in activeGenerators)
+
+            try
             {
-                if (gen != null && !gen.IsDestroyed)
+                if (activeGenerators.Contains(generator))
                 {
-                    anyActiveGenerators = true;
-                    break;
+                    activeGenerators.Remove(generator);
+                    generator.OnHealthChanged -= OnGeneratorHealthChanged;
+                    generator.OnDestroyed -= OnGeneratorDestroyed;
+
+                    // Cache the current health values
+                    maxTotalGeneratorHealth -= generator.MaxHealth;
+                    totalGeneratorHealth -= generator.CurrentHealth;
+
+                    // Only update UI if we're not being destroyed
+                    if (this && gameObject && isActiveAndEnabled)
+                    {
+                        // Check if this was the last generator
+                        bool anyActiveGenerators = activeGenerators.Any(g => g != null && !g.IsDestroyed);
+                        if (!anyActiveGenerators && !isGameEnding)
+                        {
+                            TriggerGameOver();
+                        }
+                        else
+                        {
+                            UpdateBaseHealthUI();
+                        }
+                    }
                 }
             }
-            
-            if (!anyActiveGenerators && !isGameEnding)
+            catch (System.Exception e)
             {
-                TriggerGameOver();
+                Debug.LogError($"Error in UnregisterGenerator: {e.Message}\n{e.StackTrace}");
             }
         }
 
@@ -1030,34 +1089,40 @@ namespace Planetarium
         /// </summary>
         private void UpdateTotalGeneratorHealth()
         {
-            totalGeneratorHealth = 0f;
-            maxTotalGeneratorHealth = 0f;
-
-            foreach (var generator in activeGenerators)
+            // Early exit if we're being destroyed
+            if (!this || !gameObject || !isActiveAndEnabled)
             {
-                if (generator != null && !generator.IsDestroyed)
-                {
-                    totalGeneratorHealth += generator.CurrentHealth;
-                    maxTotalGeneratorHealth += generator.MaxHealth;
-                }
+                return;
             }
 
-            UpdateBaseHealthUI();
-
-            // Check if all generators are destroyed
-            bool allGeneratorsDestroyed = true;
-            foreach (var generator in activeGenerators)
+            try
             {
-                if (generator != null && !generator.IsDestroyed)
+                float newTotalHealth = 0f;
+                float newMaxTotalHealth = 0f;
+
+                // Calculate new totals from active generators
+                foreach (var generator in activeGenerators.ToList())
                 {
-                    allGeneratorsDestroyed = false;
-                    break;
+                    if (generator != null && !generator.IsDestroyed)
+                    {
+                        newTotalHealth += generator.CurrentHealth;
+                        newMaxTotalHealth += generator.MaxHealth;
+                    }
+                }
+
+                // Update the cached values
+                totalGeneratorHealth = newTotalHealth;
+                maxTotalGeneratorHealth = newMaxTotalHealth;
+
+                // Only update UI if we're not being destroyed
+                if (this && gameObject && isActiveAndEnabled)
+                {
+                    UpdateBaseHealthUI();
                 }
             }
-
-            if (allGeneratorsDestroyed && !isGameEnding)
+            catch (System.Exception e)
             {
-                TriggerGameOver();
+                Debug.LogError($"Error in UpdateTotalGeneratorHealth: {e.Message}\n{e.StackTrace}");
             }
         }
 
@@ -1068,29 +1133,29 @@ namespace Planetarium
         {
             try
             {
-                // Calculate total health including generators
+                // Check if we're being destroyed
+                if (!this || !gameObject || !isActiveAndEnabled)
+                {
+                    return;
+                }
+
                 float totalHealth = currentBaseHealth + totalGeneratorHealth;
                 float maxTotalHealth = baseHealth + maxTotalGeneratorHealth;
                 
                 // Convert to percentage and ensure it's not negative
                 float healthPercentage = Mathf.Max(0f, (totalHealth / maxTotalHealth) * 100f);
                 
-                // If health is 0, trigger game over
-                if (healthPercentage <= 0f && !isGameEnding)
-                {
-                    TriggerGameOver();
-                    return;
-                }
                 
-                // Notify UI only if we have valid listeners
-                if (OnBaseHealthChanged != null)
+               
+                // Notify UI only if we have valid listeners and we're not being destroyed
+                if (OnBaseHealthChanged != null && this && gameObject && isActiveAndEnabled)
                 {
                     OnBaseHealthChanged.Invoke(healthPercentage);
                 }
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"Error in UpdateBaseHealthUI: {e.Message}");
+                Debug.LogError($"Error in UpdateBaseHealthUI: {e.Message}\n{e.StackTrace}");
             }
         }
 
@@ -1099,69 +1164,46 @@ namespace Planetarium
         /// </summary>
         private void OnGeneratorDestroyed()
         {
-            // Update health calculations immediately
-            UpdateTotalGeneratorHealth();
+
+            try
+            {
+                // Update health calculations immediately if we're not being destroyed
+                UpdateTotalGeneratorHealth();
+                
+                // Check if this was the last generator
+                bool anyActiveGenerators = false;
+                foreach (var gen in activeGenerators)
+                {
+                    if (gen != null && !gen.IsDestroyed)
+                    {
+                        anyActiveGenerators = true;
+                        break;
+                    }
+                }
+            
+                Debug.Log("Any Active Generators? " + anyActiveGenerators);
+                if (!anyActiveGenerators && !isGameEnding)
+                {
+                    TriggerGameOver();
+                }
+
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Error in OnGeneratorDestroyed: {e.Message}\n{e.StackTrace}");
+            }
         }
+
+  
+
 
         /// <summary>
         /// Triggers the game over sequence.
         /// </summary>
         private void TriggerGameOver()
         {
-            if (State == GameState.GameOver || isGameEnding) return;
-            
-            isGameEnding = true;
-
-            try
-            {
-                // Update state first to prevent any race conditions
-                SetGameState(GameState.GameOver);
-                SetGameOver(true);
-                
-                // Reset game state
-                currentBaseHealth = 0f;
-                totalGeneratorHealth = 0f;
-                
-                // Stop game systems
-                if (enemyManager != null)
-                {
-                    enemyManager.enabled = false;
-                    enemyManager.ClearWave();
-                }
-                
-                // Update UI
-                var uiManager = Scene?.GetService<UIManager>();
-                if (uiManager != null)
-                {
-                    try
-                    {
-                        Debug.Log("Opening GameOverView");
-                        uiManager.CloseAllViews();
-                        uiManager.OpenView<GameOverView>();
-                    }
-                    catch (System.Exception e)
-                    {
-                        Debug.LogError($"Failed to open GameOverView: {e.Message}");
-                    }
-                }
-                
-                // Notify all listeners
-                OnGameOver?.Invoke();
-                
-                // Save the final score
-                SaveHighScore();
-                
-                // Stop game time
-                Time.timeScale = 0f;
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"Error in TriggerGameOver: {e.Message}");
-            }
-            finally
-            {
-                isGameEnding = false;
-            }
+            Debug.Log("GAME OVER TRIGGERED!");
+            ChangeState(GameState.GameOver);
         }
 
         /// <summary>

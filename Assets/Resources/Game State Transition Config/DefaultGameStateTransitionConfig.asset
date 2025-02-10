@@ -21,6 +21,7 @@ MonoBehaviour:
     resetWaveTimer: 0
     resetGenerators: 0
     clearResources: 0
+    isGameOver: 0
     viewsToClose: []
     viewsToOpen: []
     triggerInitialize: 0
@@ -36,7 +37,8 @@ MonoBehaviour:
     saveHighScore: 0
     resetWaveTimer: 0
     resetGenerators: 0
-    clearResources: 1
+    clearResources: 0
+    isGameOver: 0
     viewsToClose: []
     viewsToOpen:
     - CurrencyView
@@ -44,6 +46,7 @@ MonoBehaviour:
     - ViewControlsView
     - PlayerInfoView
     - InventoryView
+    - UITagView
     triggerInitialize: 1
     triggerCleanup: 0
     resetGameState: 0
@@ -58,6 +61,7 @@ MonoBehaviour:
     resetWaveTimer: 0
     resetGenerators: 0
     clearResources: 0
+    isGameOver: 0
     viewsToClose: []
     viewsToOpen: []
     triggerInitialize: 0
@@ -72,14 +76,20 @@ MonoBehaviour:
     clearActiveEnemies: 1
     saveHighScore: 1
     resetWaveTimer: 1
-    resetGenerators: 0
-    clearResources: 0
-    viewsToClose: []
+    resetGenerators: 1
+    clearResources: 1
+    isGameOver: 1
+    viewsToClose:
+    - CurrencyView
+    - TurretShopView
+    - InventoryView
+    - ViewControlsView
+    - PlayerInfoView
     viewsToOpen:
     - GameOverView
     triggerInitialize: 0
     triggerCleanup: 1
-    resetGameState: 0
+    resetGameState: 1
     pauseAudio: 0
     musicTrack: 
     enableDebugLogging: 1
@@ -91,6 +101,7 @@ MonoBehaviour:
     resetWaveTimer: 1
     resetGenerators: 0
     clearResources: 0
+    isGameOver: 0
     viewsToClose: []
     viewsToOpen:
     - GameOverView

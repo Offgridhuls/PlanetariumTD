@@ -357,7 +357,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7942980469012514912, guid: 75601e6a218729f41b70b075674c33fe, type: 3}
       propertyPath: repairRate
-      value: 100
+      value: 25
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1346,6 +1346,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 32198708589324319, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
+      propertyPath: _debugMode
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 774300873950203410, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
       propertyPath: m_AnchorMax.y
       value: 1
@@ -1538,6 +1542,14 @@ PrefabInstance:
       propertyPath: soundSource
       value: 
       objectReference: {fileID: 480908052}
+    - target: {fileID: 2682448629396699212, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
+      propertyPath: m_Maskable
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2682448629396699212, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2819960121236464220, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
       propertyPath: m_Name
       value: SceneCanvas
@@ -1608,6 +1620,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3593304548858501935, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
       propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3758140036644971652, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
+      propertyPath: _debugMode
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3903854170401701458, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
@@ -1886,7 +1902,12 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 7959144479359007052, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
+      propertyPath: m_Name
+      value: UITagView
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 2682448629396699212, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:

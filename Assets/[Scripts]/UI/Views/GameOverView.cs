@@ -160,72 +160,6 @@ namespace Planetarium.UI.Views
                 return;
             }
             
-            /*if (statDisplayPrefab == null)
-            {
-                Debug.LogError("GameOverView: Stat display prefab is null!");
-                return;
-            }*/
-
-            Debug.Log("Starting to show detailed stats...");
-
-            // Clear existing stats
-            foreach (Transform child in statsContainer)
-            {
-                Destroy(child.gameObject);
-            }
-
-            /*if (statManager == null)
-            {
-                Debug.LogError("GameOverView: StatManager is null!");
-                return;
-            }
-
-            // Create arrays for each stat type
-            StatBase[] stats = new StatBase[]
-            {
-                statManager.GetOrCreateStat<WaveStat>("WaveStat"),
-                statManager.GetOrCreateStat<ResourceStat>("ResourceStats"),
-                statManager.GetOrCreateStat<TurretTypeStats>("TurretTypeStats"),
-                statManager.GetOrCreateStat<EnemyTypeStats>("EnemyTypeStats")
-            };*/
-
-            /*Debug.Log($"Found {stats.Length} stats to display");
-            
-            float currentDelay = 0f;
-
-            foreach (var stat in stats)
-            {
-                if (stat == null)
-                {
-                    Debug.LogWarning("Found null stat in array");
-                    continue;
-                }
-
-                Debug.Log($"Creating display for stat: {stat.name}");
-                var display = Instantiate(statDisplayPrefab, statsContainer);
-                if (display == null)
-                {
-                    Debug.LogError("Failed to instantiate stat display prefab!");
-                    continue;
-                }
-
-                var canvasGroup = display.GetComponent<CanvasGroup>();
-                if (canvasGroup == null)
-                {
-                    Debug.Log("Adding CanvasGroup component");
-                    canvasGroup = display.gameObject.AddComponent<CanvasGroup>();
-                }
-                
-                canvasGroup.alpha = 0f;
-                display.Initialize(stat);
-                
-                // Animate using DOTween
-                canvasGroup.DOFade(1f, fadeInDuration)
-                    .SetDelay(currentDelay)
-                    .SetEase(Ease.OutQuad);
-                
-                currentDelay += elementDelay;
-            }*/
             
             Debug.Log("Finished showing detailed stats");
         }
@@ -244,7 +178,8 @@ namespace Planetarium.UI.Views
                 Close(true);
                 
                 // Restart the game using the new method
-                gameState.RestartGame();
+                gameState.ChangeState(GameState.Playing);
+
                 
                 Debug.Log("Game restart initiated");
             }

@@ -36,6 +36,9 @@ namespace Planetarium
             [Tooltip("Whether to clear all resources when entering this state")]
             public bool clearResources;
 
+            [Tooltip("Whether the game is now over")]
+            public bool isGameOver;
+
             [Header("UI Management")]
             [Tooltip("Views to automatically close when entering this state")]
             public string[] viewsToClose;

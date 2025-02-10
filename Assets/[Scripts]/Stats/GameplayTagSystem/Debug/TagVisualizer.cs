@@ -20,22 +20,23 @@ namespace Planetarium.Stats.Debug
 
         private void OnEnable()
         {
+            // Ensure we start fresh
+            _isRegistered = false;
             TryRegisterWithView();
             // Also start checking for UITagView in case it's not ready yet
-            if (!_isRegistered)
-            {
-                InvokeRepeating(nameof(TryRegisterWithView), 0.1f, 0.1f);
-            }
+            InvokeRepeating(nameof(TryRegisterWithView), 0.1f, 0.1f);
         }
 
         private void OnDisable()
         {
             UnregisterFromView();
+            CancelInvoke(nameof(TryRegisterWithView));
         }
 
         private void OnDestroy()
         {
             UnregisterFromView();
+            CancelInvoke(nameof(TryRegisterWithView));
         }
 
         private void TryRegisterWithView()
@@ -43,7 +44,7 @@ namespace Planetarium.Stats.Debug
             if (_isRegistered || _taggedComponent == null) return;
 
             var view = UITagView.Instance;
-            if (view != null)
+            if (view != null && view.IsInitialized)
             {
                 view.AddTrackedComponent(_taggedComponent);
                 _isRegistered = true;

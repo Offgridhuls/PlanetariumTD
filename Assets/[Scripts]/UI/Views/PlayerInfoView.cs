@@ -42,49 +42,80 @@ namespace Planetarium.UI
 
         protected override void OnInitialize()
         {
-            Debug.Log($"PlayerInfoView: OnInitialize called on {gameObject.name}");
-            base.OnInitialize();
-
-            if (Context == null)
+            try
             {
-                Debug.LogError($"PlayerInfoView: Context is null on {gameObject.name}!");
-                return;
-            }
+                base.OnInitialize();
 
-            gameState = Context.GameState;
+                ValidateReferences();
 
-            if (gameState != null)
-            {
-                Debug.Log($"PlayerInfoView: Found GameState, subscribing to events on {gameObject.name}");
-                
-                // Reset UI first
+                // Get GameStateManager reference
+                gameState = Context.GameState;
+                if (gameState != null)
+                {
+                    // Subscribe to events
+                    gameState.OnBaseHealthChanged += UpdatePlanetHealth;
+                    gameState.OnWaveChanged += UpdateWave;
+                    gameState.OnWaveTimerChanged += UpdateWaveTimer;
+                    gameState.OnScoreChanged += UpdateScore;
+                    gameState.OnPlayerLevelChanged += SetPlayerLevel;
+                    gameState.OnWaveStateChanged += UpdateWaveState;
+                }
+                else
+                {
+                    Debug.LogError("PlayerInfoView: Failed to get GameStateManager reference!");
+                }
+
+                if (startWaveEarlyButton != null)
+                {
+                    startWaveEarlyButton.onClick.AddListener(OnStartWaveEarlyClicked);
+                }
+
                 ResetUI();
-                
-                // Then update with current game state
-                UpdatePlanetHealth(gameState.GetBaseHealth());
-                UpdateWave(gameState.GetCurrentWave());
-                UpdateWaveTimer(gameState.GetWaveTimer());
-                UpdateScore(gameState.CurrentScore);
-                //SetPlayerLevel(gameState.PlayerLevel);
-
-                gameState.OnBaseHealthChanged += UpdatePlanetHealth;
-                gameState.OnWaveChanged += UpdateWave;
-                gameState.OnWaveTimerChanged += UpdateWaveTimer;
-                gameState.OnScoreChanged += UpdateScore;
-                gameState.OnPlayerLevelChanged += SetPlayerLevel;
-                gameState.OnWaveStateChanged += UpdateWaveState;
             }
-            else
+            catch (System.Exception e)
             {
-                Debug.LogError($"PlayerInfoView: GameState is null on {gameObject.name}!");
+                Debug.LogError($"Error in OnInitialize: {e.Message}\n{e.StackTrace}");
             }
+        }
 
-            if (startWaveEarlyButton != null)
+        protected override void OnDeinitialize()
+        {
+            try
             {
-                startWaveEarlyButton.onClick.AddListener(OnStartWaveEarlyClicked);
-            }
+                if (gameState != null)
+                {
+                    // Unsubscribe from events
+                    gameState.OnBaseHealthChanged -= UpdatePlanetHealth;
+                    gameState.OnWaveChanged -= UpdateWave;
+                    gameState.OnWaveTimerChanged -= UpdateWaveTimer;
+                    gameState.OnScoreChanged -= UpdateScore;
+                    gameState.OnPlayerLevelChanged -= SetPlayerLevel;
+                    gameState.OnWaveStateChanged -= UpdateWaveState;
+                }
 
-            ValidateReferences();
+                if (startWaveEarlyButton != null)
+                {
+                    startWaveEarlyButton.onClick.RemoveListener(OnStartWaveEarlyClicked);
+                }
+
+                // Clear references
+                planetHealthText = null;
+                planetHealthBarFill = null;
+                waveNumberText = null;
+                nextWaveTimerText = null;
+                scoreText = null;
+                playerLevelText = null;
+                healthBarGradient = null;
+                gameState = null;
+                startWaveEarlyButton = null;
+                waveTimerContainer = null;
+
+                base.OnDeinitialize();
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Error in OnDeinitialize: {e.Message}\n{e.StackTrace}");
+            }
         }
 
         private void ValidateReferences()
@@ -97,28 +128,6 @@ namespace Planetarium.UI
             if (planetHealthText == null) Debug.LogError($"PlayerInfoView: planetHealthText is null on {gameObject.name}!");
             if (healthBarGradient == null) Debug.LogError($"PlayerInfoView: healthBarGradient is null on {gameObject.name}!");
             if (waveTimerContainer == null) Debug.LogError($"PlayerInfoView: waveTimerContainer is null on {gameObject.name}!");
-        }
-
-        protected override void OnDeinitialize()
-        {
-            Debug.Log($"PlayerInfoView: OnDeinitialize called on {gameObject.name}");
-            base.OnDeinitialize();
-
-            if (gameState != null)
-            {
-                Debug.Log($"PlayerInfoView: Unsubscribing from events on {gameObject.name}");
-                gameState.OnBaseHealthChanged -= UpdatePlanetHealth;
-                gameState.OnWaveChanged -= UpdateWave;
-                gameState.OnWaveTimerChanged -= UpdateWaveTimer;
-                gameState.OnScoreChanged -= UpdateScore;
-                gameState.OnPlayerLevelChanged -= SetPlayerLevel;
-                gameState.OnWaveStateChanged -= UpdateWaveState;
-            }
-
-            if (startWaveEarlyButton != null)
-            {
-                startWaveEarlyButton.onClick.RemoveListener(OnStartWaveEarlyClicked);
-            }
         }
 
         /// <summary>
@@ -184,34 +193,36 @@ namespace Planetarium.UI
             }
         }
 
-        private void UpdatePlanetHealth(float currentHealth)
+        public void UpdatePlanetHealth(float currentHealth)
         {
-           // Debug.Log($"PlayerInfoView: UpdatePlanetHealth called with health: {currentHealth} on {gameObject.name}");
-            if (planetHealthText != null)
+            // Early exit if being destroyed or disabled
+            if (!this || !gameObject || !isActiveAndEnabled)
             {
-                planetHealthText.text = $"{Mathf.CeilToInt(currentHealth)}/{gameState.MaxBaseHealth}";
+                return;
             }
 
-            float healthPercent = Mathf.Clamp01(currentHealth / gameState.MaxBaseHealth);
-
-            if (planetHealthBarFill != null)
+            try
             {
-                planetHealthBarFill.fillAmount = healthPercent;
-                if (healthBarGradient != null)
+                if (planetHealthText != null && gameState != null)
                 {
-                    planetHealthBarFill.color = healthBarGradient.Evaluate(healthPercent);
+                    planetHealthText.text = $"{Mathf.CeilToInt(currentHealth)}/{gameState.MaxBaseHealth}";
                 }
-               // Debug.Log($"PlayerInfoView: Health bar updated - Fill: {healthPercent}, Color: {planetHealthBarFill.color} on {gameObject.name}");
-            }
-            else
-            {
-                Debug.LogError($"PlayerInfoView: planetHealthBarFill is null during health update on {gameObject.name}!");
-            }
 
-            // Play warning sound if health is low
-            if (healthPercent <= 0.25f)
+                float healthPercent = gameState != null ? 
+                    Mathf.Clamp01(currentHealth / gameState.MaxBaseHealth) : 0f;
+
+                if (planetHealthBarFill != null && this && gameObject && isActiveAndEnabled)
+                {
+                    planetHealthBarFill.fillAmount = healthPercent;
+                    if (healthBarGradient != null)
+                    {
+                        planetHealthBarFill.color = healthBarGradient.Evaluate(healthPercent);
+                    }
+                }
+            }
+            catch (System.Exception e)
             {
-               // PlaySound(Context.GetAudioSetup("LowHealthWarning"));
+                Debug.LogError($"Error in UpdatePlanetHealth: {e.Message}\n{e.StackTrace}");
             }
         }
 

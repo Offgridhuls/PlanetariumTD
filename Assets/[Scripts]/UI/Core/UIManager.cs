@@ -28,6 +28,10 @@ namespace Planetarium.UI
             allViews = GetComponentsInChildren<UIView>(true);
             Debug.Log($"UIManager: Found {allViews.Length} UI views");
             
+            // Clear existing cache
+            viewCache.Clear();
+            activeViews.Clear();
+            
             foreach (var view in allViews)
             {
                 if (view == null)
@@ -40,7 +44,16 @@ namespace Planetarium.UI
                 
                 // Initialize the view
                 view.Initialize(this, null);
-                viewCache[view.GetType().Name] = view;
+                string viewName = view.GetType().Name;
+                if (!viewCache.ContainsKey(viewName))
+                {
+                    viewCache[viewName] = view;
+                    Debug.Log($"UIManager: Cached view {viewName}");
+                }
+                else
+                {
+                    Debug.LogWarning($"UIManager: Duplicate view type found: {viewName}. Skipping cache.");
+                }
             }
 
             // Log all cached views
@@ -53,10 +66,14 @@ namespace Planetarium.UI
             // Open views based on their startOpen flag
             foreach (var view in allViews)
             {
-                if (view.startOpen)
+                if (view != null && view.startOpen)
                 {
+                    Debug.Log($"UIManager: Auto-opening view {view.GetType().Name}");
                     view.Open(false);
-                    activeViews.Add(view);
+                    if (!activeViews.Contains(view))
+                    {
+                        activeViews.Add(view);
+                    }
                 }
             }
         }
@@ -187,47 +204,49 @@ namespace Planetarium.UI
             {
                 Debug.Log("UIManager: Resetting all views");
                 
+                // Store views that were open before reset
+                var openViews = new List<UIView>(activeViews);
+                
                 // Close all views first
-                foreach (var view in viewCache.Values)
-                {
-                    if (view != null && view.gameObject != null)
-                    {
-                        view.Close(true);
-                    }
-                }
+                CloseAllViews();
 
-                // Re-initialize all views
-                foreach (var view in viewCache.Values)
+                // Re-initialize all views and cache
+                allViews = GetComponentsInChildren<UIView>(true);
+                viewCache.Clear();
+                
+                foreach (var view in allViews)
                 {
                     if (view != null && view.gameObject != null)
                     {
+                        Debug.Log($"UIManager: Re-initializing view {view.GetType().Name}");
                         view.Initialize(this, null);
+                        string viewName = view.GetType().Name;
+                        if (!viewCache.ContainsKey(viewName))
+                        {
+                            viewCache[viewName] = view;
+                        }
                     }
                 }
 
-                // Open default views based on current game state
-                // var gameState = Context?.GameState;
-                // if (gameState != null && gameState.State == GameState.Playing)
-                // {
-                //     // Open gameplay HUD views
-                //     var hudView = GetView("HUDView");
-                //     if (hudView != null)
-                //     {
-                //         hudView.Open(true);
-                //     }
-
-                //     var waveView = GetView("WaveView");
-                //     if (waveView != null)
-                //     {
-                //         waveView.Open(true);
-                //     }
-                // }
+                // Reopen views that should stay open
+                foreach (var view in allViews)
+                {
+                    if (view != null && (view.startOpen || openViews.Contains(view)))
+                    {
+                        Debug.Log($"UIManager: Reopening view {view.GetType().Name}");
+                        view.Open(true);
+                        if (!activeViews.Contains(view))
+                        {
+                            activeViews.Add(view);
+                        }
+                    }
+                }
                 
                 Debug.Log("UIManager: All views reset complete");
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"Error resetting views: {e.Message}");
+                Debug.LogError($"Error resetting views: {e.Message}\n{e.StackTrace}");
             }
         }
 
