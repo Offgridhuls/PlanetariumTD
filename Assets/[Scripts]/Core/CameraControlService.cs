@@ -5,22 +5,32 @@ namespace Planetarium
     public class CameraControlService : SceneService
     {
         [Header("Camera Settings")]
-        [SerializeField] private float panSpeed = 50f;
-        [SerializeField] private float zoomSpeed = 10f;
+        [SerializeField] private float moveSpeed = 3f;
+        [SerializeField] private float rotationSpeed = 220f;
+        [SerializeField] private float focusDistance = 1f;
+        [SerializeField] private Vector3 pivot;
+
+        [Header("Zoom Settings")]
+        [SerializeField] private float mouseZoomSpeed = 0.02f;
+        [SerializeField] private float touchZoomSpeed = 0.01f;
+        [SerializeField] private float zoomSensitivity = 1f;
         [SerializeField] private float minZoom = 10f;
-        [SerializeField] private float maxZoom = 30f;
-        [SerializeField] private float smoothSpeed = 10f;
-        
-        [Header("Boundaries")]
-        [SerializeField] private float maxVerticalAngle = 85f;
+        [SerializeField] private float maxZoom = 50f;
+        [SerializeField] private float currentZoom;
 
         private Camera mainCamera;
-        private Vector2 lastTouchPosition;
-        private bool isDragging;
-        
-        private Vector3 targetPosition;
-        private float currentZoom;
-        private Vector3 currentRotation;
+        private Vector3 mousePosOld;
+        private bool hasFocusOld;
+        private Vector3 lastCtrlPivot;
+        private float lastLeftClickTime = float.MinValue;
+        private Vector2 rightClickPos;
+        private Vector3 startPosition;
+        private Quaternion startRotation;
+
+        // Touch support
+        private Vector2 touchStartPos;
+        private float initialPinchDistance;
+        private bool wasZooming;
 
         protected override void OnInitialize()
         {
@@ -32,136 +42,209 @@ namespace Planetarium
                 return;
             }
 
-            // Initialize camera position
-            currentZoom = Vector3.Distance(mainCamera.transform.position, Vector3.zero);
-            currentZoom = Mathf.Clamp(currentZoom, minZoom, maxZoom);
-            currentRotation = mainCamera.transform.eulerAngles;
+            startPosition = mainCamera.transform.position;
+            startRotation = mainCamera.transform.rotation;
+            currentZoom = Vector3.Distance(startPosition, pivot);
             
-            // Make camera look at planet
-            mainCamera.transform.LookAt(Vector3.zero);
-            targetPosition = mainCamera.transform.position;
+            Debug.Log("Camera Controls: One finger to Orbit, Two fingers to zoom/pan");
             
             base.OnInitialize();
         }
 
         protected override void OnTick()
         {
-            if (mainCamera == null || !IsActive) return;
-            
-            HandleTouchInput();
-            UpdateCameraPosition();
+            if (mainCamera == null || !IsActive || Input.GetKey(KeyCode.LeftShift)) return;
+
+            if (Application.isFocused != hasFocusOld)
+            {
+                hasFocusOld = Application.isFocused;
+                mousePosOld = Input.mousePosition;
+                touchStartPos = Input.mousePosition;
+            }
+
+            // Update current zoom
+            currentZoom = Vector3.Distance(mainCamera.transform.position, pivot);
+
+            // Handle touch input
+            if (Input.touchCount > 0)
+            {
+                HandleTouchInput();
+                return; // Skip mouse input when using touch
+            }
+
+            // Handle mouse input
+            HandleMouseInput();
         }
 
         private void HandleTouchInput()
         {
-            // Handle touch input for mobile
-            if (Input.touchCount > 0)
+            if (Input.touchCount == 1)
             {
                 Touch touch = Input.GetTouch(0);
 
-                switch (touch.phase)
+                // Double tap to reset
+                if (touch.phase == TouchPhase.Began)
                 {
-                    case TouchPhase.Began:
-                        isDragging = true;
-                        lastTouchPosition = touch.position;
-                        break;
-
-                    case TouchPhase.Moved:
-                        if (isDragging)
-                        {
-                            Vector2 delta = touch.position - lastTouchPosition;
-                            PanCamera(delta);
-                            lastTouchPosition = touch.position;
-                        }
-                        break;
-
-                    case TouchPhase.Ended:
-                    case TouchPhase.Canceled:
-                        isDragging = false;
-                        break;
+                    if (Time.time - lastLeftClickTime < 0.2f)
+                    {
+                        mainCamera.transform.position = startPosition;
+                        mainCamera.transform.rotation = startRotation;
+                        currentZoom = Vector3.Distance(startPosition, pivot);
+                    }
+                    lastLeftClickTime = Time.time;
+                    lastCtrlPivot = mainCamera.transform.position + mainCamera.transform.forward * focusDistance;
                 }
 
-                // Handle pinch to zoom with two fingers
-                if (Input.touchCount == 2)
+                // Single finger orbit
+                if (touch.phase == TouchPhase.Moved)
                 {
-                    Touch touch0 = Input.GetTouch(0);
-                    Touch touch1 = Input.GetTouch(1);
+                    float mouseMoveX = touch.deltaPosition.x / Screen.width;
+                    float mouseMoveY = touch.deltaPosition.y / Screen.width;
 
-                    Vector2 touch0PrevPos = touch0.position - touch0.deltaPosition;
-                    Vector2 touch1PrevPos = touch1.position - touch1.deltaPosition;
-
-                    float prevMagnitude = (touch0PrevPos - touch1PrevPos).magnitude;
-                    float currentMagnitude = (touch0.position - touch1.position).magnitude;
-
-                    float difference = currentMagnitude - prevMagnitude;
-                    ZoomCamera(difference * 0.01f);
+                    mainCamera.transform.RotateAround(pivot, mainCamera.transform.right, mouseMoveY * -rotationSpeed);
+                    mainCamera.transform.RotateAround(pivot, Vector3.up, mouseMoveX * rotationSpeed);
                 }
             }
+            else if (Input.touchCount == 2)
+            {
+                Touch touch0 = Input.GetTouch(0);
+                Touch touch1 = Input.GetTouch(1);
 
-            // Handle mouse input for testing in editor
-            #if UNITY_EDITOR
+                if (touch0.phase == TouchPhase.Began || touch1.phase == TouchPhase.Began)
+                {
+                    initialPinchDistance = Vector2.Distance(touch0.position, touch1.position);
+                    wasZooming = false;
+                }
+                else if (touch0.phase == TouchPhase.Moved || touch1.phase == TouchPhase.Moved)
+                {
+                    // Calculate the current distance between touches
+                    float currentPinchDistance = Vector2.Distance(touch0.position, touch1.position);
+
+                    if (!wasZooming)
+                    {
+                        initialPinchDistance = currentPinchDistance;
+                        wasZooming = true;
+                    }
+
+                    // Determine if this is primarily a zoom or pan gesture
+                    Vector2 touch0Delta = touch0.deltaPosition;
+                    Vector2 touch1Delta = touch1.deltaPosition;
+                    bool isSameDirection = Vector2.Dot(touch0Delta.normalized, touch1Delta.normalized) > 0.8f;
+
+                    if (isSameDirection)
+                    {
+                        // Pan - both fingers moving in same direction
+                        Vector2 averageDelta = (touch0Delta + touch1Delta) * 0.5f;
+                        float dstWeight = currentZoom;
+                        Vector3 move = Vector3.zero;
+                        
+                        move += Vector3.up * (-averageDelta.y / Screen.width) * -moveSpeed * dstWeight;
+                        move += Vector3.right * (-averageDelta.x / Screen.width) * -moveSpeed * dstWeight;
+                        
+                        mainCamera.transform.Translate(move);
+                    }
+                    else
+                    {
+                        // Zoom - pinch gesture
+                        float deltaPinchDistance = currentPinchDistance - initialPinchDistance;
+                        float dstWeight = currentZoom;
+                        
+                        // Calculate potential new position
+                        float zoomAmount = deltaPinchDistance * touchZoomSpeed * dstWeight * 0.01f * zoomSensitivity;
+                        Vector3 zoomMove = mainCamera.transform.forward * zoomAmount;
+                        Vector3 newPosition = mainCamera.transform.position + zoomMove;
+                        float newZoom = Vector3.Distance(newPosition, pivot);
+
+                        // Only apply if within limits
+                        if (newZoom >= minZoom && newZoom <= maxZoom)
+                        {
+                            mainCamera.transform.position = newPosition;
+                            currentZoom = newZoom;
+                        }
+                        
+                        initialPinchDistance = currentPinchDistance;
+                    }
+                }
+            }
+        }
+
+        private void HandleMouseInput()
+        {
+            // Reset view on double click
             if (Input.GetMouseButtonDown(0))
             {
-                isDragging = true;
-                lastTouchPosition = Input.mousePosition;
-            }
-            else if (Input.GetMouseButton(0) && isDragging)
-            {
-                Vector2 delta = (Vector2)Input.mousePosition - lastTouchPosition;
-                PanCamera(delta);
-                lastTouchPosition = Input.mousePosition;
-            }
-            else if (Input.GetMouseButtonUp(0))
-            {
-                isDragging = false;
+                if (Time.time - lastLeftClickTime < 0.2f)
+                {
+                    mainCamera.transform.position = startPosition;
+                    mainCamera.transform.rotation = startRotation;
+                    currentZoom = Vector3.Distance(startPosition, pivot);
+                }
+
+                lastLeftClickTime = Time.time;
             }
 
-            float scrollDelta = Input.GetAxis("Mouse ScrollWheel");
-            if (scrollDelta != 0)
+            float dstWeight = currentZoom;
+            Vector2 mouseMove = Input.mousePosition - mousePosOld;
+            mousePosOld = Input.mousePosition;
+            float mouseMoveX = mouseMove.x / Screen.width;
+            float mouseMoveY = mouseMove.y / Screen.width;
+            Vector3 move = Vector3.zero;
+
+            if (Input.GetMouseButton(2))
             {
-                ZoomCamera(scrollDelta);
+                move += Vector3.up * mouseMoveY * -moveSpeed * dstWeight;
+                move += Vector3.right * mouseMoveX * -moveSpeed * dstWeight;
             }
-            #endif
+
+            if (Input.GetMouseButtonDown(0))
+            {
+                lastCtrlPivot = mainCamera.transform.position + mainCamera.transform.forward * focusDistance;
+            }
+
+            if (Input.GetMouseButton(0))
+            {
+                Vector3 activePivot = Input.GetKey(KeyCode.LeftAlt) ? mainCamera.transform.position : pivot;
+                if (Input.GetKey(KeyCode.LeftControl))
+                {
+                    activePivot = lastCtrlPivot;
+                }
+
+                mainCamera.transform.RotateAround(activePivot, mainCamera.transform.right, mouseMoveY * -rotationSpeed);
+                mainCamera.transform.RotateAround(activePivot, Vector3.up, mouseMoveX * rotationSpeed);
+            }
+
+            mainCamera.transform.Translate(move);
+
+            if (Input.GetMouseButtonDown(1))
+            {
+                rightClickPos = Input.mousePosition;
+            }
+
+            if (Input.GetMouseButton(1))
+            {
+                Vector2 delta = (Vector2)Input.mousePosition - rightClickPos;
+                rightClickPos = Input.mousePosition;
+                float zoomAmount = delta.magnitude * Mathf.Sign(Mathf.Abs(delta.x) > Mathf.Abs(delta.y) ? delta.x : -delta.y) 
+                    / Screen.width * mouseZoomSpeed * dstWeight * zoomSensitivity;
+                
+                // Calculate potential new position
+                Vector3 zoomMove = mainCamera.transform.forward * zoomAmount;
+                Vector3 newPosition = mainCamera.transform.position + zoomMove;
+                float newZoom = Vector3.Distance(newPosition, pivot);
+
+                // Only apply if within limits
+                if (newZoom >= minZoom && newZoom <= maxZoom)
+                {
+                    mainCamera.transform.position = newPosition;
+                    currentZoom = newZoom;
+                }
+            }
         }
 
-        private void PanCamera(Vector2 delta)
+        private void OnDrawGizmosSelected()
         {
-            float screenSizeModifier = Screen.height / 1000f;
-            
-            // Calculate rotation changes
-            float horizontalRotation = delta.x * panSpeed * Time.deltaTime / screenSizeModifier;
-            float verticalRotation = -delta.y * panSpeed * Time.deltaTime / screenSizeModifier;
-
-            // Update rotation, clamping vertical to prevent flipping
-            currentRotation.y += horizontalRotation;
-            currentRotation.x = Mathf.Clamp(currentRotation.x + verticalRotation, -maxVerticalAngle, maxVerticalAngle);
-
-            // Calculate new position based on rotation
-            Vector3 direction = Quaternion.Euler(currentRotation) * Vector3.forward;
-            targetPosition = -direction * currentZoom;
-        }
-
-        private void ZoomCamera(float zoomDelta)
-        {
-            // Update zoom level
-            currentZoom = Mathf.Clamp(currentZoom - zoomDelta * zoomSpeed, minZoom, maxZoom);
-            
-            // Update position based on new zoom
-            Vector3 direction = (mainCamera.transform.position - Vector3.zero).normalized;
-            targetPosition = direction * currentZoom;
-        }
-
-        private void UpdateCameraPosition()
-        {
-            // Smoothly move camera to target position
-            mainCamera.transform.position = Vector3.Lerp(
-                mainCamera.transform.position,
-                targetPosition,
-                Time.deltaTime * smoothSpeed
-            );
-
-            // Always look at the planet (origin)
-            mainCamera.transform.LookAt(Vector3.zero);
+            Gizmos.color = Color.red;
+            // Gizmos.DrawWireSphere(pivot, 0.15f);
         }
     }
 }
