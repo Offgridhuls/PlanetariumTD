@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Planetarium.Deployables;
 using UnityEngine;
 
 public class MachineGun : DeployableBase

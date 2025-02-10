@@ -1,4 +1,5 @@
 using Planetarium;
+using Planetarium.Deployables;
 using UnityEngine;
 
 public class MortarTurret : DeployableBase

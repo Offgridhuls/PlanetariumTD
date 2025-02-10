@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3456b037c2ca8f245949e5ee488bf90d, type: 3}
+  m_Name: GameplayTagConfig
+  m_EditorClassIdentifier: 
+  ImportTagsFromConfig: 1
+  WarnOnInvalidTags: 1
+  FastReplication: 1
+  InvalidTagCharacters: '"'','
+  gameplayTagList:
+  - Tag: test
+    DevComment: comment
+  - Tag: turrets
+    DevComment: Parent tag for turrets.amountplaced
+  - Tag: turrets.amountplaced
+    DevComment: Amount of Turrets Placed
+  gameplayTagRedirects: []

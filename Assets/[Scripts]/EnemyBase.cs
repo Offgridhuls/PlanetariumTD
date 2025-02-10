@@ -28,7 +28,7 @@ public class EnemyBase : CoreBehaviour, IDamageable
 
     [Header("Rewards")]
     [SerializeField] protected int scoreValue = 10;
-    [SerializeField] protected ResourceKind[] possibleResources;
+    //[SerializeField] protected ResourceKind[] possibleResources;
     [SerializeField] protected Vector2 CoinResourceRange = new Vector2(5, 10);
     [SerializeField] protected Vector2 GemResourceRange = new Vector2(5, 10);
     [SerializeField] protected float coinDropRate = 0.5f;
@@ -92,12 +92,25 @@ public class EnemyBase : CoreBehaviour, IDamageable
     private float spawnTime;
     private float pathProgress;
 
+    // Cached tags for better performance
+    private static class CachedTags
+    {
+        public static readonly GameplayTag EnemyBase = new GameplayTag("Enemy.Base");
+        public static readonly GameplayTag EnemyFlying = new GameplayTag("Enemy.Flying");
+        public static readonly GameplayTag EnemyGround = new GameplayTag("Enemy.Ground");
+    }
+
+    private TaggedComponent taggedComponent;
+
     #region Unity Lifecycle
 
     protected virtual void Awake()
     {
         rb = GetComponent<Rigidbody>();
         InitializeStates();
+        taggedComponent = GetComponent<TaggedComponent>();
+        taggedComponent.AddTag(CachedTags.EnemyBase);
+        //taggedComponent.AddTag(enemyStats.IsFlying ? CachedTags.EnemyFlying : CachedTags.EnemyGround);
     }
 
     protected virtual void Start()
@@ -114,7 +127,7 @@ public class EnemyBase : CoreBehaviour, IDamageable
         spawnTime = Time.time;
         
         // Register enemy spawn in stats
-        GameStatsHelper.OnEnemySpawned(enemyStats);
+        //TaggedStatsHelper.OnEnemySpawned(enemyStats.name);
 
         if (healthBarPrefab != null)
         {
@@ -286,7 +299,7 @@ public class EnemyBase : CoreBehaviour, IDamageable
         if (isDead) return;
 
         currentHealth = Mathf.Max(0f, currentHealth - damage);
-        GameStatsHelper.OnEnemyDamageTaken(enemyStats.name, damage);
+        TaggedStatsHelper.OnEnemyDamageTaken(damage);
         
         onHealthChanged?.Invoke(GetHealthPercentage());
 
@@ -306,15 +319,14 @@ public class EnemyBase : CoreBehaviour, IDamageable
         if (target != null)
         {
             // Track damage dealt
-            GameStatsHelper.OnEnemyDamageDealt(enemyStats.name, damage);
+            //TaggedStatsHelper.OnEnemyDamageDealt(damage);
 
             // Track damage based on target type
             var damageableType = target.GetDamageableType();
             switch (damageableType)
             {
                 case DamageableType.Structure:
-                    //GameStatsHelper.OnStructureDamaged(damage);
-                    GameStatsHelper.TakeDamageFromEnemy(damage);
+                    TaggedStatsHelper.OnEnemyDamageTaken(damage);
                     break;
             }
 
@@ -371,7 +383,7 @@ public class EnemyBase : CoreBehaviour, IDamageable
     protected virtual void DropResources()
     {
         ResourceManager resourceManager = FindFirstObjectByType<ResourceManager>();
-        if (resourceManager == null || possibleResources == null) return;
+        /*if (resourceManager == null || possibleResources == null) return;
 
         // Coins drop
         if (possibleResources.Length > 0 && UnityEngine.Random.value <= coinDropRate)
@@ -382,7 +394,7 @@ public class EnemyBase : CoreBehaviour, IDamageable
                 int amount = UnityEngine.Random.Range((int)CoinResourceRange.x, (int)CoinResourceRange.y + 1);
                 Vector3 spawnPos = transform.position + UnityEngine.Random.insideUnitSphere * resourceSpawnRadius;
                 resourceManager.SpawnResource(resourceType, spawnPos, amount);
-                GameStatsHelper.OnEnemyDroppedResources(enemyStats.name, amount);
+                TaggedStatsHelper.OnResourceEarned("Coins", amount);
                 onResourceGained?.Invoke(amount);
             }
         }
@@ -396,10 +408,10 @@ public class EnemyBase : CoreBehaviour, IDamageable
                 int amount = UnityEngine.Random.Range((int)GemResourceRange.x, (int)GemResourceRange.y + 1);
                 Vector3 spawnPos = transform.position + UnityEngine.Random.insideUnitSphere * resourceSpawnRadius;
                 resourceManager.SpawnResource(resourceType, spawnPos, amount);
-                GameStatsHelper.OnEnemyDroppedResources(enemyStats.name, amount);
+                TaggedStatsHelper.OnResourceEarned("Gems", amount);
                 onResourceGained?.Invoke(amount);
             }
-        }
+        }*/
     }
 
     protected virtual void Die(GameObject source = null)
@@ -408,7 +420,7 @@ public class EnemyBase : CoreBehaviour, IDamageable
         isDead = true;
 
         float lifetime = Time.time - spawnTime;
-        GameStatsHelper.OnEnemyKilled(enemyStats.name, maxHealth, lifetime, pathProgress);
+       // TaggedStatsHelper.OnEnemyKilled(enemyStats.name, maxHealth, lifetime, pathProgress);
         
         // Handle resource drops
         DropResources();
@@ -467,7 +479,7 @@ public class EnemyBase : CoreBehaviour, IDamageable
     {
         scoreValue = score;
         //resourceValue = resources;
-         possibleResources = new ResourceKind[] { ResourceKind.Coins, ResourceKind.Gems };
+         //possibleResources = new ResourceKind[] { ResourceKind.Coins, ResourceKind.Gems };
     }
 
     protected void OnTriggerEnter(Collider other)

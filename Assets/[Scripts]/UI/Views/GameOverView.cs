@@ -15,7 +15,7 @@ namespace Planetarium.UI.Views
         [SerializeField] private TextMeshProUGUI scoreText;
         [SerializeField] private TextMeshProUGUI highScoreText;
         [SerializeField] private Transform statsContainer;
-        [SerializeField] private StatDisplay statDisplayPrefab;
+        //[SerializeField] private StatDisplay statDisplayPrefab;
         [SerializeField] private Button restartButton;
         [SerializeField] private Button mainMenuButton;
         
@@ -34,7 +34,6 @@ namespace Planetarium.UI.Views
         [SerializeField] private float statDisplayDuration = 0.5f;
 
         private GameStateManager gameState;
-        private StatManager statManager;
         
         public event Action OnRestartRequested;
         public event Action OnMainMenuRequested;
@@ -63,14 +62,7 @@ namespace Planetarium.UI.Views
                     gameObject.SetActive(true);
                 }
 
-                // Ensure StatManager is initialized
-                statManager = StatManager.Instance;
-                if (statManager == null)
-                {
-                    Debug.LogError("GameOverView: Failed to get StatManager instance");
-                    return;
-                }
-                
+               
                 // Update UI state
                 Show();
                 
@@ -168,11 +160,11 @@ namespace Planetarium.UI.Views
                 return;
             }
             
-            if (statDisplayPrefab == null)
+            /*if (statDisplayPrefab == null)
             {
                 Debug.LogError("GameOverView: Stat display prefab is null!");
                 return;
-            }
+            }*/
 
             Debug.Log("Starting to show detailed stats...");
 
@@ -182,7 +174,7 @@ namespace Planetarium.UI.Views
                 Destroy(child.gameObject);
             }
 
-            if (statManager == null)
+            /*if (statManager == null)
             {
                 Debug.LogError("GameOverView: StatManager is null!");
                 return;
@@ -195,9 +187,9 @@ namespace Planetarium.UI.Views
                 statManager.GetOrCreateStat<ResourceStat>("ResourceStats"),
                 statManager.GetOrCreateStat<TurretTypeStats>("TurretTypeStats"),
                 statManager.GetOrCreateStat<EnemyTypeStats>("EnemyTypeStats")
-            };
+            };*/
 
-            Debug.Log($"Found {stats.Length} stats to display");
+            /*Debug.Log($"Found {stats.Length} stats to display");
             
             float currentDelay = 0f;
 
@@ -233,7 +225,7 @@ namespace Planetarium.UI.Views
                     .SetEase(Ease.OutQuad);
                 
                 currentDelay += elementDelay;
-            }
+            }*/
             
             Debug.Log("Finished showing detailed stats");
         }

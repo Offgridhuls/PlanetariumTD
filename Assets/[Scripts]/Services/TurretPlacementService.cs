@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using System;
+using Planetarium.Deployables;
 
 namespace Planetarium
 {

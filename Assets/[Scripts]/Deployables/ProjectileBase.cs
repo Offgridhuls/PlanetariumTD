@@ -126,8 +126,7 @@ public abstract class ProjectileBase : MonoBehaviour
             if (source == ProjectileSource.Turret)
             {
                 // Turret hit something
-                GameStatsHelper.OnTurretShotHit(sourceName);
-                GameStatsHelper.OnTurretDamageDealt(sourceName, damage);
+                TaggedStatsHelper.OnTurretDamageDealt(damage);
 
                 if (damageable.GetDamageableType() == DamageableType.Enemy)
                 {
@@ -135,24 +134,24 @@ public abstract class ProjectileBase : MonoBehaviour
                     var enemyHealth = hitObject.GetComponent<EnemyBase>();
                     if (enemyHealth != null && enemyHealth.CurrentHealth <= damage)
                     {
-                        GameStatsHelper.OnTurretKill(sourceName);
+                        //TaggedStatsHelper.OnTurretKill();
                     }
                 }
             }
             else if (source == ProjectileSource.Enemy)
             {
                 // Enemy hit something
-                GameStatsHelper.OnEnemyDamageDealt(sourceName, damage);
+                //TaggedStatsHelper.OnEnemyDamageDealt(damage);
 
                 var targetType = damageable.GetDamageableType();
                 switch (targetType)
                 {
                     case DamageableType.Player:
-                        GameStatsHelper.TakeDamageFromEnemy(damage);
+                        //TaggedStatsHelper.UpdatePlayerHealth(damage);
                         break;
                     case DamageableType.Generator:
                     case DamageableType.Structure:
-                        GameStatsHelper.OnStructureDamaged(damage);
+                        TaggedStatsHelper.OnEnemyDamageTaken(damage);
                         break;
                 }
             }
