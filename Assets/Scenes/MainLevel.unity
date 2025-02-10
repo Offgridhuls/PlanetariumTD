@@ -232,8 +232,8 @@ MonoBehaviour:
     targetPositionX: 0.22
     targetPositionY: 0.4
   - resourceType: {fileID: 11400000, guid: 9673b180cb0ceda41897087662f90a06, type: 2}
-    targetPositionX: 0.747
-    targetPositionY: 0.9
+    targetPositionX: 0.4
+    targetPositionY: 0.4
   defaultTargetX: 0.9
   defaultTargetY: 0.9
 --- !u!82 &480908052 stripped
