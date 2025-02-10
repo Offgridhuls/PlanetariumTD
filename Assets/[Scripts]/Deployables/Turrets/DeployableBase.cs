@@ -71,7 +71,7 @@ public class DeployableBase : MonoBehaviour, IDamageable
         }
 
         // Register turret construction in stats
-        GameStatsHelper.OnTurretBuilt(M_TurretStats);
+        GameStatsHelper.OnTurretBuilt(M_TurretStats.GetName(), M_TurretStats.GetCoinCost());
     }
 
     public virtual DamageableType GetDamageableType()
@@ -240,6 +240,31 @@ public class DeployableBase : MonoBehaviour, IDamageable
         // Spawn and initialize projectile
         ProjectileBase projectile = Instantiate(M_Projectile, TurretMuzzle.position, Quaternion.identity);
         projectile.Initialize(M_TurretStats.GetDamage(), targetPos, M_TurretStats.GetProjectileSpeed());
+        projectile.SetSource(ProjectileSource.Turret, M_TurretStats.GetName());
+        projectile.ShootProjectile(targetPos, ClosestTarget.gameObject);
+
+        // Track shot fired in stats
+        GameStatsHelper.OnTurretShotFired(M_TurretStats.GetName());
+    }
+
+    protected virtual void FireProjectile(Vector3 targetPos, EnemyBase target)
+    {
+        if (M_Projectile != null && TurretMuzzle != null)
+        {
+            var projectile = Instantiate(M_Projectile, TurretMuzzle.position, TurretMuzzle.rotation);
+            projectile.Initialize(M_TurretStats.GetDamage(), ClosestTarget.transform.position, M_TurretStats.GetProjectileSpeed());
+            projectile.SetSource(ProjectileSource.Turret, M_TurretStats.GetName());
+            projectile.ShootProjectile(targetPos, target.gameObject);
+            
+            // Play fire sound if we have one
+            if (audioSource != null && fireSound != null)
+            {
+                audioSource.PlayOneShot(fireSound);
+            }
+
+            // Track shot fired in stats
+            GameStatsHelper.OnTurretShotFired(M_TurretStats.GetName());
+        }
     }
 
     protected virtual void PlayFireSound()
@@ -307,24 +332,6 @@ public class DeployableBase : MonoBehaviour, IDamageable
             targetRotation,
             M_TurretStats.GetRotationSpeed() * Time.deltaTime
         );
-    }
-
-    protected virtual void FireProjectile(Vector3 targetPos, EnemyBase target)
-    {
-        if (M_Projectile != null && TurretMuzzle != null)
-        {
-            var projectile = Instantiate(M_Projectile, TurretMuzzle.position, TurretMuzzle.rotation);
-            projectile.Initialize(M_TurretStats.GetDamage(), ClosestTarget.transform.position, M_TurretStats.GetProjectileSpeed());
-            
-            // Play fire sound if we have one
-            if (audioSource != null && fireSound != null)
-            {
-                audioSource.PlayOneShot(fireSound);
-            }
-
-            // Track shot fired in stats
-            GameStatsHelper.OnTurretDamageDealt(M_TurretStats.GetName(), M_TurretStats.GetDamage(), true);
-        }
     }
 
     protected virtual void OnProjectileHit(EnemyBase target, float damageDealt)

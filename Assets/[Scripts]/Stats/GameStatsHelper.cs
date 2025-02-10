@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Planetarium.Stats
@@ -41,7 +42,14 @@ namespace Planetarium.Stats
         #region Enemy Stats
         public static void OnEnemySpawned(EnemySpawnData enemyData)
         {
-            var data = (EnemyTypeStats.EnemyTypeData)StatManager.Instance.GetValue<object>("EnemyTypeStats");
+            if (enemyData == null) return;
+
+            var data = StatManager.Instance.GetValue<EnemyTypeStats.EnemyTypeData>(IDs.EnemyTypeStats);
+            if (data == null)
+            {
+                data = new EnemyTypeStats.EnemyTypeData();
+                data.enemyStats = new Dictionary<string, EnemyTypeStats.EnemyStats>();
+            }
             
             if (!data.enemyStats.ContainsKey(enemyData.name))
             {
@@ -52,7 +60,7 @@ namespace Planetarium.Stats
             stats.totalSpawned++;
             data.enemyStats[enemyData.name] = stats;
             
-            StatManager.Instance.SetValue("EnemyTypeStats", data);
+            StatManager.Instance.SetValue(IDs.EnemyTypeStats, data);
             
             // Also update general enemy stats
             EnemySpawned();
@@ -60,8 +68,19 @@ namespace Planetarium.Stats
 
         public static void OnEnemyKilled(string enemyName, float maxHealth, float lifetime, float progress)
         {
-            var data = (EnemyTypeStats.EnemyTypeData)StatManager.Instance.GetValue<object>("EnemyTypeStats");
-            if (!data.enemyStats.ContainsKey(enemyName)) return;
+            if (string.IsNullOrEmpty(enemyName)) return;
+
+            var data = StatManager.Instance.GetValue<EnemyTypeStats.EnemyTypeData>(IDs.EnemyTypeStats);
+            if (data == null)
+            {
+                data = new EnemyTypeStats.EnemyTypeData();
+                data.enemyStats = new Dictionary<string, EnemyTypeStats.EnemyStats>();
+            }
+
+            if (!data.enemyStats.ContainsKey(enemyName))
+            {
+                data.enemyStats[enemyName] = new EnemyTypeStats.EnemyStats();
+            }
 
             var stats = data.enemyStats[enemyName];
             stats.totalKilled++;
@@ -69,48 +88,89 @@ namespace Planetarium.Stats
             stats.furthestProgress = Mathf.Max(stats.furthestProgress, progress);
             data.enemyStats[enemyName] = stats;
 
-            StatManager.Instance.SetValue("EnemyTypeStats", data);
+            StatManager.Instance.SetValue(IDs.EnemyTypeStats, data);
+            
+            // Update general enemy stats
+            EnemyKilled(enemyName, maxHealth);
         }
 
         public static void OnEnemyDamageDealt(string enemyName, float damage)
         {
-            var data = (EnemyTypeStats.EnemyTypeData)StatManager.Instance.GetValue<object>("EnemyTypeStats");
-            if (!data.enemyStats.ContainsKey(enemyName)) return;
+            if (string.IsNullOrEmpty(enemyName)) return;
+
+            var data = StatManager.Instance.GetValue<EnemyTypeStats.EnemyTypeData>(IDs.EnemyTypeStats);
+            if (data == null)
+            {
+                data = new EnemyTypeStats.EnemyTypeData();
+                data.enemyStats = new Dictionary<string, EnemyTypeStats.EnemyStats>();
+            }
+
+            if (!data.enemyStats.ContainsKey(enemyName))
+            {
+                data.enemyStats[enemyName] = new EnemyTypeStats.EnemyStats();
+            }
 
             var stats = data.enemyStats[enemyName];
             stats.totalDamageDealt += damage;
             data.enemyStats[enemyName] = stats;
 
-            StatManager.Instance.SetValue("EnemyTypeStats", data);
+            StatManager.Instance.SetValue(IDs.EnemyTypeStats, data);
         }
 
         public static void OnEnemyDamageTaken(string enemyName, float damage)
         {
-            var data = (EnemyTypeStats.EnemyTypeData)StatManager.Instance.GetValue<object>("EnemyTypeStats");
-            if (!data.enemyStats.ContainsKey(enemyName)) return;
+            if (string.IsNullOrEmpty(enemyName)) return;
+
+            var data = StatManager.Instance.GetValue<EnemyTypeStats.EnemyTypeData>(IDs.EnemyTypeStats);
+            if (data == null)
+            {
+                data = new EnemyTypeStats.EnemyTypeData();
+                data.enemyStats = new Dictionary<string, EnemyTypeStats.EnemyStats>();
+            }
+
+            if (!data.enemyStats.ContainsKey(enemyName))
+            {
+                data.enemyStats[enemyName] = new EnemyTypeStats.EnemyStats();
+            }
 
             var stats = data.enemyStats[enemyName];
             stats.totalDamageTaken += damage;
             data.enemyStats[enemyName] = stats;
 
-            StatManager.Instance.SetValue("EnemyTypeStats", data);
+            StatManager.Instance.SetValue(IDs.EnemyTypeStats, data);
         }
 
         public static void OnEnemyDroppedResources(string enemyName, int amount)
         {
-            var data = (EnemyTypeStats.EnemyTypeData)StatManager.Instance.GetValue<object>("EnemyTypeStats");
-            if (!data.enemyStats.ContainsKey(enemyName)) return;
+            if (string.IsNullOrEmpty(enemyName)) return;
+
+            var data = StatManager.Instance.GetValue<EnemyTypeStats.EnemyTypeData>(IDs.EnemyTypeStats);
+            if (data == null)
+            {
+                data = new EnemyTypeStats.EnemyTypeData();
+                data.enemyStats = new Dictionary<string, EnemyTypeStats.EnemyStats>();
+            }
+
+            if (!data.enemyStats.ContainsKey(enemyName))
+            {
+                data.enemyStats[enemyName] = new EnemyTypeStats.EnemyStats();
+            }
 
             var stats = data.enemyStats[enemyName];
             stats.resourcesDropped += amount;
             data.enemyStats[enemyName] = stats;
 
-            StatManager.Instance.SetValue("EnemyTypeStats", data);
+            StatManager.Instance.SetValue(IDs.EnemyTypeStats, data);
         }
 
         public static void EnemyKilled(string enemyType, float damageDealt)
         {
             var stats = GetEnemyStats();
+            if (stats.enemyTypeKills == null)
+            {
+                stats.enemyTypeKills = new Dictionary<string, int>();
+            }
+
             stats.totalKilled++;
             stats.totalDamageDealt += damageDealt;
             if (!stats.enemyTypeKills.ContainsKey(enemyType))
@@ -132,6 +192,14 @@ namespace Planetarium.Stats
         {
             ModifyEnemyStats(stats => {
                 stats.totalDamageTaken += damage;
+                return stats;
+            });
+        }
+
+        public static void OnStructureDamaged(float damage)
+        {
+            ModifyEnemyStats(stats => {
+                stats.totalStructureDamage += damage;
                 return stats;
             });
         }
@@ -250,78 +318,154 @@ namespace Planetarium.Stats
         #endregion
 
         #region Turret Type Stats
-        public static void OnTurretBuilt(TurretStats stats)
+        public static void OnTurretShotFired(string turretName)
         {
-            ModifyTurretTypeStats(data => {
-                if (!data.turretStats.ContainsKey(stats.GetName()))
-                {
-                    data.turretStats[stats.GetName()] = new TurretTypeStats.TurretStats();
-                }
+            if (string.IsNullOrEmpty(turretName)) return;
 
-                var turretData = data.turretStats[stats.GetName()];
-                turretData.totalBuilt++;
-                turretData.resourcesSpent += stats.GetScrapCost();
-                data.turretStats[stats.GetName()] = turretData;
-                
-                return data;
-            });
+            var data = StatManager.Instance.GetValue<TurretTypeStats.TurretTypeData>(IDs.TurretTypeStats);
+            if (data == null)
+            {
+                data = new TurretTypeStats.TurretTypeData();
+            }
+
+            if (!data.turretStats.ContainsKey(turretName))
+            {
+                data.turretStats[turretName] = new TurretTypeStats.TurretStats();
+            }
+
+            var stats = data.turretStats[turretName];
+            stats.shotsFired++;
+            // Recalculate accuracy
+            stats.accuracy = stats.shotsHit / (float)stats.shotsFired;
+            data.turretStats[turretName] = stats;
+
+            StatManager.Instance.SetValue(IDs.TurretTypeStats, data);
+        }
+
+        public static void OnTurretShotHit(string turretName)
+        {
+            if (string.IsNullOrEmpty(turretName)) return;
+
+            var data = StatManager.Instance.GetValue<TurretTypeStats.TurretTypeData>(IDs.TurretTypeStats);
+            if (data == null)
+            {
+                data = new TurretTypeStats.TurretTypeData();
+            }
+
+            if (!data.turretStats.ContainsKey(turretName))
+            {
+                data.turretStats[turretName] = new TurretTypeStats.TurretStats();
+            }
+
+            var stats = data.turretStats[turretName];
+            stats.shotsHit++;
+            // Recalculate accuracy
+            stats.accuracy = stats.shotsHit / (float)stats.shotsFired;
+            data.turretStats[turretName] = stats;
+
+            StatManager.Instance.SetValue(IDs.TurretTypeStats, data);
+        }
+
+        public static void OnTurretBuilt(string turretName, float cost)
+        {
+            if (string.IsNullOrEmpty(turretName)) return;
+
+            var data = StatManager.Instance.GetValue<TurretTypeStats.TurretTypeData>(IDs.TurretTypeStats);
+            if (data == null)
+            {
+                data = new TurretTypeStats.TurretTypeData();
+            }
+
+            if (!data.turretStats.ContainsKey(turretName))
+            {
+                data.turretStats[turretName] = new TurretTypeStats.TurretStats();
+            }
+
+            var stats = data.turretStats[turretName];
+            stats.totalBuilt++;
+            stats.resourcesSpent += cost;
+            data.turretStats[turretName] = stats;
+
+            StatManager.Instance.SetValue(IDs.TurretTypeStats, data);
         }
 
         public static void OnTurretDestroyed(string turretName)
         {
-            ModifyTurretTypeStats(data => {
-                if (!data.turretStats.ContainsKey(turretName)) return data;
-                
-                var turretData = data.turretStats[turretName];
-                turretData.totalDestroyed++;
-                data.turretStats[turretName] = turretData;
-                
-                return data;
-            });
+            if (string.IsNullOrEmpty(turretName)) return;
+
+            var data = StatManager.Instance.GetValue<TurretTypeStats.TurretTypeData>(IDs.TurretTypeStats);
+            if (data == null)
+            {
+                data = new TurretTypeStats.TurretTypeData();
+            }
+
+            if (!data.turretStats.ContainsKey(turretName))
+            {
+                data.turretStats[turretName] = new TurretTypeStats.TurretStats();
+            }
+
+            var stats = data.turretStats[turretName];
+            stats.totalDestroyed++;
+            data.turretStats[turretName] = stats;
+
+            StatManager.Instance.SetValue(IDs.TurretTypeStats, data);
         }
 
-        public static void OnTurretDamageDealt(string turretName, float damage, bool hit)
+        public static void OnTurretDamageDealt(string turretName, float damage)
         {
-            ModifyTurretTypeStats(data => {
-                if (!data.turretStats.ContainsKey(turretName)) return data;
-                
-                var turretData = data.turretStats[turretName];
-                turretData.shotsFired++;
-                
-                if (hit)
-                {
-                    turretData.shotsHit++;
-                    turretData.totalDamageDealt += damage;
-                }
-                
-                turretData.accuracy = turretData.shotsHit / (float)turretData.shotsFired;
-                data.turretStats[turretName] = turretData;
-                
-                return data;
-            });
+            if (string.IsNullOrEmpty(turretName)) return;
+
+            var data = StatManager.Instance.GetValue<TurretTypeStats.TurretTypeData>(IDs.TurretTypeStats);
+            if (data == null)
+            {
+                data = new TurretTypeStats.TurretTypeData();
+            }
+
+            if (!data.turretStats.ContainsKey(turretName))
+            {
+                data.turretStats[turretName] = new TurretTypeStats.TurretStats();
+            }
+
+            var stats = data.turretStats[turretName];
+            stats.totalDamageDealt += damage;
+            data.turretStats[turretName] = stats;
+
+            StatManager.Instance.SetValue(IDs.TurretTypeStats, data);
         }
 
         public static void OnTurretKill(string turretName)
         {
-            ModifyTurretTypeStats(data => {
-                if (!data.turretStats.ContainsKey(turretName)) return data;
-                
-                var turretData = data.turretStats[turretName];
-                turretData.totalKills++;
-                data.turretStats[turretName] = turretData;
-                
-                return data;
-            });
+            if (string.IsNullOrEmpty(turretName)) return;
+
+            var data = StatManager.Instance.GetValue<TurretTypeStats.TurretTypeData>(IDs.TurretTypeStats);
+            if (data == null)
+            {
+                data = new TurretTypeStats.TurretTypeData();
+            }
+
+            if (!data.turretStats.ContainsKey(turretName))
+            {
+                data.turretStats[turretName] = new TurretTypeStats.TurretStats();
+            }
+
+            var stats = data.turretStats[turretName];
+            stats.totalKills++;
+            data.turretStats[turretName] = stats;
+
+            StatManager.Instance.SetValue(IDs.TurretTypeStats, data);
         }
 
-        private static void ModifyTurretTypeStats(System.Func<TurretTypeStats.TurretTypeData, TurretTypeStats.TurretTypeData> modifier)
+        public static TurretTypeStats.TurretStats GetTurretStats(string turretName)
         {
-            StatManager.Instance.ModifyValue(IDs.TurretTypeStats, modifier);
-        }
+            if (string.IsNullOrEmpty(turretName)) return new TurretTypeStats.TurretStats();
 
-        public static TurretTypeStats.TurretTypeData GetTurretTypeStats()
-        {
-            return StatManager.Instance.GetValue<TurretTypeStats.TurretTypeData>(IDs.TurretTypeStats);
+            var data = StatManager.Instance.GetValue<TurretTypeStats.TurretTypeData>(IDs.TurretTypeStats);
+            if (data == null || !data.turretStats.ContainsKey(turretName))
+            {
+                return new TurretTypeStats.TurretStats();
+            }
+
+            return data.turretStats[turretName];
         }
         #endregion
 

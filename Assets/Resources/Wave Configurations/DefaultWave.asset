@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d4ef84d46043db40bab26a324a0b8d5, type: 3}
   m_Name: DefaultWave
   m_EditorClassIdentifier: 
-  baseEnemyCount: 15
+  baseEnemyCount: 40
   enemyCountScaling: 2
   waveDelayBase: 5
   waveDelayReduction: 0.1

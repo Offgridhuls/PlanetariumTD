@@ -188,6 +188,7 @@ public class EnemyManager : SceneService
 
         // Configure enemy with modified stats
         enemy.ProcessSpawnData(spawnData, speedMultiplier, isElite);
+        enemy.SetRewards(spawnData.scoreValue, spawnData.resourceValue);
         enemy.onDeath.AddListener(() => {
             activeEnemies.Remove(enemy);
             OnEnemyDied?.Invoke(enemy);

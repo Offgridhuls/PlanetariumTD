@@ -6,7 +6,9 @@ public enum DamageableType
     Planet,
     Enemy,
     Turret,
-    Structure
+    Structure,
+    Generator,
+    Player
 }
 
 public interface IDamageable

@@ -8,7 +8,7 @@ namespace Planetarium
     public class ResourceManager : SceneService
     {
         [Header("Resource Settings")]
-        [SerializeField] private ResourceType[] availableResources;
+        [SerializeField] public ResourceType[] availableResources;
         [SerializeField] private float globalGravitationMultiplier = 1f;
         [SerializeField] private int maxResourcesPerType = 1000;
         

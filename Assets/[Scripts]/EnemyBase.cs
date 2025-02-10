@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Planetarium;
 using Unity.Collections;
 using Planetarium.AI;
@@ -30,6 +31,9 @@ public class EnemyBase : CoreBehaviour, IDamageable
     [SerializeField] protected ResourceKind[] possibleResources;
     [SerializeField] protected Vector2 CoinResourceRange = new Vector2(5, 10);
     [SerializeField] protected Vector2 GemResourceRange = new Vector2(5, 10);
+    [SerializeField] protected float coinDropRate = 0.5f;
+    [SerializeField] protected float gemDropRate = 0.25f;
+    [SerializeField] protected float resourceSpawnRadius = 0.5f;
 
     [Header("State Machine")]
     [SerializeField] protected EnemyStateConfig stateConfig;
@@ -301,7 +305,19 @@ public class EnemyBase : CoreBehaviour, IDamageable
     {
         if (target != null)
         {
+            // Track damage dealt
             GameStatsHelper.OnEnemyDamageDealt(enemyStats.name, damage);
+
+            // Track damage based on target type
+            var damageableType = target.GetDamageableType();
+            switch (damageableType)
+            {
+                case DamageableType.Structure:
+                    //GameStatsHelper.OnStructureDamaged(damage);
+                    GameStatsHelper.TakeDamageFromEnemy(damage);
+                    break;
+            }
+
             target.ProcessDamage(new DamageData(damage, gameObject));
         }
     }
@@ -346,10 +362,45 @@ public class EnemyBase : CoreBehaviour, IDamageable
             CurrentTarget.transform.position,
             enemyStats.ProjectileSpeed
         );
+        projectile.SetSource(ProjectileSource.Enemy, enemyStats.name);
         projectile.ShootProjectile(CurrentTarget.transform.position, CurrentTarget.gameObject);
     }
 
     #endregion
+
+    protected virtual void DropResources()
+    {
+        ResourceManager resourceManager = FindFirstObjectByType<ResourceManager>();
+        if (resourceManager == null || possibleResources == null) return;
+
+        // Coins drop
+        if (possibleResources.Length > 0 && UnityEngine.Random.value <= coinDropRate)
+        {
+            var resourceType = resourceManager.availableResources.FirstOrDefault(r => r.resourceName == "Coins");
+            if (resourceType != null)
+            {
+                int amount = UnityEngine.Random.Range((int)CoinResourceRange.x, (int)CoinResourceRange.y + 1);
+                Vector3 spawnPos = transform.position + UnityEngine.Random.insideUnitSphere * resourceSpawnRadius;
+                resourceManager.SpawnResource(resourceType, spawnPos, amount);
+                GameStatsHelper.OnEnemyDroppedResources(enemyStats.name, amount);
+                onResourceGained?.Invoke(amount);
+            }
+        }
+
+        // Gems drop
+        if (possibleResources.Length > 1 && UnityEngine.Random.value <= gemDropRate)
+        {
+            var resourceType = resourceManager.availableResources.FirstOrDefault(r => r.resourceName == "Gems");
+            if (resourceType != null)
+            {
+                int amount = UnityEngine.Random.Range((int)GemResourceRange.x, (int)GemResourceRange.y + 1);
+                Vector3 spawnPos = transform.position + UnityEngine.Random.insideUnitSphere * resourceSpawnRadius;
+                resourceManager.SpawnResource(resourceType, spawnPos, amount);
+                GameStatsHelper.OnEnemyDroppedResources(enemyStats.name, amount);
+                onResourceGained?.Invoke(amount);
+            }
+        }
+    }
 
     protected virtual void Die(GameObject source = null)
     {
@@ -371,30 +422,7 @@ public class EnemyBase : CoreBehaviour, IDamageable
             Instantiate(deathEffect, transform.position, Quaternion.identity);
 
         onDeath?.Invoke();
-
         
-        /*ResourceManager resourceManager = FindFirstObjectByType<ResourceManager>();
-        if (resourceManager != null && possibleResources != null)
-        {
-            // First resource: 50% chance
-            if (possibleResources.Length > 0 && UnityEngine.Random.value <= 0.5f)
-            {
-                ResourceKind selectedResource = possibleResources[0];
-                int amount = UnityEngine.Random.Range((int)CoinResourceRange.x, (int)CoinResourceRange.y + 1);
-                resourceManager.SpawnResource(selectedResource, transform.position, amount);
-            }
-
-            // Second resource: 25% chance (independent of first resource)
-            float secondResourceChance = 0.25f;
-            if (possibleResources.Length > 1 && UnityEngine.Random.value <= secondResourceChance)
-            {
-                ResourceKind selectedResource = possibleResources[1];
-                int amount = UnityEngine.Random.Range((int)GemResourceRange.x, (int)GemResourceRange.y + 1);
-                Vector3 offsetPosition = transform.position + UnityEngine.Random.insideUnitSphere * 0.5f;
-                resourceManager.SpawnResource(selectedResource, offsetPosition, amount);
-            }
-        }*/
-
         Destroy(gameObject);
     }
 
@@ -439,31 +467,7 @@ public class EnemyBase : CoreBehaviour, IDamageable
     {
         scoreValue = score;
         //resourceValue = resources;
-    }
-
-    protected void DropResources()
-    {
-        if (possibleResources == null || possibleResources.Length == 0) return;
-
-        foreach (var resourceType in possibleResources)
-        {
-            int amount = 0;
-            switch (resourceType)
-            {
-                case Planetarium.Stats.ResourceKind.Coins:
-                    amount = Mathf.RoundToInt(UnityEngine.Random.Range(CoinResourceRange.x, CoinResourceRange.y));
-                    break;
-                case Planetarium.Stats.ResourceKind.Gems:
-                    amount = Mathf.RoundToInt(UnityEngine.Random.Range(GemResourceRange.x, GemResourceRange.y));
-                    break;
-            }
-
-            if (amount > 0)
-            {
-                GameStatsHelper.OnEnemyDroppedResources(enemyStats.name, amount);
-                onResourceGained?.Invoke(amount);
-            }
-        }
+         possibleResources = new ResourceKind[] { ResourceKind.Coins, ResourceKind.Gems };
     }
 
     protected void OnTriggerEnter(Collider other)

@@ -427,11 +427,16 @@ namespace Planetarium
             enemy.onDeath.AddListener(() => OnEnemyKilled(enemy));
             enemy.onScoreGained.AddListener(AddScore);
             enemy.onResourceGained.AddListener(AddCurrency);
+            
+            // Update wave stats
+            GameStatsHelper.UpdateWaveStats(currentWave, enemiesRemainingInWave, waveTimer, IsLastWave());
         }
 
         private void OnEnemyKilled(EnemyBase enemy)
         {
             enemiesRemainingInWave--;
+            // Update wave stats
+            GameStatsHelper.UpdateWaveStats(currentWave, enemiesRemainingInWave, waveTimer, IsLastWave());
         }
 
         /// <summary>
@@ -669,6 +674,9 @@ namespace Planetarium
                 enemyManager.StartWave(currentWave);
             }
             
+            // Update wave stats
+            GameStatsHelper.UpdateWaveStats(currentWave, enemiesRemainingInWave, waveTimer, IsLastWave());
+            
             if (autoSaveEnabled) SaveGameState();
         }
 
@@ -683,6 +691,9 @@ namespace Planetarium
             waveTimer = timeBetweenWaves;
             enemiesRemainingInWave = 0;
             isCheckingWaveEnd = false;
+            
+            // Update wave stats
+            GameStatsHelper.UpdateWaveStats(currentWave, enemiesRemainingInWave, waveTimer, IsLastWave());
             
             if (IsLastWave())
             {

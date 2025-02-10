@@ -243,7 +243,7 @@ namespace Planetarium.Stats
         {
             if (stat != null)
             {
-                StatManager.Instance?.UnregisterCallback<object>(stat.name, OnStatUpdated);
+                //StatManager.Instance?.UnregisterCallback<object>(stat.name, OnStatUpdated);
             }
         }
     }

@@ -159,9 +159,7 @@ MonoBehaviour:
   damageEffect: {fileID: 0}
   healthBarPrefab: {fileID: 0}
   scoreValue: 10
-  possibleResources:
-  - {fileID: 11400000, guid: 34a83c52de3b36542b7def04caa99464, type: 2}
-  - {fileID: 11400000, guid: 9673b180cb0ceda41897087662f90a06, type: 2}
+  possibleResources: 0000000001000000
   CoinResourceRange: {x: 5, y: 10}
   GemResourceRange: {x: 5, y: 10}
   stateConfig: {fileID: 11400000, guid: ba1d9026522707d4db6d51eb49a20ec0, type: 2}

@@ -47,6 +47,7 @@ namespace Planetarium.Stats
             public int totalSpawned;
             public float totalDamageDealt;    // Damage dealt TO enemies
             public float totalDamageTaken;    // Damage taken FROM enemies
+            public float totalStructureDamage; // Damage dealt to structures/generators
             public Dictionary<string, int> enemyTypeKills; // Kills per enemy type
         }
 
@@ -56,7 +57,7 @@ namespace Planetarium.Stats
         {
             var data = (EnemyData)value;
             return string.Format(format, data.totalKilled, data.totalSpawned, 
-                data.totalDamageDealt, data.totalDamageTaken);
+                data.totalDamageDealt, data.totalDamageTaken, data.totalStructureDamage);
         }
     }
 

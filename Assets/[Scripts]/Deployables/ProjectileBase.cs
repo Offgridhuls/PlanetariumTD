@@ -1,4 +1,11 @@
 using UnityEngine;
+using Planetarium.Stats;
+
+public enum ProjectileSource
+{
+    Turret,
+    Enemy
+}
 
 public abstract class ProjectileBase : MonoBehaviour
 {
@@ -20,6 +27,8 @@ public abstract class ProjectileBase : MonoBehaviour
     protected float aliveTime;
     protected AudioSource audioSource;
     protected Rigidbody rigidBody;
+    protected ProjectileSource source;
+    protected string sourceName; // Name of the turret or enemy that fired this projectile
     
     protected virtual void Awake()
     {
@@ -45,6 +54,12 @@ public abstract class ProjectileBase : MonoBehaviour
 
         // Play launch sound if available
         PlayLaunchSound();
+    }
+
+    public virtual void SetSource(ProjectileSource source, string sourceName)
+    {
+        this.source = source;
+        this.sourceName = sourceName;
     }
 
     protected virtual void PlayLaunchSound()
@@ -107,6 +122,41 @@ public abstract class ProjectileBase : MonoBehaviour
         var damageable = hitObject.GetComponent<IDamageable>();
         if (damageable != null)
         {
+            // Record stats based on source type and target type
+            if (source == ProjectileSource.Turret)
+            {
+                // Turret hit something
+                GameStatsHelper.OnTurretShotHit(sourceName);
+                GameStatsHelper.OnTurretDamageDealt(sourceName, damage);
+
+                if (damageable.GetDamageableType() == DamageableType.Enemy)
+                {
+                    // Check if the enemy died from this hit
+                    var enemyHealth = hitObject.GetComponent<EnemyBase>();
+                    if (enemyHealth != null && enemyHealth.CurrentHealth <= damage)
+                    {
+                        GameStatsHelper.OnTurretKill(sourceName);
+                    }
+                }
+            }
+            else if (source == ProjectileSource.Enemy)
+            {
+                // Enemy hit something
+                GameStatsHelper.OnEnemyDamageDealt(sourceName, damage);
+
+                var targetType = damageable.GetDamageableType();
+                switch (targetType)
+                {
+                    case DamageableType.Player:
+                        GameStatsHelper.TakeDamageFromEnemy(damage);
+                        break;
+                    case DamageableType.Generator:
+                    case DamageableType.Structure:
+                        GameStatsHelper.OnStructureDamaged(damage);
+                        break;
+                }
+            }
+
             DamageData damageData = new DamageData
             {
                 Damage = damage,
