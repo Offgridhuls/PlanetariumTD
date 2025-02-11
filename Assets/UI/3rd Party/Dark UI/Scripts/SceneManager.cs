@@ -40,7 +40,7 @@ public class SceneManager : MonoBehaviour
         StartCoroutine(LoadSceneAsync(sceneName));
     }
 
-    private IEnumerator LoadSceneAsync(string sceneName)
+    public IEnumerator LoadSceneAsync(string sceneName)
     {
         // Show loading screen
         if (loadingScreen != null)

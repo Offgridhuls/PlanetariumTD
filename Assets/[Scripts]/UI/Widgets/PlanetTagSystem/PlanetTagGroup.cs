@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine.UI;
 using Planetarium.Stats;
 using DG.Tweening;
+using Planetarium.UI.Views;
 using UnityEngine.EventSystems;
 
 namespace Planetarium.UI
@@ -21,8 +22,12 @@ namespace Planetarium.UI
         [SerializeField] private float expandDuration = 0.3f;
         [SerializeField] private Ease expandEase = Ease.OutBack;
 
+        [Header("Level Loading")]
+        [SerializeField] private string levelSceneName;
+        private SceneLoadingService _sceneLoader;
+        private UIManager _uiManager;
+
         private Vector3 _originalScale;
-        private TaggedComponent _target;
         private Tween _scaleTween;
 
         private void Start()
@@ -33,6 +38,10 @@ namespace Planetarium.UI
             }
 
             _originalScale = transform.localScale;
+            
+            // Get required services
+            _sceneLoader = Context.scene.GetService<SceneLoadingService>();
+            _uiManager = Context.scene.GetService<UIManager>();
         }
 
         public void Initialize(TaggedComponent target)
@@ -94,9 +103,34 @@ namespace Planetarium.UI
                 .SetEase(expandEase);
         }
 
-        private void OnInteractButtonClicked()
+        private async void OnInteractButtonClicked()
         {
-            SendMessageUpwards("OnPlanetInteraction", _target?.gameObject, SendMessageOptions.DontRequireReceiver);
+            if (string.IsNullOrEmpty(levelSceneName))
+            {
+                Debug.LogWarning($"No level scene name specified for planet tag {gameObject.name}");
+                return;
+            }
+
+            if (_sceneLoader == null || _uiManager == null)
+            {
+                Debug.LogError($"Required services not found in {gameObject.name}");
+                return;
+            }
+
+            // Show loading screen
+            var loadingScreen = _uiManager.GetView<LoadingScreen>();
+            if (loadingScreen != null)
+            {
+                loadingScreen.Open();
+            }
+
+            // Load the level
+            bool success = await _sceneLoader.LoadSceneAsync(levelSceneName);
+            
+            if (!success && loadingScreen != null)
+            {
+                loadingScreen.Close();
+            }
         }
 
         private void OnDestroy()

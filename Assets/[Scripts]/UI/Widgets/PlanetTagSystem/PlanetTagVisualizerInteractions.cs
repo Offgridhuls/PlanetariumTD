@@ -85,6 +85,7 @@ namespace Planetarium.UI
             }
 
             var visualizer = Instantiate(_planetTagGroupPrefab, transform);
+            
             _planetVisualizers[target] = visualizer;
             visualizer.Initialize(target);
 

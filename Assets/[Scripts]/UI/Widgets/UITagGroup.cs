@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace Planetarium.UI
 {
-    public class UITagGroup : MonoBehaviour
+    public class UITagGroup : UIWidget
     {
         [Header("References")]
         [SerializeField]
