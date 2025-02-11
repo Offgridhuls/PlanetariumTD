@@ -42,14 +42,12 @@ MonoBehaviour:
     viewsToClose: []
     viewsToOpen:
     - CurrencyView
-    - TurretShopView
     - ViewControlsView
     - PlayerInfoView
-    - InventoryView
     - UITagView
     triggerInitialize: 1
     triggerCleanup: 0
-    resetGameState: 0
+    resetGameState: 1
     pauseAudio: 0
     musicTrack: 
     enableDebugLogging: 1

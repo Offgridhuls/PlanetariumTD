@@ -13,11 +13,11 @@ GameObject:
   - component: {fileID: 4687432802531861276}
   - component: {fileID: 8588679846482464613}
   - component: {fileID: 6451041024947094753}
-  - component: {fileID: -1139313612236275423}
+  - component: {fileID: 8048594128652718908}
   - component: {fileID: 7388876952218093659}
-  - component: {fileID: 3120065214795860454}
+  - component: {fileID: 7516297048338034674}
   m_Layer: 6
-  m_Name: FlyingEnemy
+  m_Name: ExampleEnemy
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -32,8 +32,8 @@ Transform:
   m_GameObject: {fileID: 3507184854093064820}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.6776302, y: 12.38, z: -1.1070896}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: -1.6776302, y: 12.332, z: -1.1227}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5187705381737875952}
@@ -46,7 +46,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3507184854093064820}
-  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 1308169165768092123, guid: 3ece76b9e4ba66241b37d94801dfedc3, type: 3}
 --- !u!23 &4687432802531861276
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -70,7 +70,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 2108d8603f3bd8a4889e438479b3fd2d, type: 2}
+  - {fileID: 2100000, guid: bd5105e1f39844b4daded70961d0174f, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -111,8 +111,8 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 0.5
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Radius: 0.75
+  m_Center: {x: -0.03, y: 0.52, z: 0}
 --- !u!54 &6451041024947094753
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -140,7 +140,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &-1139313612236275423
+--- !u!114 &8048594128652718908
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -149,15 +149,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 3507184854093064820}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c46b7fefd05845748b8bb532aad3a434, type: 3}
+  m_Script: {fileID: 11500000, guid: 90a21d0825f5ba24ea9c5b342af377db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyStats: {fileID: 11400000, guid: 8088cecfdd382cb4bab9d99fd4d6a0b6, type: 2}
+  enemyStats: {fileID: 11400000, guid: b34443952a914f64eb7a10d477d0c81f, type: 2}
   maxHealth: 100
   currentHealth: 0
   integrity: 0.5
   isDead: 0
-  deathEffect: {fileID: 1814315751473787963, guid: e9459def1a517a24ba482f9e639df7ff, type: 3}
+  deathEffect: {fileID: 2427786012956944610, guid: da0de216ad60c5d46a6b049d61961615, type: 3}
   damageEffect: {fileID: 0}
   healthBarPrefab: {fileID: 0}
   scoreValue: 10
@@ -166,7 +166,7 @@ MonoBehaviour:
   coinDropRate: 0.5
   gemDropRate: 0.25
   resourceSpawnRadius: 0.5
-  stateConfig: {fileID: 11400000, guid: ba1d9026522707d4db6d51eb49a20ec0, type: 2}
+  stateConfig: {fileID: 11400000, guid: e265053f23552c14cb4456213579d70f, type: 2}
   currentStateName: 
   projectilePrefab: {fileID: 2526509629052936677, guid: 3f270dfdc506de546b772760313af985, type: 3}
   projectileSpawnPoint: {fileID: 4568147509268017655}
@@ -186,7 +186,13 @@ MonoBehaviour:
   onResourceGained:
     m_PersistentCalls:
       m_Calls: []
-  firePoint: {fileID: 4568147509268017655}
+  groundCheckDistance: 5
+  groundStickForce: 15
+  chargeEffect: {fileID: 579717377713784693, guid: 4aef0eaa09032814593ec390577dcc4d, type: 3}
+  attackEffect: {fileID: 8896690762899414031, guid: 26f888e08b48b1f448ee369a688c2b41, type: 3}
+  chargeTime: 3
+  burstCount: 2
+  burstDelay: 0.2
 --- !u!114 &7388876952218093659
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -201,7 +207,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tags:
     tags: []
---- !u!114 &3120065214795860454
+--- !u!114 &7516297048338034674
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -272,7 +278,7 @@ Transform:
   m_GameObject: {fileID: 7963398384135626164}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.047089156, z: -0, w: 0.9988907}
-  m_LocalPosition: {x: 0.058, y: -0.04, z: 0.582}
+  m_LocalPosition: {x: 0.188, y: 0.823, z: 1.961}
   m_LocalScale: {x: 0.1259108, y: 0.058770824, z: 0.26080328}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -294,7 +300,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7963398384135626164}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1

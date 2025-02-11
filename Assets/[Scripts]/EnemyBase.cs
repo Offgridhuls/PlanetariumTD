@@ -97,14 +97,14 @@ public class EnemyBase : CoreBehaviour, IDamageable
     private float pathProgress;
 
     // Cached tags for better performance
-    private static class CachedTags
+    protected static class CachedTags
     {
         public static readonly GameplayTag EnemyBase = new GameplayTag("Enemy.Base");
         public static readonly GameplayTag EnemyFlying = new GameplayTag("Enemy.Flying");
         public static readonly GameplayTag EnemyGround = new GameplayTag("Enemy.Ground");
     }
 
-    private TaggedComponent taggedComponent;
+    public TaggedComponent taggedComponent;
 
     #region Unity Lifecycle
 

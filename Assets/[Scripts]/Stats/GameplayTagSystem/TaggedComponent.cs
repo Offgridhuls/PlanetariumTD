@@ -35,22 +35,32 @@ namespace Planetarium.Stats
         /// </summary>
         public IReadOnlyList<GameplayTag> Tags => tags.Tags;
 
+        private TaggedObjectFilter tagFilter;
+
         #region Unity Lifecycle
         private void Awake()
         {
             Parent = GetComponent<ITaggable>();
+            tagFilter = FindFirstObjectByType<TaggedObjectFilter>();
         }
 
         private void OnEnable()
         {
-            TaggedObjectFilter.Instance.RegisterTaggedObject(this);
+            if (tagFilter != null)
+            {
+                tagFilter.RegisterTaggedObject(this);
+            }
+            else
+            {
+                UnityEngine.Debug.LogWarning($"[TaggedComponent] No TaggedObjectFilter found for {gameObject.name}");
+            }
         }
 
         private void OnDisable()
         {
-            if (TaggedObjectFilter.Instance != null)
+            if (tagFilter != null)
             {
-                TaggedObjectFilter.Instance.UnregisterTaggedObject(this);
+                tagFilter.UnregisterTaggedObject(this);
             }
         }
         #endregion

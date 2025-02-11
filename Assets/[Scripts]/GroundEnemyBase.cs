@@ -1,5 +1,6 @@
 using UnityEngine;
 using Planetarium.AI;
+using Planetarium.Stats;
 
 namespace Planetarium
 {
@@ -26,7 +27,13 @@ namespace Planetarium
         {
             base.Awake();
             
-            
+            taggedComponent = GetComponent<TaggedComponent>();
+            if (taggedComponent == null)
+            {
+                taggedComponent = gameObject.AddComponent<TaggedComponent>();
+            }
+        
+            taggedComponent.AddTag(CachedTags.EnemyFlying);
         }
 
         protected override void Start()

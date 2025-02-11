@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Planetarium.AI;
+using Planetarium.Stats;
 
 public class FlyingEnemyBase : EnemyBase
 {
@@ -17,6 +18,13 @@ public class FlyingEnemyBase : EnemyBase
     {
         base.Awake();
         
+        taggedComponent = GetComponent<TaggedComponent>();
+        if (taggedComponent == null)
+        {
+            taggedComponent = gameObject.AddComponent<TaggedComponent>();
+        }
+        
+        taggedComponent.AddTag(CachedTags.EnemyFlying);
     }
 
     protected override void Start()

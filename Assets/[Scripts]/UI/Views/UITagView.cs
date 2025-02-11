@@ -108,8 +108,9 @@ namespace Planetarium.UI
 
         public override void Close(bool instant = false)
         {
+            base.Close();
             LogDebug("Close requested - cleaning up visualizers but staying active");
-            CleanupVisualizers();
+            //CleanupVisualizers();
         }
 
         private void CleanupVisualizers()
