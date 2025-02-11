@@ -1480,9 +1480,17 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 398554542}
     - target: {fileID: 1029490728685127306, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
+      propertyPath: gameSceneName
+      value: MainLevel
+      objectReference: {fileID: 0}
+    - target: {fileID: 1029490728685127306, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
       propertyPath: highScoreText
       value: 
       objectReference: {fileID: 1300863571}
+    - target: {fileID: 1029490728685127306, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
+      propertyPath: mainMenuSceneName
+      value: MenuScene
+      objectReference: {fileID: 0}
     - target: {fileID: 1029490728685127306, guid: d8ccc1b5f0dfd1f47b525a25006ce3ba, type: 3}
       propertyPath: statDisplayPrefab
       value: 
