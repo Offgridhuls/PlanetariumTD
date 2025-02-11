@@ -7,7 +7,7 @@ namespace Planetarium.UI
     {
         // PUBLIC MEMBERS
         public Canvas Canvas { get; private set; }
-        public Camera UICamera { get; private set; }
+        public UnityEngine.Camera UICamera { get; private set; }
 
         
         // PRIVATE MEMBERS
@@ -266,6 +266,20 @@ namespace Planetarium.UI
                     activeViews.RemoveAt(i);
                 }
             }
+        }
+
+        /// <summary>
+        /// Transitions from the current view to a new view by closing the current one and opening the target view.
+        /// </summary>
+        /// <typeparam name="T">The type of view to transition to</typeparam>
+        /// <param name="currentView">The current view that should be closed</param>
+        public void TransitionToView<T>(UIView currentView) where T : UIView
+        {
+            if (currentView != null)
+            {
+                currentView.Close();
+            }
+            OpenView<T>();
         }
     }
 }

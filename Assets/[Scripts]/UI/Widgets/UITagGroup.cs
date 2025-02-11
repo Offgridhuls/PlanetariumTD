@@ -68,7 +68,7 @@ namespace Planetarium.UI
             ClearTagTexts();
         }
 
-        public virtual void UpdatePosition(Camera camera)
+        public virtual void UpdatePosition(UnityEngine.Camera camera)
         {
             if (_target == null || camera == null)
                 return;

@@ -127,6 +127,7 @@ namespace Planetarium
         {
            
             context.MainCamera = Camera.main;
+            context.scene = this;
             context.HasInput = true;
             context.IsVisible = true;
 

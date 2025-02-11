@@ -9,19 +9,19 @@ namespace Planetarium.UI
         // PRIVATE MEMBERS
         [Header("Settings")]
         [SerializeField]
-        private UITagGroup _tagGroupPrefab;
+        protected UITagGroup _tagGroupPrefab;
 
         [SerializeField]
-        private float _maxDistance = 100f;
+        protected float _maxDistance = 100f;
         
         [SerializeField]
-        private float _minDistance = 10f;
+        protected float _minDistance = 10f;
 
         [Header("Debug")]
-        [SerializeField] private bool _debugMode = true;
+        [SerializeField] protected bool _debugMode = true;
 
-        private Dictionary<TaggedComponent, UITagGroup> _activeVisualizers = new Dictionary<TaggedComponent, UITagGroup>();
-        private bool _isActive = true;
+        protected Dictionary<TaggedComponent, UITagGroup> _activeVisualizers = new Dictionary<TaggedComponent, UITagGroup>();
+        protected bool _isActive = true;
 
         // PUBLIC MEMBERS
         public void SetActive(bool active)
@@ -55,7 +55,7 @@ namespace Planetarium.UI
             _activeVisualizers[target] = visualizer;
             
             visualizer.Initialize(target);
-            UpdateVisualizerPosition(target, visualizer, Camera.main);
+            UpdateVisualizerPosition(target, visualizer, UnityEngine.Camera.main);
             LogDebug($"Created visualizer for {target.gameObject.name}, Total active: {_activeVisualizers.Count}");
         }
 
@@ -92,7 +92,7 @@ namespace Planetarium.UI
             LogDebug("All visualizers removed");
         }
 
-        public void UpdateVisualizerPositions(Camera camera)
+        public void UpdateVisualizerPositions(UnityEngine.Camera camera)
         {
             if (!_isActive || camera == null)
                 return;
@@ -127,7 +127,7 @@ namespace Planetarium.UI
             }
         }
 
-        private void UpdateVisualizerPosition(TaggedComponent target, UITagGroup visualizer, Camera camera)
+        public void UpdateVisualizerPosition(TaggedComponent target, UITagGroup visualizer, UnityEngine.Camera camera)
         {
             visualizer.UpdatePosition(camera);
 

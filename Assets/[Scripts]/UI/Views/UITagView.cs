@@ -21,7 +21,7 @@ namespace Planetarium.UI
 
         private List<TaggedComponent> _trackedComponents = new List<TaggedComponent>();
         private bool _visualizersEnabled = true;
-        private Camera _mainCamera;
+        private UnityEngine.Camera _mainCamera;
         private bool _initialized = false;
         private float _debugUpdateTimer = 0f;
         private const float DEBUG_LOG_INTERVAL = 1f; // Log debug info every second
@@ -57,7 +57,7 @@ namespace Planetarium.UI
         {
             LogDebug("Initializing view state");
             _initialized = true;
-            _mainCamera = Camera.main;
+            _mainCamera = UnityEngine.Camera.main;
             _tagInteractions.SetActive(true);
             _visualizersEnabled = true;
 
@@ -247,7 +247,7 @@ namespace Planetarium.UI
         private void OnSceneLoaded()
         {
             // Reset camera reference since it might have changed
-            _mainCamera = Camera.main;
+            _mainCamera = UnityEngine.Camera.main;
             
             // Clean up old visualizers
             CleanupVisualizers();

@@ -13,6 +13,7 @@ namespace Planetarium
         [SerializeField] private LayerMask planetLayer;
         [SerializeField] private Color validPlacementColor = new Color(0, 1, 0, 0.5f);
         [SerializeField] private Color invalidPlacementColor = new Color(1, 0, 0, 0.5f);
+        [SerializeField] private float minimumTurretDistance = 5f; // Minimum distance between turrets
 
         private DeployableBase selectedTurret;
         private DeployableBase previewTurret;
@@ -155,8 +156,8 @@ namespace Planetarium
                     previewTurret.transform.position = position;
                     previewTurret.transform.up = upDirection;  // Keep turret oriented away from planet
                     
-                    // TODO: Add additional placement validation (e.g., distance from other turrets)
-                    isValidPlacement = true;
+                    // Check distance from other turrets
+                    isValidPlacement = IsTurretPlacementValid(position);
                     UpdatePreviewColor(isValidPlacement);
                 }
                 else
@@ -170,6 +171,27 @@ namespace Planetarium
                 isValidPlacement = false;
                 UpdatePreviewColor(isValidPlacement);
             }
+        }
+
+        private bool IsTurretPlacementValid(Vector3 position)
+        {
+            // Find all turrets in the scene
+            DeployableBase[] existingTurrets = FindObjectsOfType<DeployableBase>();
+
+            // Check distance from each existing turret
+            foreach (var turret in existingTurrets)
+            {
+                if (turret == previewTurret) // Skip the preview turret
+                    continue;
+
+                float distance = Vector3.Distance(position, turret.transform.position);
+                if (distance < minimumTurretDistance)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private void PlaceTurret()

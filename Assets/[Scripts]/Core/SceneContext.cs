@@ -18,7 +18,8 @@ namespace Planetarium
         public ResourceManager ResourceManager;
         
         public ResourceInventory ResourceInventory;
-        
+
+        public Scene scene;
         // Camera and Input
         public Camera MainCamera;
         public CursorController CursorController;

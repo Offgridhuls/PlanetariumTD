@@ -25,7 +25,7 @@ namespace Planetarium.UI
         [SerializeField] private float fadeStartDistance = 10f;
         [SerializeField] private float fadeEndDistance = 5f;
 
-        private Camera mainCamera;
+        private UnityEngine.Camera mainCamera;
         private List<EnemyBase> trackedEnemies = new List<EnemyBase>();
         private float nextUpdateTime;
         private Canvas parentCanvas;
@@ -35,7 +35,7 @@ namespace Planetarium.UI
         {
             base.OnInitialize();
             
-            mainCamera = Camera.main;
+            mainCamera = UnityEngine.Camera.main;
             parentCanvas = GetComponentInParent<Canvas>();
             
             InitializePool(normalEnemyPool);
