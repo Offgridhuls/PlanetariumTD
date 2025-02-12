@@ -22,7 +22,6 @@ namespace Planetarium
         private Vector3 mousePosOld;
         private bool hasFocusOld;
         private Vector3 lastCtrlPivot;
-        private float lastLeftClickTime = float.MinValue;
         private Vector2 rightClickPos;
         private Vector3 startPosition;
         private Quaternion startRotation;
@@ -82,16 +81,8 @@ namespace Planetarium
             {
                 Touch touch = Input.GetTouch(0);
 
-                // Double tap to reset
                 if (touch.phase == TouchPhase.Began)
                 {
-                    if (Time.time - lastLeftClickTime < 0.2f)
-                    {
-                        mainCamera.transform.position = startPosition;
-                        mainCamera.transform.rotation = startRotation;
-                        currentZoom = Vector3.Distance(startPosition, pivot);
-                    }
-                    lastLeftClickTime = Time.time;
                     lastCtrlPivot = mainCamera.transform.position + mainCamera.transform.forward * focusDistance;
                 }
 
@@ -170,17 +161,9 @@ namespace Planetarium
 
         private void HandleMouseInput()
         {
-            // Reset view on double click
             if (Input.GetMouseButtonDown(0))
             {
-                if (Time.time - lastLeftClickTime < 0.2f)
-                {
-                    mainCamera.transform.position = startPosition;
-                    mainCamera.transform.rotation = startRotation;
-                    currentZoom = Vector3.Distance(startPosition, pivot);
-                }
-
-                lastLeftClickTime = Time.time;
+                lastCtrlPivot = mainCamera.transform.position + mainCamera.transform.forward * focusDistance;
             }
 
             float dstWeight = currentZoom;
@@ -196,43 +179,24 @@ namespace Planetarium
                 move += Vector3.right * mouseMoveX * -moveSpeed * dstWeight;
             }
 
-            if (Input.GetMouseButtonDown(0))
-            {
-                lastCtrlPivot = mainCamera.transform.position + mainCamera.transform.forward * focusDistance;
-            }
-
             if (Input.GetMouseButton(0))
             {
-                Vector3 activePivot = Input.GetKey(KeyCode.LeftAlt) ? mainCamera.transform.position : pivot;
-                if (Input.GetKey(KeyCode.LeftControl))
-                {
-                    activePivot = lastCtrlPivot;
-                }
-
-                mainCamera.transform.RotateAround(activePivot, mainCamera.transform.right, mouseMoveY * -rotationSpeed);
-                mainCamera.transform.RotateAround(activePivot, Vector3.up, mouseMoveX * rotationSpeed);
+                mainCamera.transform.RotateAround(pivot, mainCamera.transform.right, mouseMoveY * -rotationSpeed);
+                mainCamera.transform.RotateAround(pivot, Vector3.up, mouseMoveX * rotationSpeed);
             }
 
+            // Apply movement
             mainCamera.transform.Translate(move);
 
-            if (Input.GetMouseButtonDown(1))
+            // Handle zooming
+            float scrollDelta = Input.mouseScrollDelta.y;
+            if (scrollDelta != 0)
             {
-                rightClickPos = Input.mousePosition;
-            }
-
-            if (Input.GetMouseButton(1))
-            {
-                Vector2 delta = (Vector2)Input.mousePosition - rightClickPos;
-                rightClickPos = Input.mousePosition;
-                float zoomAmount = delta.magnitude * Mathf.Sign(Mathf.Abs(delta.x) > Mathf.Abs(delta.y) ? delta.x : -delta.y) 
-                    / Screen.width * mouseZoomSpeed * dstWeight * zoomSensitivity;
-                
-                // Calculate potential new position
+                float zoomAmount = scrollDelta * mouseZoomSpeed * dstWeight * zoomSensitivity;
                 Vector3 zoomMove = mainCamera.transform.forward * zoomAmount;
                 Vector3 newPosition = mainCamera.transform.position + zoomMove;
                 float newZoom = Vector3.Distance(newPosition, pivot);
 
-                // Only apply if within limits
                 if (newZoom >= minZoom && newZoom <= maxZoom)
                 {
                     mainCamera.transform.position = newPosition;
@@ -241,10 +205,17 @@ namespace Planetarium
             }
         }
 
+        public void ResetCamera()
+        {
+            mainCamera.transform.position = startPosition;
+            mainCamera.transform.rotation = startRotation;
+            currentZoom = Vector3.Distance(startPosition, pivot);
+        }
+
         private void OnDrawGizmosSelected()
         {
-            Gizmos.color = Color.red;
-            // Gizmos.DrawWireSphere(pivot, 0.15f);
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(pivot, 0.5f);
         }
     }
 }

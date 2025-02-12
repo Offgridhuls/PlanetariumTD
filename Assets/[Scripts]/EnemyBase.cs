@@ -394,35 +394,16 @@ public class EnemyBase : CoreBehaviour, IDamageable
     protected virtual void DropResources()
     {
         ResourceManager resourceManager = FindFirstObjectByType<ResourceManager>();
-        /*if (resourceManager == null || possibleResources == null) return;
+        if (resourceManager == null || enemyStats.resourceDrops == null || enemyStats.resourceDrops.Count == 0) return;
 
-        // Coins drop
-        if (possibleResources.Length > 0 && UnityEngine.Random.value <= coinDropRate)
+        foreach (var resourceDrop in enemyStats.resourceDrops)
         {
-            var resourceType = resourceManager.availableResources.FirstOrDefault(r => r.resourceName == "Coins");
-            if (resourceType != null)
+            if (UnityEngine.Random.value <= resourceDrop.dropRate)
             {
-                int amount = UnityEngine.Random.Range((int)CoinResourceRange.x, (int)CoinResourceRange.y + 1);
-                Vector3 spawnPos = transform.position + UnityEngine.Random.insideUnitSphere * resourceSpawnRadius;
-                resourceManager.SpawnResource(resourceType, spawnPos, amount);
-                TaggedStatsHelper.OnResourceEarned("Coins", amount);
-                onResourceGained?.Invoke(amount);
+                Vector3 spawnPos = transform.position + UnityEngine.Random.insideUnitSphere * 2f; // 2f is the spawn radius
+                resourceManager.SpawnResource(resourceDrop.resourceType, spawnPos, enemyStats.resourceValue);
             }
         }
-
-        // Gems drop
-        if (possibleResources.Length > 1 && UnityEngine.Random.value <= gemDropRate)
-        {
-            var resourceType = resourceManager.availableResources.FirstOrDefault(r => r.resourceName == "Gems");
-            if (resourceType != null)
-            {
-                int amount = UnityEngine.Random.Range((int)GemResourceRange.x, (int)GemResourceRange.y + 1);
-                Vector3 spawnPos = transform.position + UnityEngine.Random.insideUnitSphere * resourceSpawnRadius;
-                resourceManager.SpawnResource(resourceType, spawnPos, amount);
-                TaggedStatsHelper.OnResourceEarned("Gems", amount);
-                onResourceGained?.Invoke(amount);
-            }
-        }*/
     }
 
     protected virtual void Die(GameObject source = null)

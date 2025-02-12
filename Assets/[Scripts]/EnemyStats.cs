@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "EnemyStats", menuName = "PlanetariumTD/Enemy Stats")]
@@ -7,6 +8,11 @@ public class EnemyStats : ScriptableObject
     [SerializeField] private string enemyName = "Default Enemy";
     [SerializeField] private float healthPoints = 100f;
     [SerializeField] private float integrity = 1f;
+
+    [Header("Resource Drops")]
+    [SerializeField] private int CoinDropRate = 0;
+    [SerializeField] private int GemDropRate = 0;
+    [SerializeField] Dictionary<Planetarium.Resources.Types.ResourceType, int> ResourceMap;
 
     [Header("Movement Stats")]
     [SerializeField] private float moveSpeed = 5f;

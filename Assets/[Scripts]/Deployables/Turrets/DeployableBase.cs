@@ -213,8 +213,6 @@ namespace Planetarium.Deployables
             { 
                 RotateTowardsTarget(targetPosition);
             }
-            
-         
         }
         
         void CheckClosestTarget()

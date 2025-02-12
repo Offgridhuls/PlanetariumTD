@@ -15,10 +15,10 @@ MonoBehaviour:
   turretName: Mortar
   healthPoints: 100
   damage: 30
-  fireInterval: 7
+  fireInterval: 4
   agroRadius: 400
   rotationSpeed: 180
-  projectileSpeed: 3
+  projectileSpeed: 7
   projectileLifetime: 20
   scrapCost: 80
   coinCost: 40

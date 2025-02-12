@@ -1,4 +1,14 @@
 using UnityEngine;
+using System.Collections.Generic;
+using Planetarium.Resources.Types;
+
+[System.Serializable]
+public class ResourceDrop
+{
+    public ResourceType resourceType;
+    [Range(0f, 1f)]
+    public float dropRate = 0.5f;
+}
 
 [CreateAssetMenu(fileName = "EnemySpawnData", menuName = "Game/Enemy Spawn Data")]
 public class EnemySpawnData : ScriptableObject
@@ -19,9 +29,11 @@ public class EnemySpawnData : ScriptableObject
     public int scoreValue = 10;
     public int resourceValue = 5;
 
+    [Header("Resource Drop Rates")]
+    public List<ResourceDrop> resourceDrops = new List<ResourceDrop>();
     
     [Header("Attacking")]
-    public float attackSpeed = 2f ;
+    public float attackSpeed = 2f;
     public int attackDamage = 20;
     public int attackRange = 50;
     public int ProjectileSpeed = 80;
