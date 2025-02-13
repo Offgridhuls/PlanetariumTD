@@ -20,6 +20,14 @@ MonoBehaviour:
   MoveSpeed: 5
   scoreValue: 10
   resourceValue: 5
+  resourceDrops:
+  - resourceType: {fileID: 11400000, guid: 9673b180cb0ceda41897087662f90a06, type: 2}
+    dropRate: 0
+  attackSpeed: 2
+  attackDamage: 20
+  attackRange: 50
+  ProjectileSpeed: 80
+  attackAngle: 45
   spawnEffect: {fileID: 3031766928850544864, guid: a8cb176ac2d6504459d1fb8e59257cda, type: 3}
   deathEffect: {fileID: 2433282508537954060, guid: 3ef3ae421f71c5c4e97fe12dc2fc6312, type: 3}
   damageEffect: {fileID: 1983540425171338894, guid: 339a2ef9a7a98144db57d26b4fff94a0, type: 3}
