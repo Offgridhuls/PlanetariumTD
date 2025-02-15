@@ -263,12 +263,6 @@ namespace Planetarium.Deployables
             RaycastHit hit;
             bool didHit = Physics.Raycast(startPosition, directionToTarget, out hit, distanceToTarget, lineOfSightMask);
             
-            // Draw debug ray in scene view
-            #if UNITY_EDITOR
-            Debug.DrawLine(startPosition, startPosition + directionToTarget * distanceToTarget, 
-                didHit && hit.transform != target ? Color.red : Color.green, 0.1f);
-            #endif
-
             // If we hit something and it's not the target, we don't have line of sight
             if (didHit && hit.transform != target)
             {

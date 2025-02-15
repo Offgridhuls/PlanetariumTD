@@ -131,7 +131,7 @@ public class EnemyBase : CoreBehaviour, IDamageable
         
         if (currentPlanet == null)
         {
-            Debug.LogError("No planet found in scene!");
+            //Debug.LogError("No planet found in scene!");
             return;
         }
         
@@ -174,7 +174,7 @@ public class EnemyBase : CoreBehaviour, IDamageable
     {
         if (stateConfig == null)
         {
-            Debug.LogError($"[{gameObject.name}] No state config assigned to enemy!", this);
+            //Debug.LogError($"[{gameObject.name}] No state config assigned to enemy!", this);
             return;
         }
 
@@ -183,7 +183,7 @@ public class EnemyBase : CoreBehaviour, IDamageable
             Type stateType = stateEntry.GetStateType();
             if (stateType == null || !typeof(EnemyStateBase).IsAssignableFrom(stateType))
             {
-                Debug.LogError($"[{gameObject.name}] Invalid state type in config: {stateEntry.StateName}", this);
+                //Debug.LogError($"[{gameObject.name}] Invalid state type in config: {stateEntry.StateName}", this);
                 continue;
             }
 
@@ -230,7 +230,7 @@ public class EnemyBase : CoreBehaviour, IDamageable
         var type = typeof(T);
         if (!states.ContainsKey(type))
         {
-            Debug.LogError($"[{gameObject.name}] State {type.Name} not registered!", this);
+            //Debug.LogError($"[{gameObject.name}] State {type.Name} not registered!", this);
             return;
         }
 
@@ -349,7 +349,7 @@ public class EnemyBase : CoreBehaviour, IDamageable
     {
         if (projectilePrefab == null)
         {
-            Debug.LogWarning("No projectile prefab assigned to enemy!");
+            //Debug.LogWarning("No projectile prefab assigned to enemy!");
             return null;
         }
 
@@ -368,7 +368,7 @@ public class EnemyBase : CoreBehaviour, IDamageable
     {
         if (projectilePrefab == null)
         {
-            Debug.LogWarning("Attack : No projectile prefab assigned to enemy!");
+            //Debug.LogWarning("Attack : No projectile prefab assigned to enemy!");
             return;
         }
         
@@ -452,7 +452,7 @@ public class EnemyBase : CoreBehaviour, IDamageable
     public void SetIntegrity(float value)
     {
         integrity = value;
-        Debug.Log("Integrity set to: " + integrity);
+        //Debug.Log("Integrity set to: " + integrity);
     }
 
     public void SetEffects(GameObject death, GameObject damage, GameObject healthBar)

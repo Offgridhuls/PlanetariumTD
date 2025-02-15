@@ -25,6 +25,7 @@ namespace Planetarium
         private Vector2 rightClickPos;
         private Vector3 startPosition;
         private Quaternion startRotation;
+        private bool inputBlocked;
 
         // Touch support
         private Vector2 touchStartPos;
@@ -45,14 +46,12 @@ namespace Planetarium
             startRotation = mainCamera.transform.rotation;
             currentZoom = Vector3.Distance(startPosition, pivot);
             
-            Debug.Log("Camera Controls: One finger to Orbit, Two fingers to zoom/pan");
-            
             base.OnInitialize();
         }
 
         protected override void OnTick()
         {
-            if (mainCamera == null || !IsActive || Input.GetKey(KeyCode.LeftShift)) return;
+            if (mainCamera == null || !IsActive || Input.GetKey(KeyCode.LeftShift) || inputBlocked) return;
 
             if (Application.isFocused != hasFocusOld)
             {
@@ -210,6 +209,11 @@ namespace Planetarium
             mainCamera.transform.position = startPosition;
             mainCamera.transform.rotation = startRotation;
             currentZoom = Vector3.Distance(startPosition, pivot);
+        }
+
+        public void BlockInput(bool block)
+        {
+            inputBlocked = block;
         }
 
         private void OnDrawGizmosSelected()
