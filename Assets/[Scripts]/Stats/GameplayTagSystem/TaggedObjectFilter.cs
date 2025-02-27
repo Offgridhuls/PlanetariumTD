@@ -102,7 +102,7 @@ namespace Planetarium.Stats
                 objectTags.Remove(component);
             }
             
-            UnityEngine.Debug.Log($"[TaggedObjectFilter] Unregistered {component?.gameObject.name ?? "null"}");
+            // UnityEngine.Debug.Log($"[TaggedObjectFilter] Unregistered {component?.gameObject.name ?? "null"}");
         }
 
         private void AddTagToIndex(GameplayTag tag, TaggedComponent component)

@@ -4,12 +4,22 @@ using Planetarium.Stats;
 
 namespace Planetarium.UI
 {
+    [System.Serializable]
+    public class TagPrefabMapping
+    {
+        [SerializeField] public GameplayTag tag;
+        [SerializeField] public UITagGroup prefab;
+    }
+
     public class UITagVisualizerInteractions : MonoBehaviour
     {
         // PRIVATE MEMBERS
         [Header("Settings")]
         [SerializeField]
-        protected UITagGroup _tagGroupPrefab;
+        protected UITagGroup _defaultTagGroupPrefab;
+
+        [SerializeField]
+        protected List<TagPrefabMapping> _tagSpecificPrefabs = new List<TagPrefabMapping>();
 
         [SerializeField]
         protected float _maxDistance = 100f;
@@ -22,6 +32,19 @@ namespace Planetarium.UI
 
         protected Dictionary<TaggedComponent, UITagGroup> _activeVisualizers = new Dictionary<TaggedComponent, UITagGroup>();
         protected bool _isActive = true;
+        protected Dictionary<GameplayTag, UITagGroup> _prefabByTag = new Dictionary<GameplayTag, UITagGroup>();
+
+        private void Awake()
+        {
+            // Initialize the tag-to-prefab mapping
+            foreach (var mapping in _tagSpecificPrefabs)
+            {
+                if (mapping.tag != null && mapping.prefab != null)
+                {
+                    _prefabByTag[mapping.tag] = mapping.prefab;
+                }
+            }
+        }
 
         // PUBLIC MEMBERS
         public void SetActive(bool active)
@@ -38,7 +61,7 @@ namespace Planetarium.UI
 
         public void CreateVisualizerFor(TaggedComponent target)
         {
-            if (!_isActive || target == null || _activeVisualizers.ContainsKey(target) || _tagGroupPrefab == null)
+            if (!_isActive || target == null || _activeVisualizers.ContainsKey(target))
             {
                 if (target == null)
                 {
@@ -51,7 +74,27 @@ namespace Planetarium.UI
                 return;
             }
 
-            var visualizer = Instantiate(_tagGroupPrefab, transform);
+            // Select the appropriate prefab based on tags
+            UITagGroup prefabToUse = _defaultTagGroupPrefab;
+            
+            // Check if the tagged component has any tags that map to specific prefabs
+            foreach (var tag in target.Tags)
+            {
+                if (_prefabByTag.TryGetValue(tag, out var tagSpecificPrefab))
+                {
+                    prefabToUse = tagSpecificPrefab;
+                    LogDebug($"Using tag-specific prefab for {tag.TagName} on {target.gameObject.name}");
+                    break; // Use the first matching tag's prefab
+                }
+            }
+
+            if (prefabToUse == null)
+            {
+                LogDebug($"No valid prefab found for {target.gameObject.name}");
+                return;
+            }
+
+            var visualizer = Instantiate(prefabToUse, transform);
             _activeVisualizers[target] = visualizer;
             
             visualizer.Initialize(target);
