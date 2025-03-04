@@ -10,7 +10,7 @@ public class HexTile : MonoBehaviour
 {
     [Header("Identification")]
     [SerializeField] private int tileIndex;
-    [SerializeField] private Vector3 centerPosition;
+    [SerializeField] public Vector3 centerPosition;
     [SerializeField] private List<Vector3> vertices = new List<Vector3>();
     
     [Header("Resource Properties")]
@@ -39,6 +39,10 @@ public class HexTile : MonoBehaviour
     
     // Resource generation timer
     private float resourceTimer = 0f;
+    
+    // Add this method to your HexTile class
+    public List<Vector3> GetVertices() => vertices;
+    
     
     // Enums
     public enum ResourceType
@@ -118,7 +122,7 @@ public class HexTile : MonoBehaviour
         centerPosition = center;
         vertices = new List<Vector3>(tileVertices);
         
-        transform.position = center;
+       // transform.position = center;
     }
     
     /// <summary>

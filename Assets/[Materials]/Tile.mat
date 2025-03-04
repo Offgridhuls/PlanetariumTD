@@ -106,7 +106,7 @@ Material:
     - _Metallic: 0
     - _OcclusionStrength: 1
     - _OutlineIntensity: 5
-    - _OutlineWidth: 0.0037
+    - _OutlineWidth: 0.0372
     - _Parallax: 0.005
     - _PulseSpeed: 0.89
     - _QueueOffset: 0

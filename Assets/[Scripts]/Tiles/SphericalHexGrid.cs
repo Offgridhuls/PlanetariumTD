@@ -27,15 +27,7 @@ public class SphericalHexGrid : MonoBehaviour
     private List<int> icosphereTriangles = new List<int>();
     private Dictionary<long, int> middlePointIndexCache = new Dictionary<long, int>();
     
-    [System.Serializable]
-    public class HexTile
-    {
-        public GameObject gameObject;
-        public Vector3 centerPosition;
-        public List<Vector3> vertices = new List<Vector3>();
-        public int terrainType = 0; // 0: ocean, 1: plains, 2: mountains, etc.
-    }
-    
+
     private void Start()
     {
         if (tiles.Count == 0)
@@ -48,10 +40,23 @@ public class SphericalHexGrid : MonoBehaviour
     [ContextMenu("Regenerate Sphere")]
     public void GenerateSphere()
     {
+        // Initialize lists if they haven't been already
+        if (tiles == null)
+            tiles = new List<HexTile>();
+        
+        if (icosphereVertices == null)
+            icosphereVertices = new List<Vector3>();
+        
+        if (icosphereTriangles == null)
+            icosphereTriangles = new List<int>();
+        
+        if (middlePointIndexCache == null)
+            middlePointIndexCache = new Dictionary<long, int>();
+    
         // Clean up any existing tiles
         foreach (var tile in tiles)
         {
-            if (tile.gameObject != null)
+            if (tile != null && tile.gameObject != null)
             {
                 if (Application.isPlaying)
                     Destroy(tile.gameObject);
@@ -60,18 +65,75 @@ public class SphericalHexGrid : MonoBehaviour
             }
         }
         tiles.Clear();
-        
+    
         // Reset the working data
         icosphereVertices.Clear();
         icosphereTriangles.Clear();
         middlePointIndexCache.Clear();
-        
+    
         // Create and subdivide the icosphere
         CreateIcosphere();
-        
+    
         // Convert the icosphere faces to hexagons
         CreateHexagonsFromIcosphere();
+    
+        // Setup adjacency between tiles
+        SetupTileAdjacency();
+    
+        // Add some portal proximity to certain tiles
+        SetupPortalProximity();
     }
+    
+    
+    /// <summary>
+    /// Sets up portal proximity values for some tiles
+    /// </summary>
+    private void SetupPortalProximity()
+    {
+        if (tiles.Count == 0) return;
+    
+        // Choose a few random points to be "portals"
+        int portalCount = Mathf.Max(1, tiles.Count / 20); // About 5% of tiles are portal-adjacent
+        List<int> portalIndices = new List<int>();
+    
+        for (int i = 0; i < portalCount; i++)
+        {
+            // Pick a random tile that isn't already a portal
+            int attemptCount = 0;
+            int randomIndex;
+            do
+            {
+                randomIndex = Random.Range(0, tiles.Count);
+                attemptCount++;
+            } while (portalIndices.Contains(randomIndex) && attemptCount < 50);
+        
+            portalIndices.Add(randomIndex);
+        }
+    
+        // For each tile, calculate proximity to nearest portal
+        foreach (var tile in tiles)
+        {
+            float minDistance = float.MaxValue;
+        
+            foreach (int portalIndex in portalIndices)
+            {
+                if (portalIndex < tiles.Count)
+                {
+                    HexTile portalTile = tiles[portalIndex];
+                    float distance = Vector3.Distance(tile.GetCenterPosition(), portalTile.GetCenterPosition());
+                    minDistance = Mathf.Min(minDistance, distance);
+                }
+            }
+        
+            // Normalize distance to 0-1 range (1 = closest to portal)
+            float maxDistance = sphereRadius * 2; // Maximum possible distance on sphere
+            float proximity = 1f - Mathf.Clamp01(minDistance / maxDistance);
+        
+            // Set portal proximity on the tile
+            tile.SetPortalProximity(proximity);
+        }
+    }
+    
     
     /// <summary>
     /// Creates a base icosphere and subdivides it
@@ -273,141 +335,172 @@ public class SphericalHexGrid : MonoBehaviour
     /// <summary>
     /// Creates a single hex tile at the given center with the surrounding vertices
     /// </summary>
-    private void CreateHexTile(Vector3 center, List<Vector3> surroundingVertices)
+   private void CreateHexTile(Vector3 center, List<Vector3> surroundingVertices)
+{
+    // Sort vertices around the center
+    SortVerticesAroundCenter(center, surroundingVertices);
+
+    // Create regular hexagon vertices
+    Vector3[] regularVertices = new Vector3[6];
+    List<Vector3> verticesList = new List<Vector3>(6);
+    for (int i = 0; i < 6; i++)
     {
-        // Create new tile
-        HexTile tile = new HexTile();
-        tile.centerPosition = center;
-        
-        // Assign a random terrain type
+        int index = (i * surroundingVertices.Count / 6) % surroundingVertices.Count;
+        regularVertices[i] = surroundingVertices[index];
+        verticesList.Add(surroundingVertices[index]);
+    }
+
+    // Create GameObject and add components
+    GameObject hexObj = new GameObject("HexTile");
+    hexObj.transform.SetParent(transform);
+    
+    // Add the HexTile component
+    HexTile hexTileComponent = hexObj.AddComponent<HexTile>();
+    
+    MeshFilter meshFilter = hexObj.AddComponent<MeshFilter>();
+    MeshRenderer meshRenderer = hexObj.AddComponent<MeshRenderer>();
+
+    // Create mesh with improved UV mapping
+    Mesh mesh = CreateHexagonMesh(center, regularVertices);
+    meshFilter.mesh = mesh;
+
+    // Initialize the HexTile component with proper data
+    int tileIndex = tiles.Count;
+    hexTileComponent.Initialize(tileIndex, center, verticesList);
+
+    // Handle material
+    if (Application.isPlaying)
+    {
+        meshRenderer.material = new Material(tileMaterial);
         if (tileColors != null && tileColors.Length > 0)
         {
-            tile.terrainType = useRandomColors ? Random.Range(0, tileColors.Length) : 0;
+            int terrainType = useRandomColors ? Random.Range(0, tileColors.Length) : 0;
+            meshRenderer.material.color = tileColors[terrainType];
+            hexTileComponent.SetTerrainType(terrainType);
         }
-        
-        // Sort the vertices around the center
-        SortVerticesAroundCenter(center, surroundingVertices);
-        
-        // For more regular hexagons, take vertices at equal angles
-        List<Vector3> regularVertices = new List<Vector3>();
-        int numSides = Mathf.Min(surroundingVertices.Count, 6);
-        
-        for (int i = 0; i < numSides; i++)
-        {
-            int index = (i * surroundingVertices.Count / numSides) % surroundingVertices.Count;
-            regularVertices.Add(surroundingVertices[index]);
-        }
-        
-        tile.vertices = regularVertices;
-        
-        // Create the GameObject and mesh
-        GameObject hexObj = new GameObject("HexTile");
-        hexObj.transform.SetParent(transform);
-        
-        MeshFilter meshFilter = hexObj.AddComponent<MeshFilter>();
-        MeshRenderer meshRenderer = hexObj.AddComponent<MeshRenderer>();
-        
-        // Create the mesh
-        Mesh mesh = new Mesh();
-        
-        // Create top and bottom vertices for the extruded hex
-        List<Vector3> meshVertices = new List<Vector3>();
-        
-        // Add top vertices (at sphere radius)
-        meshVertices.Add(center);
-        int centerTopIndex = 0;
-        
-        foreach (Vector3 vertex in tile.vertices)
-        {
-            meshVertices.Add(vertex);
-        }
-        
-        // Add bottom vertices (pushed inward by tileThickness)
-        Vector3 inwardDirection = -center.normalized;
-        meshVertices.Add(center + inwardDirection * tileThickness);
-        int centerBottomIndex = meshVertices.Count - 1;
-        
-        foreach (Vector3 vertex in tile.vertices)
-        {
-            // Pull vertices slightly inward to prevent overlap
-            Vector3 pullDirection = (center - vertex).normalized * 0.02f * sphereRadius;
-            Vector3 adjustedVertex = vertex + pullDirection;
-            
-            // Now push inward for thickness
-            meshVertices.Add(adjustedVertex + inwardDirection * tileThickness);
-        }
-        
-        // Create triangles
-        List<int> triangles = new List<int>();
-        
-        // Top face
-        for (int i = 0; i < tile.vertices.Count; i++)
-        {
-            int nextI = (i + 1) % tile.vertices.Count;
-            triangles.Add(centerTopIndex);
-            triangles.Add(i + 1);
-            triangles.Add(nextI + 1);
-        }
-        
-        // Bottom face (reversed winding order)
-        for (int i = 0; i < tile.vertices.Count; i++)
-        {
-            int nextI = (i + 1) % tile.vertices.Count;
-            triangles.Add(centerBottomIndex);
-            triangles.Add(nextI + tile.vertices.Count + 1);
-            triangles.Add(i + tile.vertices.Count + 1);
-        }
-        
-        // Side faces
-        for (int i = 0; i < tile.vertices.Count; i++)
-        {
-            int nextI = (i + 1) % tile.vertices.Count;
-            
-            // Upper triangle
-            triangles.Add(i + 1);
-            triangles.Add(i + tile.vertices.Count + 1);
-            triangles.Add(nextI + 1);
-            
-            // Lower triangle
-            triangles.Add(nextI + 1);
-            triangles.Add(i + tile.vertices.Count + 1);
-            triangles.Add(nextI + tile.vertices.Count + 1);
-        }
-        
-        // Assign to mesh
-        mesh.vertices = meshVertices.ToArray();
-        mesh.triangles = triangles.ToArray();
-        mesh.RecalculateNormals();
-        
-        // Assign to GameObject
-        meshFilter.mesh = mesh;
-        
-        // Handle material assignment to prevent leaks
-        if (Application.isPlaying)
-        {
-            meshRenderer.material = new Material(tileMaterial);
-            if (tileColors != null && tileColors.Length > tile.terrainType)
-            {
-                meshRenderer.material.color = tileColors[tile.terrainType];
-            }
-        }
-        else
-        {
-            meshRenderer.sharedMaterial = tileMaterial;
-            
-            // For edit mode color variation, use MaterialPropertyBlock
-            if (tileColors != null && tileColors.Length > tile.terrainType)
-            {
-                MaterialPropertyBlock propBlock = new MaterialPropertyBlock();
-                propBlock.SetColor("_Color", tileColors[tile.terrainType]);
-                meshRenderer.SetPropertyBlock(propBlock);
-            }
-        }
-        
-        // Store in our tile list
-        tile.gameObject = hexObj;
-        tiles.Add(tile);
     }
+    else
+    {
+        meshRenderer.sharedMaterial = tileMaterial;
+        if (tileColors != null && tileColors.Length > 0)
+        {
+            int terrainType = useRandomColors ? Random.Range(0, tileColors.Length) : 0;
+            MaterialPropertyBlock propBlock = new MaterialPropertyBlock();
+            propBlock.SetColor("_Color", tileColors[terrainType]);
+            meshRenderer.SetPropertyBlock(propBlock);
+            hexTileComponent.SetTerrainType(terrainType);
+        }
+    }
+
+    // Add the tile to our list
+    tiles.Add(hexTileComponent);
+}
+    
+    
+    /// <summary>
+    /// Sets up adjacency relationships between tiles after all tiles are created
+    /// </summary>
+    private void SetupTileAdjacency()
+    {
+        // For each tile
+        for (int i = 0; i < tiles.Count; i++)
+        {
+            HexTile currentTile = tiles[i];
+            List<HexTile> adjacentTiles = new List<HexTile>();
+        
+            // Check each other tile for adjacency
+            for (int j = 0; j < tiles.Count; j++)
+            {
+                if (i == j) continue; // Skip self
+            
+                HexTile otherTile = tiles[j];
+            
+                // Tiles are adjacent if they share at least one vertex
+                bool isAdjacent = false;
+                List<Vector3> currentVertices = currentTile.GetVertices();
+                List<Vector3> otherVertices = otherTile.GetVertices();
+            
+                if (currentVertices != null && otherVertices != null)
+                {
+                    foreach (Vector3 v1 in currentVertices)
+                    {
+                        foreach (Vector3 v2 in otherVertices)
+                        {
+                            // If vertices are very close, consider them shared
+                            if (Vector3.Distance(v1, v2) < 0.01f * sphereRadius)
+                            {
+                                isAdjacent = true;
+                                break;
+                            }
+                        }
+                        if (isAdjacent) break;
+                    }
+                }
+            
+                if (isAdjacent)
+                {
+                    adjacentTiles.Add(otherTile);
+                }
+            }
+        
+            // Set adjacent tiles
+            currentTile.SetAdjacentTiles(adjacentTiles);
+        }
+    
+        // Calculate strategic values based on adjacency
+        foreach (var tile in tiles)
+        {
+            tile.CalculateStrategicValue();
+        }
+    }
+    
+    
+    
+    
+    private Mesh CreateHexagonMesh(Vector3 center, Vector3[] vertices)
+    {
+        Mesh mesh = new Mesh();
+    
+        // Create vertex array including center point
+        Vector3[] meshVertices = new Vector3[7];
+        meshVertices[0] = center;
+        for (int i = 0; i < 6; i++)
+        {
+            meshVertices[i + 1] = vertices[i];
+        }
+
+        // Create triangles (fan formation)
+        int[] triangles = new int[18]; // 6 triangles * 3 vertices
+        for (int i = 0; i < 6; i++)
+        {
+            int baseIndex = i * 3;
+            triangles[baseIndex] = 0; // center
+            triangles[baseIndex + 1] = i + 1;
+            triangles[baseIndex + 2] = ((i + 1) % 6) + 1;
+        }
+
+        // Create UVs
+        Vector2[] uvs = new Vector2[7];
+        uvs[0] = new Vector2(0.5f, 0.5f); // center
+        for (int i = 0; i < 6; i++)
+        {
+            float angle = i * Mathf.PI * 2f / 6f;
+            uvs[i + 1] = new Vector2(
+                0.5f + Mathf.Cos(angle) * 0.5f,
+                0.5f + Mathf.Sin(angle) * 0.5f
+            );
+        }
+
+        // Assign to mesh
+        mesh.vertices = meshVertices;
+        mesh.triangles = triangles;
+        mesh.uv = uvs;
+        mesh.RecalculateNormals();
+        mesh.RecalculateBounds();
+
+        return mesh;
+    }
+    
     
     /// <summary>
     /// Helper method to add a vertex to the icosphere
@@ -486,7 +579,7 @@ public class SphericalHexGrid : MonoBehaviour
             // Ensure positive angles
             if (angleA < 0) angleA += 360f;
             if (angleB < 0) angleB += 360f;
-            
+                
             return angleA.CompareTo(angleB);
         });
     }
