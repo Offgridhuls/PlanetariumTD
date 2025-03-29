@@ -10,6 +10,7 @@ namespace Planetarium.UI
         [Header("Buttons")]
         [SerializeField] private Button singlePlayerButton;
         [SerializeField] private Button multiplayerButton;
+        [SerializeField] private Button profileButton;
         [SerializeField] private Button settingsButton;
         [SerializeField] private Button quitButton;
 
@@ -29,12 +30,23 @@ namespace Planetarium.UI
                     UIManager.TransitionToView<SinglePlayerView>(this);
                 });
             }
+            
+            
 
             if (multiplayerButton != null)
             {
                 multiplayerButton.onClick.AddListener(() => {
                     PlayClickSound();
                     // TODO: Implement multiplayer view transition
+                });
+            }
+            
+            if (profileButton != null)
+            {
+                profileButton.onClick.AddListener(() => {
+                    PlayClickSound();
+                    // TODO: Implement profile view transition
+                    
                 });
             }
 

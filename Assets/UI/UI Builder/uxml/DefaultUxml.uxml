@@ -1,0 +1,11 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/UI%20Builder/Stylesheets/Default.uss?fileID=7433441132597879392&amp;guid=fb8a9a1a200c5fe469d6e2d08758020f&amp;type=3#Default" />
+    <ui:VisualElement name="panel" class="panel" style="flex-grow: 1; align-items: flex-start; justify-content: center; left: 0; padding-left: 0; background-color: rgba(185, 156, 156, 0);">
+        <ui:VisualElement name="container" class="container" style="flex-grow: 1; background-color: rgba(214, 208, 177, 0.6); justify-content: center; align-self: auto; background-size: 100% 100%; align-items: center; width: 437px; height: auto; padding-bottom: 53px; align-content: flex-start; flex-basis: auto;">
+            <ui:VisualElement name="logo" class="logo" style="flex-grow: 1; background-image: url(&quot;project://database/Assets/UI/3rd%20Party/Dark%20UI/Textures/Others/90cf314e-ffd7-4181-9a4b-ac6556da795d.jpg?fileID=2800000&amp;guid=69ef098fba5e0264bbb09145a6390666&amp;type=3#90cf314e-ffd7-4181-9a4b-ac6556da795d&quot;); background-color: rgb(255, 255, 255);" />
+            <ui:Button text="Button" />
+            <ui:Button text="Button" />
+            <ui:Button text="Button" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

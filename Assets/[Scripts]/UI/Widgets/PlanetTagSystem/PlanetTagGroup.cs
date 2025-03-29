@@ -40,8 +40,8 @@ namespace Planetarium.UI
             _originalScale = transform.localScale;
             
             // Get required services
-            _sceneLoader = Context.scene.GetService<SceneLoadingService>();
-            _uiManager = Context.scene.GetService<UIManager>();
+            //_sceneLoader = Context.scene.GetService<SceneLoadingService>();
+            //_uiManager = Context.scene.GetService<UIManager>();
         }
 
         public void Initialize(TaggedComponent target)

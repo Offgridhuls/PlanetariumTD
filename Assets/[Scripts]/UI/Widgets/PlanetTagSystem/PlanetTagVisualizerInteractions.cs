@@ -95,7 +95,7 @@ namespace Planetarium.UI
                 UpdateVisualizerPosition(target, visualizer, _camera);
             }
 
-            Debug.Log($"[PlanetTagVisualizer] Created visualizer for {target.gameObject.name}");
+           // Debug.Log($"[PlanetTagVisualizer] Created visualizer for {target.gameObject.name}");
         }
 
         public new void RemoveVisualizerFor(TaggedComponent target)

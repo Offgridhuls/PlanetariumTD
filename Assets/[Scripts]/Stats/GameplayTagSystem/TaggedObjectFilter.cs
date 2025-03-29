@@ -70,7 +70,7 @@ namespace Planetarium.Stats
             component.OnTagAdded += addHandler;
             component.OnTagRemoved += removeHandler;
             
-            UnityEngine.Debug.Log($"[TaggedObjectFilter] Registered {component.gameObject.name} with {component.Tags.Count} tags");
+           // UnityEngine.Debug.Log($"[TaggedObjectFilter] Registered {component.gameObject.name} with {component.Tags.Count} tags");
         }
 
         public void UnregisterTaggedObject(TaggedComponent component)

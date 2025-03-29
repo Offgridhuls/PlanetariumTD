@@ -42,6 +42,10 @@ namespace Planetarium.UI
             base.OnInitialize();
             LogDebug("Initializing SinglePlayerView");
 
+            // Ensure cursor is visible
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+
             _saveManager = Context.scene.GetService<SaveManager>();
             _cameraService = Context.scene.GetService<CameraStateService>();
 
@@ -110,7 +114,7 @@ namespace Planetarium.UI
                 foreach (var planet in planets)
                 {
                     _planetTagVisualizer.CreateVisualizerFor(planet);
-                    LogDebug($"Created visualizer for planet: {planet.gameObject.name}");
+                    //LogDebug($"Created visualizer for planet: {planet.gameObject.name}");
                 }
             }
             else
@@ -118,7 +122,7 @@ namespace Planetarium.UI
                 LogDebug("Warning: Planet tag visualizer is not assigned!");
             }
 
-            LogDebug("View initialization complete");
+            //LogDebug("View initialization complete");
         }
 
         private void Update()
@@ -136,6 +140,10 @@ namespace Planetarium.UI
         {
             base.Open(instant);
             LogDebug("Opening SinglePlayerView");
+
+            // Ensure cursor is visible when view opens
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
 
             if (useAnimation)
             {

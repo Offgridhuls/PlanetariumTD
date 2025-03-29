@@ -19,6 +19,8 @@ namespace Planetarium
         
         public ResourceInventory ResourceInventory;
 
+        public SceneLoadingService SceneLoadingService;
+        
         public Scene scene;
         // Camera and Input
         public Camera MainCamera;

@@ -1,0 +1,42 @@
+.panel {
+    flex-direction: column;
+    justify-content: center;
+    background-color: rgba(185, 156, 156, 0);
+    align-items: auto;
+    align-content: auto;
+    max-width: 1920px;
+    max-height: 1080px;
+}
+
+.menubutton {
+}
+
+.menu {
+}
+
+.container {
+}
+
+.menu {
+}
+
+.unity-button {
+    margin-bottom: 24px;
+    width: 250px;
+    height: 50px;
+}
+
+.logo {
+    background-color: rgb(255, 255, 255);
+    background-image: url("project://database/Assets/UI/3rd%20Party/Dark%20UI/Textures/Others/90cf314e-ffd7-4181-9a4b-ac6556da795d.jpg?fileID=2800000&guid=69ef098fba5e0264bbb09145a6390666&type=3#90cf314e-ffd7-4181-9a4b-ac6556da795d");
+}
+
+.unity-button:hover {
+    background-color: rgba(202, 155, 49, 0.6);
+    border-left-color: rgba(197, 68, 68, 0.89);
+    border-left-width: 0;
+    scale: 1.1 1.1;
+    transition-duration: 0.1s;
+    transition-timing-function: ease-in;
+    transition-property: scale;
+}
